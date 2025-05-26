@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Druk Wide';
+  src: url('/fonts/DrukWide-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-druk: 'Druk Wide', sans-serif;
+  --font-helvetica: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --background: #222222;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #3D3D3D;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-[#222222] text-white;
+  font-family: var(--font-helvetica);
+}
+
+.druk-font {
+  font-family: var(--font-druk);
+}
+
+/* Responsive font size classes */
+.text-responsive {
+  font-size: clamp(14px, 2vw, 18px);
+}
+
+.heading-responsive {
+  font-size: clamp(24px, 4vw, 48px);
+}
+
+.subheading-responsive {
+  font-size: clamp(18px, 3vw, 32px);
+}
