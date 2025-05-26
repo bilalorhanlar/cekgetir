@@ -101,20 +101,26 @@ export default function YolYardimModal({ onClose }) {
       setPrice(0);
       return 0;
     }
+
     // Temel değerler
     const basePrice = Number(fiyatlandirma?.basePrice) || 0;
     const basePricePerKm = Number(fiyatlandirma?.basePricePerKm) || 0;
     const distance = routeInfo?.distance || 0;
     const nightPrice = Number(fiyatlandirma?.nightPrice) || 1.5;
+
     // Segment bilgileri
     const segmentObj = fiyatlandirma?.segmentler?.find(seg => String(seg.id) === String(aracBilgileri.tip));
     const segmentMultiplier = segmentObj ? Number(segmentObj.price) : 1;
+
     // Arıza ücreti
     const arizaFiyat = fiyatlandirma?.arizaTipleri?.[selectedAriza.id]?.price || 0;
+
     // Ara toplam hesaplama (arıza ücreti toplama olarak ekleniyor)
     const baseTotal = basePrice + (distance * basePricePerKm) + arizaFiyat;
+
     // Segment çarpanı uygulaması
     const segmentTotal = baseTotal * segmentMultiplier;
+
     // Gece ücreti kontrolü
     const finalPrice = isNightTime ? segmentTotal * nightPrice : segmentTotal;
 
@@ -340,10 +346,10 @@ export default function YolYardimModal({ onClose }) {
 
   // Konumlar değiştiğinde fiyat hesapla
   useEffect(() => {
-    if (pickupLocation && deliveryLocation) {
-      calculateRoute(deliveryLocation);
+    if (location && aracBilgileri.tip && selectedAriza) {
+      calculateRoute(location);
     }
-  }, [pickupLocation, deliveryLocation, routeInfo, calculateRoute]);
+  }, [location, aracBilgileri.tip, selectedAriza, calculateRoute]);
 
   // Araç listesi değiştiğinde fiyat hesapla
   useEffect(() => {
@@ -446,6 +452,10 @@ export default function YolYardimModal({ onClose }) {
     const newLocation = { lat, lng, address };
     setLocation(newLocation);
     setLocationSearchValue(address);
+    // Konum seçildikten sonra fiyat hesaplama
+    if (aracBilgileri.tip && selectedAriza) {
+      calculateRoute(newLocation);
+    }
   };
 
   const handleCurrentLocation = async () => {
@@ -483,6 +493,11 @@ export default function YolYardimModal({ onClose }) {
       setLocation(newLocation);
       setLocationSearchValue(address);
       setShowMap(null);
+      
+      // Konum seçildikten sonra fiyat hesaplama
+      if (aracBilgileri.tip && selectedAriza) {
+        calculateRoute(newLocation);
+      }
       
       toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
     } catch (error) {
