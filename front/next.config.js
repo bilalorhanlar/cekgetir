@@ -13,7 +13,7 @@ const nextConfig = {
     return config;
   },
   images: {
-    domains: ['localhost'],
+    domains: ['cekgetir.up.railway.app'],
   },
   async headers() {
     return [
@@ -32,7 +32,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:4000/api/:path*',
+        destination: 'http://cekgetir.up.railway.app:4000/api/:path*',
       },
       {
         source: '/.well-known/appspecific/com.chrome.devtools.json',

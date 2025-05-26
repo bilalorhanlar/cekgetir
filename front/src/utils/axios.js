@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 
 const api = axios.create({
-  baseURL: 'http://localhost:4000',
+  baseURL: 'http://cekgetir.up.railway.app:4000',
   headers: {
     'Content-Type': 'application/json',
   },

@@ -10,7 +10,8 @@ async function bootstrap() {
   // CORS ayarları
   app.enableCors({
     origin: [
-      'http://172.20.10.2:3000',
+      'https://cekgetir.com',
+      'https://www.cekgetir.com',
       'http://localhost:3000',
       'http://127.0.0.1:3000'
     ],
