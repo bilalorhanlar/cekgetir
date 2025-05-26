@@ -20,8 +20,8 @@ export function middleware(request) {
     "style-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://*.googleapis.com https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://www.google.com/recaptcha/ https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com https://maps.googleapis.com",
     "font-src 'self' https://*.gstatic.com https://fonts.googleapis.com",
-    "connect-src 'self' https://cekgetir.com https://api.cekgetir.com http://cekgetir.up.railway.app:4000 https://cekgetir.up.railway.app:4000 http://localhost:4000 ws://localhost:4000 https://www.google.com/recaptcha/ https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com",
-    "frame-src 'self' https://www.google.com/recaptcha/ https://*.googleapis.com https://www.google.com/maps/ https://maps.google.com/ https://www.google.com/",
+    "connect-src 'self' https://cekgetir.com https://api.cekgetir.com https://cekgetir.up.railway.app:4000 https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com",
+    "frame-src 'self' https://*.googleapis.com https://www.google.com/maps/ https://maps.google.com/ https://www.google.com/",
     "worker-src 'self' blob:"
   ]
 
