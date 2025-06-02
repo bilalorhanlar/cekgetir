@@ -143,7 +143,7 @@ export default function TopluCekiciModal({ onClose }) {
   const [deliveryOtopark, setDeliveryOtopark] = useState(false)
   const [araclar, setAraclar] = useState([])
   const [musteriBilgileri, setMusteriBilgileri] = useState({
-    musteriTipi: '',
+    musteriTipi: 'kisisel',
     ad: '',
     soyad: '',
     tcVatandasi: true,
@@ -1709,6 +1709,7 @@ export default function TopluCekiciModal({ onClose }) {
               <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
                 <h3 className="text-lg font-semibold text-white mb-4">Fiyat Teklifi</h3>
                 <FiyatDetaylari routeInfo={routeInfo} toplamFiyat={toplamFiyat} />
+                <div className="text-xs text-[#404040] mt-1">Fiyatlara KDV dahildir</div>
                 <button
                   type="button"
                   onClick={async () => {

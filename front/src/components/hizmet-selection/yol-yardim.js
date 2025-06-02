@@ -202,6 +202,7 @@ export default function YolYardimModal({ onClose }) {
           <div className="text-3xl font-bold text-yellow-500">
             {price?.toLocaleString('tr-TR')} TL
           </div>
+          <div className="text-xs text-[#404040] mt-1">Fiyatlara KDV dahildir</div>
         </div>
       </div>
       {renderPriceDetails()}
@@ -210,8 +211,8 @@ export default function YolYardimModal({ onClose }) {
 
   // Rota hesaplama fonksiyonu
   const calculateRoute = useCallback(async (destination) => {
-    if (!fiyatlandirma || !destination) {
-      console.warn('Fiyatlandırma bilgisi veya konum henüz yüklenmedi');
+    if (!fiyatlandirma) {
+      console.warn('Fiyatlandırma bilgisi henüz yüklenmedi');
       return;
     }
     
@@ -263,25 +264,17 @@ export default function YolYardimModal({ onClose }) {
           duration: step.duration.text
         }))
       });
+      fiyatHesapla();
     } catch (error) {
       console.error('Rota hesaplama hatası:', error);
       setError('Rota hesaplanırken bir hata oluştu. Lütfen tekrar deneyin.');
     }
-  }, [fiyatlandirma]);
+  }, [fiyatlandirma, fiyatHesapla]);
 
   // Fiyat hesaplamayı useEffect ile tetikle
   useEffect(() => {
-    if (location && aracBilgileri.tip && selectedAriza) {
-      calculateRoute(location);
-    }
-  }, [location, aracBilgileri.tip, selectedAriza, calculateRoute]);
-
-  // Fiyat hesaplamayı useEffect ile tetikle
-  useEffect(() => {
-    if (routeInfo) {
-      fiyatHesapla();
-    }
-  }, [routeInfo, fiyatHesapla]);
+    fiyatHesapla();
+  }, [location, aracBilgileri.tip, selectedAriza, routeInfo, fiyatHesapla]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -351,6 +344,20 @@ export default function YolYardimModal({ onClose }) {
 
     fetchData();
   }, []); // Empty dependency array since we only want to fetch once on mount
+
+  // Konumlar değiştiğinde fiyat hesapla
+  useEffect(() => {
+    if (location && aracBilgileri.tip && selectedAriza) {
+      calculateRoute(location);
+    }
+  }, [location, aracBilgileri.tip, selectedAriza, calculateRoute]);
+
+  // Araç listesi değiştiğinde fiyat hesapla
+  useEffect(() => {
+    if (araclar.length > 0) {
+      calculateRoute(deliveryLocation);
+    }
+  }, [araclar, routeInfo, calculateRoute, deliveryLocation]);
 
   // İstanbul sınırları kontrolü
   const isWithinIstanbul = (lat, lng) => {
@@ -446,6 +453,10 @@ export default function YolYardimModal({ onClose }) {
     const newLocation = { lat, lng, address };
     setLocation(newLocation);
     setLocationSearchValue(address);
+    // Konum seçildikten sonra fiyat hesaplama
+    if (aracBilgileri.tip && selectedAriza) {
+      calculateRoute(newLocation);
+    }
   };
 
   const handleCurrentLocation = async () => {
@@ -483,6 +494,11 @@ export default function YolYardimModal({ onClose }) {
       setLocation(newLocation);
       setLocationSearchValue(address);
       setShowMap(null);
+      
+      // Konum seçildikten sonra fiyat hesaplama
+      if (aracBilgileri.tip && selectedAriza) {
+        calculateRoute(newLocation);
+      }
       
       toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
     } catch (error) {

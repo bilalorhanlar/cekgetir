@@ -185,7 +185,7 @@ export default function Footer() {
                 <FaInstagram className="h-5 w-5 sm:h-6 sm:w-6" />
               </a>
               <a 
-                href="https://x.com/cekgetircom" 
+                href="https://x.com/cekgetir" 
                 className="text-gray-400 hover:text-yellow-400 transition-colors transform hover:scale-110"
                 target="_blank"
                 rel="noopener noreferrer"

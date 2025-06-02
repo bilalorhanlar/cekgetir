@@ -1153,6 +1153,7 @@ export default function OzelCekiciModal({ onClose }) {
                           <div className="text-3xl font-bold text-yellow-500">
                             {price?.toLocaleString('tr-TR')} TL
                           </div>
+                          <div className="text-xs text-[#404040] mt-1">Fiyatlara KDV dahildir</div>
                         </div>
                       </div>
                       <div className="block text-sm">

@@ -85,7 +85,14 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-semibold text-black mb-1 sm:mb-2">Adres</h3>
-                    <p className="text-sm sm:text-base text-black">Ferhatpaşa, Anadolu Cd. No:74, 34888 Ataşehir/İstanbul</p>
+                    <a 
+                      href="https://www.google.com/maps?q=40.9782,29.1271" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm sm:text-base text-black hover:text-yellow-500 transition-colors"
+                    >
+                      Ferhatpaşa, Anadolu Cd. No:74, 34888 Ataşehir/İstanbul
+                    </a>
                   </div>
                 </div>
 
@@ -97,7 +104,12 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-semibold text-black mb-1 sm:mb-2">Telefon</h3>
-                    <p className="text-sm sm:text-base text-black">+90 540 490 10 00</p>
+                    <a 
+                      href="tel:+905404901000" 
+                      className="text-sm sm:text-base text-black hover:text-yellow-500 transition-colors"
+                    >
+                      +90 540 490 10 00
+                    </a>
                   </div>
                 </div>
 
@@ -109,7 +121,12 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-semibold text-black mb-1 sm:mb-2">E-posta</h3>
-                    <p className="text-sm sm:text-base text-black">info@cekgetir.com</p>
+                    <a 
+                      href="mailto:info@cekgetir.com" 
+                      className="text-sm sm:text-base text-black hover:text-yellow-500 transition-colors"
+                    >
+                      info@cekgetir.com
+                    </a>
                   </div>
                 </div>
 

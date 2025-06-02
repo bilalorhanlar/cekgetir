@@ -6,7 +6,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly validCredentials = {
     email: 'info@cekgetir.com',
-    password: '123',
+    password: 'AuLkkz@“16',
   };
 
   constructor(private jwtService: JwtService) {}
