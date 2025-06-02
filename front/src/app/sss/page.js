@@ -31,25 +31,25 @@ export default function FAQ() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <main className="min-h-screen bg-white">
         {/* Hero Section */}
-        <section className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] flex items-center overflow-hidden">
+        <section className="relative h-[40vh] sm:h-[65vh] md:h-[100vh] flex text-center items-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/images/home.jpeg"
+              src="/images/beyaz.jpeg"
               alt="Çekgetir SSS"
               fill
               className="object-cover transform scale-105"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/40"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-black/50 to-white"></div>
           </div>
           <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-16">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-3xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
                 Sıkça Sorulan Sorular
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-2xl leading-relaxed">
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-2xl mx-auto leading-relaxed md:mb-20 lg:mb-24">
                 Merak ettiğiniz tüm soruların cevapları burada
               </p>
             </div>
@@ -57,7 +57,7 @@ export default function FAQ() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 -mt-8 sm:-mt-12 md:-mt-16 relative z-10">
+        <section className="py-12 sm:py-16 md:py-20 px-5 sm:px-8 lg:px-10 -mt-24 sm:-mt-48 md:-mt-96 relative z-10">
           <div className="max-w-4xl mx-auto">
             {loading ? (
               <div className="text-center py-12">
@@ -73,7 +73,7 @@ export default function FAQ() {
                 {faqs.map((faq) => (
                   <div 
                     key={faq.id} 
-                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                    className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
                   >
                     <button
                       className="w-full px-6 sm:px-8 py-4 sm:py-5 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"

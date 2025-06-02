@@ -19,7 +19,7 @@ export default function Home() {
   const serviceOptions = [
     {
       id: 'sehirler-arasi',
-      title: 'Şehirler Arası',
+      title: 'Şehirler Arası Transfer',
       description: 'Şehirler arası araç transferi',
       icon: (
         <svg className="w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path fill="currentColor" d="M224 96.8V96a56.06 56.06 0 0 0-56-56h-8a16 16 0 0 0-16 16v120h-16V72a8 8 0 0 0-8-8H16A16 16 0 0 0 0 80v104a32 32 0 0 0 56 21.13A32 32 0 0 0 111 192h82a32 32 0 0 0 63-8v-48a40.07 40.07 0 0 0-32-39.2M160 56h8a40 40 0 0 1 40 40v8a8 8 0 0 0 8 8a24 24 0 0 1 24 24v20.31a31.71 31.71 0 0 0-16-4.31a32.06 32.06 0 0 0-31 24h-33Zm-48 24v96h-1a32 32 0 0 0-55-13.13a31.9 31.9 0 0 0-40-6.56V80ZM32 200a16 16 0 1 1 16-16a16 16 0 0 1-16 16m48 0a16 16 0 1 1 16-16a16 16 0 0 1-16 16m144 0a16 16 0 1 1 16-16a16 16 0 0 1-16 16"/></svg>
@@ -55,13 +55,13 @@ export default function Home() {
         <section className="relative min-h-[100vh] flex items-center">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/images/home.jpeg"
+              src="/images/home.png"
               alt="Çekgetir Yol Yardım"
               fill
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-l from-black/95 via-black/75 to-black/30"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-black/50 to-white"></div>
           </div>
 
           <div className="relative z-10 w-full max-w-6xl mx-auto px-4 flex flex-col lg:flex-row items-center">
@@ -71,22 +71,22 @@ export default function Home() {
                 <h1 className="text-3xl md:text-5xl text-center lg:text-left font-bold mb-6">
                 Şehirler Arası Araç Taşıma Ve Yol Yardım Hizmeti
                 </h1>
-                <p className="text-lg md:text-xl mb-8 text-center lg:text-left text-gray-300">
-                  Çekici, lastik, akü ve tüm yol yardım hizmetleriyle yanınızdayız
+                <p className="text-lg md:text-xl mb-8 text-center font-light lg:text-left text-white">
+                Talebinizi oluşturduktan sonra, aracınıza uygun ekipleri yönlendiriyor ve süreci sizin için takip ediyoruz.
                 </p>
               </div>
             </div>
 
             {/* Sağ taraf - Hizmet Seçimi */}
             <div className="w-full lg:w-1/3">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 lg:p-6 shadow-xl border border-white/20 hover:border-white/30">
+              <div className="bg-black/40 backdrop-blur-md rounded-xl p-4 lg:p-6 shadow-xl ">
                 <h2 className="text-xl lg:text-2xl font-semibold text-white mb-4 lg:mb-6">Hizmet Seçin</h2>
                 <div className="grid grid-cols-1 gap-3">
                   {serviceOptions.map(option => (
                     <button
                       key={option.id}
                       onClick={() => setActiveModal(option.id)}
-                      className="flex items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-colors text-left group"
+                      className="flex items-center gap-3 p-4 bg-black/30 hover:bg-black/40 border border-yellow-500/25 hover:border-yellow-500 rounded-lg transition-colors text-left group"
                     >
                       <div className="text-yellow-400 group-hover:scale-110 transition-transform">
                         {option.icon}
@@ -104,7 +104,7 @@ export default function Home() {
         </section>
 
         {/* Neden Biz Section */}
-        <section className="py-16 px-4 bg-gray-50">
+        <section className="py-16 px-4 bg-white">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center text-black mb-12">Neden Bizi Tercih Etmelisiniz?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -124,7 +124,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-black mb-4">Güvenilir Hizmet</h3>
-                <p className="text-gray-600">Profesyonel ekip ve modern ekipmanlarla güvenli ve kaliteli hizmet garantisi.</p>
+                <p className="text-gray-600">Araçlarınızı, Türkiye genelinde anlaşmalı ve denetimli iş ortaklarımızla güvenle taşıyoruz. Her aşamada şeffaf ve profesyonel bir hizmet sunuyoruz.</p>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
                 <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
@@ -140,36 +140,30 @@ export default function Home() {
         </section>
 
         {/* Hizmetler Section */}
-        <section id="hizmetler" className="py-16 px-4">
+        <section id="hizmetler" className="py-16 px-4 bg-gray-50">
           <div className="max-w-6xl mx-auto text-black">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Hizmetlerimiz</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
                 <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-4">Yol Yardım</h3>
-                <p className="text-gray-600">Aracınız yolda kaldığında en hızlı yol yardım desteğini sağlıyoruz. İhtiyacınızı bize iletmeniz yeterli. Gerekli ekipleri sizin adınıza yönlendiriyoruz.</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
-                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-4">Çekici Hizmeti</h3>
-                <p className="text-gray-600">Aracınız mı çekilmeli? Konumunuza uygun çekiciyi hızlıca ayarlıyoruz. Süreci baştan sona biz takip ediyoruz.</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
-                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
+                <svg className="w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path fill="currentColor" d="M224 96.8V96a56.06 56.06 0 0 0-56-56h-8a16 16 0 0 0-16 16v120h-16V72a8 8 0 0 0-8-8H16A16 16 0 0 0 0 80v104a32 32 0 0 0 56 21.13A32 32 0 0 0 111 192h82a32 32 0 0 0 63-8v-48a40.07 40.07 0 0 0-32-39.2M160 56h8a40 40 0 0 1 40 40v8a8 8 0 0 0 8 8a24 24 0 0 1 24 24v20.31a31.71 31.71 0 0 0-16-4.31a32.06 32.06 0 0 0-31 24h-33Zm-48 24v96h-1a32 32 0 0 0-55-13.13a31.9 31.9 0 0 0-40-6.56V80ZM32 200a16 16 0 1 1 16-16a16 16 0 0 1-16 16m48 0a16 16 0 1 1 16-16a16 16 0 0 1-16 16m144 0a16 16 0 1 1 16-16a16 16 0 0 1-16 16"/></svg>
                 </div>
                 <h3 className="text-xl font-semibold mb-4">Şehirler Arası Transfer</h3>
                 <p className="text-gray-600">Aracınızı bir şehirden başka bir şehre taşıtmak mı istiyorsunuz? Talebinizi alıyor, sizin için en uygun firmayı görevlendiriyoruz. Siz sadece teslimat zamanını takip edin.</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M15 10h5.39l-3.33-4H15v4m2.5 8.5c.39 0 .74-.13 1.04-.43c.3-.3.46-.65.46-1.07c0-.39-.16-.74-.46-1.04c-.3-.3-.65-.46-1.04-.46c-.42 0-.77.16-1.07.46c-.3.3-.43.65-.43 1.04c0 .42.13.77.43 1.07c.3.3.65.43 1.07.43M6 18.5c.44 0 .8-.13 1.08-.43s.42-.65.42-1.07c0-.39-.14-.74-.42-1.04c-.28-.3-.64-.46-1.08-.46c-.44 0-.8.16-1.08.46c-.28.3-.42.65-.42 1.04c0 .42.14.77.42 1.07c.28.3.64.43 1.08.43M18 4l5 6v7h-2.5c0 .83-.31 1.53-.91 2.13c-.59.59-1.29.87-2.09.87c-.83 0-1.53-.28-2.12-.87c-.6-.6-.88-1.3-.88-2.13H9c0 .83-.3 1.53-.89 2.13c-.61.59-1.3.87-2.11.87c-.81 0-1.5-.28-2.11-.87C3.3 18.53 3 17.83 3 17H1v-4h8.19L3 8.11V11H1V5h1l11 6.06V4h5Z"/></svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Özel Çekici Hizmeti</h3>
+                <p className="text-gray-600">Konumunuza göre uygun çekiciyi hızlıca ayarlıyoruz yerine yönlendiriyoruz</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8"  xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24"><g fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="2"/><path strokeLinecap="round" d="M6 12h4m4 0h4m-9 5.196l2-3.464m2-3.464l2-3.464m0 10.392l-2-3.464m-2-3.464L9 6.804M7 3.338A9.954 9.954 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5"/><path strokeLinecap="round" d="M15 17.197A6 6 0 1 1 17.197 15"/></g></svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Yol Yardım</h3>
+                <p className="text-gray-600">Aracınız yolda kaldığında en hızlı yol yardım desteğini sağlıyoruz. İhtiyacınızı bize iletmeniz yeterli. Gerekli ekipleri sizin adınıza yönlendiriyoruz.</p>
               </div>
             </div>
           </div>

@@ -10,7 +10,7 @@ export default function Navbar() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#303030]/80 backdrop-blur-md py-4 transition-all duration-300">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#303030]/70 backdrop-blur-sm py-4 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -67,13 +67,13 @@ export default function Navbar() {
             </Link>
             <Link 
               href="/pnr-sorgula" 
-              className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-xl shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-base lg:text-lg border-2 border-yellow-400 hover:scale-105 active:scale-95"
+              className="flex items-center gap-2 p-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-xl shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-sm border-2 border-yellow-400 hover:scale-105 active:scale-95"
               style={{ boxShadow: '0 4px 24px 0 rgba(234, 179, 8, 0.15)' }}
             >
-              <svg className="w-4 h-4 lg:w-4 lg:h-4 mr-1 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 lg:w-5 lg:h-5 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Talep Sorgula
+              <span className="text-xs lg:text-sm">Talep Sorgula</span>
             </Link>
             <div className="flex items-center space-x-3 lg:space-x-4">
               <a 
@@ -100,13 +100,13 @@ export default function Navbar() {
           {/* Mobilde sabit PNR Sorgula butonu */}
           <Link
             href="/pnr-sorgula"
-            className="md:hidden flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-lg shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-sm border-2 border-yellow-400 ml-2 hover:scale-105 active:scale-95"
+            className="md:hidden flex items-center gap-1 p-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-lg shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-xs border-2 border-yellow-400 ml-2 hover:scale-105 active:scale-95"
             style={{ boxShadow: '0 2px 12px 0 rgba(234, 179, 8, 0.15)' }}
           >
-            <svg className="w-4 h-4 mr-1 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Talep No
+            <span className="text-xs">Talep No</span>
           </Link>
 
           {/* Mobile Menu Button */}
@@ -172,13 +172,13 @@ export default function Navbar() {
             </Link>
             <Link 
               href="/pnr-sorgula" 
-              className="block flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-xl shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-lg border-2 border-yellow-400 hover:scale-105 active:scale-95 text-center justify-center mt-2"
+              className="block flex items-center gap-2 p-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-xl shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-xs border-2 border-yellow-400 hover:scale-105 active:scale-95 text-center justify-center mt-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <svg className="w-5 h-5 mr-1 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Talep Sorgula
+              <span className="text-xs">Talep Sorgula</span>
             </Link>
             <div className="flex flex-col space-y-4 pt-4">
               <a 

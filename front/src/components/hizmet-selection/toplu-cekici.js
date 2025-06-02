@@ -1231,7 +1231,7 @@ export default function TopluCekiciModal({ onClose }) {
     return (
       <div className="space-y-4">
         <div className="bg-[#202020] rounded-lg p-3">
-          <div className="text-[#404040] text-sm mb-1">Toplam Tutar</div>
+          <div className="text-[#ebebeb] text-sm mb-1">Toplam Tutar</div>
           <div className="text-2xl font-bold text-yellow-500">
             {toplamFiyat.toLocaleString('tr-TR')} TL
           </div>
@@ -1239,11 +1239,11 @@ export default function TopluCekiciModal({ onClose }) {
         {routeInfo && (
           <>
             <div className="bg-[#202020] rounded-lg p-3">
-              <div className="text-[#404040] text-sm mb-1">Mesafe</div>
+              <div className="text-[#ebebeb] text-sm mb-1">Mesafe</div>
               <div className="text-white font-medium">{routeInfo.distance}</div>
             </div>
             <div className="bg-[#202020] rounded-lg p-3">
-              <div className="text-[#404040] text-sm mb-1">Tahmini Süre</div>
+              <div className="text-[#ebebeb] text-sm mb-1">Tahmini Süre</div>
               <div className="text-white font-medium">{routeInfo.duration}</div>
             </div>
           </>
@@ -1528,7 +1528,6 @@ export default function TopluCekiciModal({ onClose }) {
           ) : step === 2 ? (
             <div className="space-y-6">
               <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
-                <h3 className="text-lg font-semibold text-white mb-4">Araç Bilgileri</h3>
                 <div className="space-y-4">
                   {araclar.map((arac) => (
                     <div key={`arac-${arac.id}`} className="bg-[#202020] rounded-lg p-4 space-y-4">
@@ -1549,7 +1548,7 @@ export default function TopluCekiciModal({ onClose }) {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[#404040] text-sm mb-1">Marka</label>
+                          <label className="block text-[#ebebeb] text-sm mb-1">Marka</label>
                           <select
                             value={arac.marka}
                             onChange={(e) => aracGuncelle(arac.id, 'marka', e.target.value)}
@@ -1565,7 +1564,7 @@ export default function TopluCekiciModal({ onClose }) {
                         </div>
 
                         <div>
-                          <label className="block text-[#404040] text-sm mb-1">Model</label>
+                          <label className="block text-[#ebebeb] text-sm mb-1">Model</label>
                           <select
                             value={arac.model}
                             onChange={(e) => aracGuncelle(arac.id, 'model', e.target.value)}
@@ -1582,7 +1581,7 @@ export default function TopluCekiciModal({ onClose }) {
                         </div>
 
                         <div>
-                          <label className="block text-[#404040] text-sm mb-1">Segment</label>
+                          <label className="block text-[#ebebeb] text-sm mb-1">Segment</label>
                           <select
                             value={arac.segment}
                             onChange={(e) => aracGuncelle(arac.id, 'segment', e.target.value)}
@@ -1598,7 +1597,7 @@ export default function TopluCekiciModal({ onClose }) {
                         </div>
 
                         <div>
-                          <label className="block text-[#404040] text-sm mb-1">Yıl</label>
+                          <label className="block text-[#ebebeb] text-sm mb-1">Yıl</label>
                           <select
                             value={arac.yil}
                             onChange={(e) => aracGuncelle(arac.id, 'yil', e.target.value)}
@@ -1614,7 +1613,7 @@ export default function TopluCekiciModal({ onClose }) {
                         </div>
 
                         <div>
-                          <label className="block text-[#404040] text-sm mb-1">Plaka</label>
+                          <label className="block text-[#ebebeb] text-sm mb-1">Plaka</label>
                           <input
                             type="text"
                             value={arac.plaka}
@@ -1626,7 +1625,7 @@ export default function TopluCekiciModal({ onClose }) {
                         </div>
 
                         <div>
-                          <label className="block text-[#404040] text-sm mb-1">Durum</label>
+                          <label className="block text-[#ebebeb] text-sm mb-1">Durum</label>
                           <select
                             value={arac.durum}
                             onChange={(e) => aracGuncelle(arac.id, 'durum', e.target.value)}
@@ -1648,7 +1647,7 @@ export default function TopluCekiciModal({ onClose }) {
                     <button
                       type="button"
                       onClick={aracEkle}
-                      className="w-full py-3 px-4 bg-[#141414] text-[#404040] font-medium rounded-lg hover:bg-[#202020] hover:text-white transition-colors border border-[#404040]"
+                      className="w-full py-3 px-4 bg-[#141414] text-[#ebebeb] font-medium rounded-lg hover:bg-[#202020] hover:text-white transition-colors border border-[#404040]"
                     >
                       + Araç Ekle
                     </button>
@@ -1680,29 +1679,17 @@ export default function TopluCekiciModal({ onClose }) {
                 <h3 className="text-lg font-semibold text-white mb-4">Rota Bilgileri</h3>
                 <div className="space-y-4">
                   <div className="bg-[#202020] rounded-lg p-3">
-                    <div className="text-[#404040] text-sm mb-1">Alınacak Konum</div>
+                    <div className="text-[#ebebeb] text-sm mb-1">Alınacak Konum</div>
                     <div className="text-white font-medium text-sm" title={pickupSearchValue}>
                       {pickupSearchValue}
                     </div>
                   </div>
                   <div className="bg-[#202020] rounded-lg p-3">
-                    <div className="text-[#404040] text-sm mb-1">Teslim Edilecek Konum</div>
+                    <div className="text-[#ebebeb] text-sm mb-1">Teslim Edilecek Konum</div>
                     <div className="text-white font-medium text-sm" title={deliverySearchValue}>
                       {deliverySearchValue}
                     </div>
                   </div>
-                  {routeInfo && (
-                    <React.Fragment key="routeInfo">
-                      <div key="distance" className="bg-[#202020] rounded-lg p-3">
-                        <div className="text-[#404040] text-sm mb-1">Mesafe</div>
-                        <div className="text-white font-medium">{routeInfo.distance}</div>
-                      </div>
-                      <div key="duration" className="bg-[#202020] rounded-lg p-3">
-                        <div className="text-[#404040] text-sm mb-1">Tahmini Süre</div>
-                        <div className="text-white font-medium">{routeInfo.duration}</div>
-                      </div>
-                    </React.Fragment>
-                  )}
                 </div>
               </div>
 
@@ -1830,7 +1817,7 @@ export default function TopluCekiciModal({ onClose }) {
                 {musteriBilgileri.musteriTipi === 'kurumsal' ? (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Firma Adı
                       </label>
                       <input
@@ -1843,7 +1830,7 @@ export default function TopluCekiciModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Vergi Numarası
                       </label>
                       <input
@@ -1856,7 +1843,7 @@ export default function TopluCekiciModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Vergi Dairesi
                       </label>
                       <input
@@ -1872,7 +1859,7 @@ export default function TopluCekiciModal({ onClose }) {
                 ) : (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Ad
                       </label>
                       <input
@@ -1885,7 +1872,7 @@ export default function TopluCekiciModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Soyad
                       </label>
                       <input
@@ -1900,7 +1887,7 @@ export default function TopluCekiciModal({ onClose }) {
                     <div className="sm:col-span-2">
                       <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
                         <div className="flex items-center justify-between mb-3">
-                          <label className="text-sm font-medium text-[#404040]">
+                          <label className="text-sm font-medium text-[#ebebeb]">
                             Kimlik Bilgileri
                           </label>
                           <div className="flex items-center gap-2">
@@ -1918,7 +1905,7 @@ export default function TopluCekiciModal({ onClose }) {
                               }}
                               className="w-4 h-4 rounded border-[#404040] bg-[#141414] text-yellow-500 focus:ring-yellow-500 focus:ring-offset-[#141414]"
                             />
-                            <label htmlFor="tcVatandasi" className="text-sm text-[#404040]">
+                            <label htmlFor="tcVatandasi" className="text-sm text-[#ebebeb]">
                               TC Vatandaşıyım
                             </label>
                           </div>
@@ -1937,7 +1924,7 @@ export default function TopluCekiciModal({ onClose }) {
                             placeholder="TC Kimlik No"
                           />
                         ) : (
-                          <div className="w-full px-4 py-2.5 bg-[#202020] border border-[#404040] rounded-lg text-[#404040]">
+                          <div className="w-full px-4 py-2.5 bg-[#202020] border border-[#404040] rounded-lg text-[#ebebeb]">
                             Yabancı Uyruklu
                           </div>
                         )}
@@ -1946,7 +1933,7 @@ export default function TopluCekiciModal({ onClose }) {
                   </>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     Telefon
                   </label>
                   <input
@@ -1963,7 +1950,7 @@ export default function TopluCekiciModal({ onClose }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     E-posta
                   </label>
                   <input
@@ -1995,12 +1982,12 @@ export default function TopluCekiciModal({ onClose }) {
               </div>
 
               <div className="mt-4 text-center">
-                <p className="text-xs text-[#404040]">
+                <p className="text-xs text-[#ebebeb]">
                   Siparişi Onayla butonuna tıkladığınızda{' '}
-                  <a href="/kvkk" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
-                  <a href="/acik-riza" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</a>,{' '}
-                  <a href="/aydinlatma" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</a> ve{' '}
-                  <a href="/sorumluluk-reddi" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</a> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
+                  <a href="/docs/KVKKvegizlilik.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
+                  <a href="/docs/acikrizametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</a>,{' '}
+                  <a href="/docs/aydinlatmametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</a> ve{' '}
+                  <a href="/docs/sorumlulukreddibeyani.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</a> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
                 </p>
               </div>
             </form>
@@ -2010,17 +1997,17 @@ export default function TopluCekiciModal({ onClose }) {
                 <h3 className="text-lg font-semibold text-white mb-4">Sipariş Tamamlandı</h3>
                 <div className="space-y-4">
                   <div className="bg-[#202020] rounded-lg p-3">
-                    <div className="text-[#404040] text-sm mb-1">Talep Numarası</div>
+                    <div className="text-[#ebebeb] text-sm mb-1">Talep Numarası</div>
                     <div className="text-2xl font-bold text-yellow-500">{pnrNumber}</div>
                   </div>
                   <div className="bg-[#202020] rounded-lg p-3">
-                    <div className="text-[#404040] text-sm mb-1">Toplam Tutar</div>
+                    <div className="text-[#ebebeb] text-sm mb-1">Toplam Tutar</div>
                     <div className="text-2xl font-bold text-yellow-500">
                       {toplamFiyat.toLocaleString('tr-TR')} TL
                     </div>
                   </div>
                   <div className="bg-[#202020] rounded-lg p-3">
-                    <div className="text-[#404040] text-sm mb-1">Ödeme Bilgileri</div>
+                    <div className="text-[#ebebeb] text-sm mb-1">Ödeme Bilgileri</div>
                     <div className="space-y-2">
                       <div className="text-white">
                         <span className="font-medium">Banka:</span> Garanti Bankası
@@ -2031,7 +2018,7 @@ export default function TopluCekiciModal({ onClose }) {
                       <div className="text-white">
                         <span className="font-medium">Hesap Sahibi:</span> Çekgetir A.Ş.
                       </div>
-                      <div className="text-[#404040] text-sm mt-2">
+                      <div className="text-[#ebebeb] text-sm mt-2">
                         * Ödemenizi yaptıktan sonra dekontunuzu Talep numaranız ile birlikte info@cekgetir.com adresine göndermeniz gerekmektedir.
                       </div>
                     </div>

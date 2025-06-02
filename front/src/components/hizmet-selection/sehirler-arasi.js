@@ -494,9 +494,9 @@ export default function SehirlerArasiModal({ onClose }) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Toplu Çekici</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">Çoklu Çekici</h3>
                   <p className="text-[#404040] text-sm">
-                    Birden fazla araç için toplu çekici hizmeti. Ekonomik ve verimli çözüm.
+                    Bir ve birden fazla araç için çoklu çekici hizmeti. Ekonomik ve verimli çözüm.
                   </p>
                 </button>
               </div>
@@ -506,7 +506,7 @@ export default function SehirlerArasiModal({ onClose }) {
                 disabled={isSubmitting || !selectedService}
                 className="w-full py-3 px-6 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Lütfen Bekleyin...' : 'Siparişi Onayla'}
+                {isSubmitting ? 'Lütfen Bekleyin...' : 'Devam Et'}
               </button>
             </form>
           ) : step === 2 ? (

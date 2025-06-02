@@ -124,65 +124,69 @@ export default function YolYardimModal({ onClose }) {
     // Gece ücreti kontrolü
     const finalPrice = isNightTime ? segmentTotal * nightPrice : segmentTotal;
 
-    console.log('Fiyat Hesaplama Detayları:', {
-      basePrice,
-      basePricePerKm,
-      distance,
-      nightPrice,
-      segmentMultiplier,
-      arizaFiyat,
-      baseTotal,
-      segmentTotal,
-      isNightTime,
-      finalPrice
-    });
+    // Sadece fiyat değiştiğinde log at
+    if (price !== Math.round(finalPrice)) {
+      console.log('Fiyat Hesaplama Detayları:', {
+        basePrice,
+        basePricePerKm,
+        distance,
+        nightPrice,
+        segmentMultiplier,
+        arizaFiyat,
+        baseTotal,
+        segmentTotal,
+        isNightTime,
+        finalPrice
+      });
+    }
 
     setPrice(Math.round(finalPrice));
     return Math.round(finalPrice);
-  }, [fiyatlandirma, location, aracBilgileri.tip, selectedAriza, routeInfo, isNightTime]);
+  }, [fiyatlandirma, location, aracBilgileri.tip, selectedAriza, routeInfo, isNightTime, price]);
+
+  // Fiyat hesaplamayı useEffect ile tetikle
+  useEffect(() => {
+    if (location && aracBilgileri.tip && selectedAriza && routeInfo) {
+      const newPrice = fiyatHesapla();
+      // Sadece fiyat değiştiğinde state'i güncelle
+      if (newPrice !== price) {
+        setPrice(newPrice);
+      }
+    }
+  }, [location, aracBilgileri.tip, selectedAriza, routeInfo, fiyatHesapla, price]);
 
   // Fiyat detaylarını göster
   const renderPriceDetails = () => {
     if (!price || !routeInfo) return null;
 
-    const segment = fiyatlandirma.segmentler.find(s => s.id === aracBilgileri.tip);
-    const katsayi = parseFloat(segment?.price) || 1;
-    const arizaFiyat = fiyatlandirma.arizaTipleri[selectedAriza.id]?.price || 0;
-    const baseUcret = fiyatlandirma.basePrice;
-    const kmUcreti = routeInfo.distance * fiyatlandirma.basePricePerKm;
-    const araToplam = baseUcret + kmUcreti + arizaFiyat;
-    const segmentUcreti = araToplam * (katsayi - 1);
-    const geceUcreti = (currentHour >= 22 || currentHour < 6) ? (araToplam + segmentUcreti) * (fiyatlandirma.nightPrice - 1) : 0;
-
     return (
       <div className="space-y-2 text-sm">
-        <div className="flex justify-between text-[#404040]">
-          <span>Araç Markası:</span>
-          <span>{aracBilgileri.marka}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="bg-[#202020] rounded-lg p-3 flex flex-col gap-1 col-span-2">
+            <span className="text-xs text-white/60">Araç</span>
+            <span className="font-semibold text-white">{aracBilgileri.marka} {aracBilgileri.model}</span>
+          </div>
+          <div className="bg-[#202020] rounded-lg p-3 flex flex-col gap-1">
+            <span className="text-xs text-white/60">Plaka</span>
+            <span className="font-semibold text-white">{aracBilgileri.plaka}</span>
+          </div>
+          <div className="bg-[#202020] rounded-lg p-3 flex flex-col gap-1">
+            <span className="text-xs text-white/60">Arıza Tipi</span>
+            <span className="font-semibold text-white">{selectedAriza.title}</span>
+          </div>
+          <div className="bg-[#202020] rounded-lg p-3 flex flex-col gap-1">
+            <span className="text-xs text-white/60">Mesafe</span>
+            <span className="font-semibold text-yellow-500">{routeInfo.distance.toFixed(1)} km</span>
+          </div>
+          <div className="bg-[#202020] rounded-lg p-3 flex flex-col gap-1">
+            <span className="text-xs text-white/60">Süre</span>
+            <span className="font-semibold text-yellow-500">{Math.round(routeInfo.duration)} dk</span>
+          </div>
+
         </div>
-        <div className="flex justify-between text-[#404040]">
-          <span>Araç Modeli:</span>
-          <span>{aracBilgileri.model}</span>
-        </div>
-        <div className="flex justify-between text-[#404040]">
-          <span>Araç Yılı:</span>
-          <span>{aracBilgileri.yil}</span>
-        </div>
-        <div className="flex justify-between text-[#404040]">
-          <span>Plaka:</span>
-          <span>{aracBilgileri.plaka}</span>
-        </div>
-        <div className="flex justify-between text-[#404040]">
-          <span>Mesafe:</span>
-          <span>{routeInfo.distance.toFixed(1)} km</span>
-        </div>
-        <div className="flex justify-between text-[#404040]">
-          <span>Arıza Tipi:</span>
-          <span>{selectedAriza.name}</span>
-        </div>
-        <div className="flex justify-between text-white font-medium pt-2 border-t border-[#404040]">
-          <span>Toplam:</span>
-          <span>{price.toLocaleString('tr-TR')} TL</span>
+        <div className="border-t border-[#404040] pt-3 mt-2 flex items-center justify-between">
+          <span className="text-base font-semibold text-white">Toplam</span>
+          <span className="text-lg font-bold text-yellow-500">{price.toLocaleString('tr-TR')} TL</span>
         </div>
       </div>
     );
@@ -190,29 +194,20 @@ export default function YolYardimModal({ onClose }) {
 
   // Fiyat teklifi bölümünü güncelle
   const renderPriceOffer = () => (
-    <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-white">Fiyat Teklifi</h3>
-        <div className="flex items-center gap-2">
-          {isNightTime && (
-            <div className="text-[10px] text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded max-w-[180px]">
-              Gece Tarifesi (22:00 - 08:00) • Gündüz daha uygun
-            </div>
-          )}
-          <div className="text-3xl font-bold text-yellow-500">
-            {price?.toLocaleString('tr-TR')} TL
-          </div>
-          <div className="text-xs text-[#404040] mt-1">Fiyatlara KDV dahildir</div>
-        </div>
-      </div>
+    <div className="bg-[#141414] rounded-lg p-4 sm:p-4 px-2 py-2 border border-[#404040]">
       {renderPriceDetails()}
+      {isNightTime && (
+        <div className="text-xs text-center text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded w-full">
+          Gece Tarifesi • Önerilen (08:00 - 22:00)
+        </div>
+      )}
+      <div className="text-[10px] sm:text-xs text-[#404040] text-right mt-1">Fiyatlara KDV dahildir</div>
     </div>
   );
 
   // Rota hesaplama fonksiyonu
   const calculateRoute = useCallback(async (destination) => {
-    if (!fiyatlandirma) {
-      console.warn('Fiyatlandırma bilgisi henüz yüklenmedi');
+    if (!fiyatlandirma || !window.google) {
       return;
     }
     
@@ -220,17 +215,13 @@ export default function YolYardimModal({ onClose }) {
       lat: fiyatlandirma.baseLat,
       lng: fiyatlandirma.baseLng
     };
-    
-    if (!window.google) {
-      console.warn('Google Maps API henüz yüklenmedi');
+
+    // Eğer mevcut rota bilgisi varsa ve aynı hedef için hesaplanmışsa, tekrar hesaplama
+    if (routeInfo && 
+        routeInfo.destination?.lat === destination.lat && 
+        routeInfo.destination?.lng === destination.lng) {
       return;
     }
-
-    console.log('Rota hesaplama başlıyor:', {
-      origin,
-      destination,
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.substring(0, 10) + '...'
-    });
     
     const directionsService = new window.google.maps.DirectionsService();
     const request = {
@@ -252,29 +243,37 @@ export default function YolYardimModal({ onClose }) {
 
       const route = result.routes[0];
       const distance = route.legs[0].distance.value / 1000; // km
-      const duration = route.legs[0].duration.value / 60; // dk
+      const duration = (route.legs[0].duration.value / 60) + 15; // dk
       
       setDirections(result);
       setRouteInfo({
         distance,
         duration,
+        destination: destination,
         steps: route.legs[0].steps.map(step => ({
           instruction: step.instructions,
           distance: step.distance.text,
           duration: step.duration.text
         }))
       });
-      fiyatHesapla();
     } catch (error) {
       console.error('Rota hesaplama hatası:', error);
       setError('Rota hesaplanırken bir hata oluştu. Lütfen tekrar deneyin.');
     }
-  }, [fiyatlandirma, fiyatHesapla]);
+  }, [fiyatlandirma, routeInfo]);
 
-  // Fiyat hesaplamayı useEffect ile tetikle
+  // Konumlar değiştiğinde fiyat hesapla
   useEffect(() => {
-    fiyatHesapla();
-  }, [location, aracBilgileri.tip, selectedAriza, routeInfo, fiyatHesapla]);
+    if (location && aracBilgileri.tip && selectedAriza) {
+      const shouldCalculateRoute = !routeInfo || 
+        routeInfo.destination?.lat !== location.lat || 
+        routeInfo.destination?.lng !== location.lng;
+      
+      if (shouldCalculateRoute) {
+        calculateRoute(location);
+      }
+    }
+  }, [location, aracBilgileri.tip, selectedAriza, calculateRoute, routeInfo]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -344,20 +343,6 @@ export default function YolYardimModal({ onClose }) {
 
     fetchData();
   }, []); // Empty dependency array since we only want to fetch once on mount
-
-  // Konumlar değiştiğinde fiyat hesapla
-  useEffect(() => {
-    if (location && aracBilgileri.tip && selectedAriza) {
-      calculateRoute(location);
-    }
-  }, [location, aracBilgileri.tip, selectedAriza, calculateRoute]);
-
-  // Araç listesi değiştiğinde fiyat hesapla
-  useEffect(() => {
-    if (araclar.length > 0) {
-      calculateRoute(deliveryLocation);
-    }
-  }, [araclar, routeInfo, calculateRoute, deliveryLocation]);
 
   // İstanbul sınırları kontrolü
   const isWithinIstanbul = (lat, lng) => {
@@ -668,7 +653,7 @@ export default function YolYardimModal({ onClose }) {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     Konum Seçin
                   </label>
                   <div className="relative">
@@ -749,9 +734,6 @@ export default function YolYardimModal({ onClose }) {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
-                    Araç Bilgileri
-                  </label>
                   {loading ? (
                     <div className="text-[#404040]">Yükleniyor...</div>
                   ) : error ? (
@@ -759,7 +741,7 @@ export default function YolYardimModal({ onClose }) {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm text-[#404040] mb-1">Araç Segmenti</label>
+                        <label className="block text-sm text-[#ebebeb] mb-1">Araç Segmenti</label>
                         <select
                           value={aracBilgileri.tip}
                           onChange={(e) => setAracBilgileri({ ...aracBilgileri, tip: e.target.value })}
@@ -773,21 +755,21 @@ export default function YolYardimModal({ onClose }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm text-[#404040] mb-1">Marka</label>
+                        <label className="block text-sm text-[#ebebeb] mb-1">Marka</label>
                         <select
                           value={aracBilgileri.marka}
                           onChange={(e) => setAracBilgileri({ ...aracBilgileri, marka: e.target.value, model: '' })}
                           className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         >
                           <option value="">Marka Seçin</option>
-                          {vehicleData.aracMarkalari.map(marka => (
-                            <option key={marka} value={marka}>{marka}</option>
+                          {vehicleData.aracMarkalari.map((marka, index) => (
+                            <option key={`marka-${marka}-${index}`} value={marka}>{marka}</option>
                           ))}
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-sm text-[#404040] mb-1">Model</label>
+                        <label className="block text-sm text-[#ebebeb] mb-1">Model</label>
                         <select
                           value={aracBilgileri.model}
                           onChange={(e) => setAracBilgileri({ ...aracBilgileri, model: e.target.value })}
@@ -795,14 +777,14 @@ export default function YolYardimModal({ onClose }) {
                           className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:opacity-50"
                         >
                           <option value="">Model Seçin</option>
-                          {aracBilgileri.marka && vehicleData.aracModelleri[aracBilgileri.marka]?.map(model => (
-                            <option key={model} value={model}>{model}</option>
+                          {aracBilgileri.marka && vehicleData.aracModelleri[aracBilgileri.marka]?.map((model, index) => (
+                            <option key={`model-${model}-${index}`} value={model}>{model}</option>
                           ))}
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-sm text-[#404040] mb-1">Yıl</label>
+                        <label className="block text-sm text-[#ebebeb] mb-1">Yıl</label>
                         <select
                           value={aracBilgileri.yil}
                           onChange={(e) => setAracBilgileri({ ...aracBilgileri, yil: e.target.value })}
@@ -816,7 +798,7 @@ export default function YolYardimModal({ onClose }) {
                       </div>
 
                       <div className="sm:col-span-2">
-                        <label className="block text-sm text-[#404040] mb-1">Plaka</label>
+                        <label className="block text-sm text-[#ebebeb] mb-1">Plaka</label>
                         <input
                           type="text"
                           value={aracBilgileri.plaka}
@@ -831,7 +813,7 @@ export default function YolYardimModal({ onClose }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     Arıza Tipi
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -868,36 +850,23 @@ export default function YolYardimModal({ onClose }) {
                 {renderPriceOffer()}
                 {/* Rota ve Harita */}
                 <div className="bg-[#141414] rounded-lg border border-[#404040] overflow-hidden">
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="text-lg font-semibold text-white">Rota Bilgileri</h3>
+                  <div className="p-2 sm:p-4">
+                    <div className="flex text-center justify-center sm:items-center ">
                       <button
                         type="button"
                         onClick={() => setShowMap(showMap === 'route' ? null : 'route')}
-                        className="text-yellow-500 hover:text-yellow-400 transition-colors text-sm flex items-center gap-1 bg-[#202020] px-3 py-1.5 rounded-lg"
+                        className="text-yellow-500 hover:text-yellow-400 transition-colors text-xs text-center sm:text-sm items-center bg-[#202020] px-2 sm:px-3 py-1 rounded-lg"
                       >
-                        {showMap === 'route' ? 'Haritayı Kapat' : 'Haritayı Göster'}
+                        {showMap === 'route' ? 'Haritayı Gizle' : 'Haritayı Göster'}
                       </button>
                     </div>
-                    {routeInfo && (
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div className="bg-[#202020] rounded-lg p-2 text-center">
-                          <div className="text-[#404040] text-xs">Mesafe</div>
-                          <div className="text-white font-medium text-sm">{routeInfo.distance.toFixed(1)} km</div>
-                        </div>
-                        <div className="bg-[#202020] rounded-lg p-2 text-center">
-                          <div className="text-[#404040] text-xs">Süre</div>
-                          <div className="text-white font-medium text-sm">{Math.round(routeInfo.duration)} dk</div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                   {showMap === 'route' && (
-                    <div className="relative" style={{ height: '200px' }}>
+                    <div className="relative" style={{ height: '248px', minHeight: '120px', maxHeight: '248px' }}>
                       <GoogleMap
                         mapContainerStyle={{ width: '100%', height: '100%' }}
                         center={location || { lat: 40.9877, lng: 29.1267 }}
-                        zoom={13}
+                        zoom={11}
                         options={mapOptions}
                       >
                         {location && <Marker position={location} />}
@@ -933,7 +902,7 @@ export default function YolYardimModal({ onClose }) {
                   className="flex-1 py-2.5 px-4 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition-colors"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Lütfen Bekleyin...' : 'Siparişi Onayla'}
+                  {isSubmitting ? 'Lütfen Bekleyin...' : 'Devam Et'}
                 </button>
               </div>
             </form>
@@ -981,7 +950,7 @@ export default function YolYardimModal({ onClose }) {
                 {musteriBilgileri.musteriTipi === 'kurumsal' ? (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2 ">
                         Firma Adı
                       </label>
                       <input
@@ -994,7 +963,7 @@ export default function YolYardimModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Vergi Numarası
                       </label>
                       <input
@@ -1007,7 +976,7 @@ export default function YolYardimModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Vergi Dairesi
                       </label>
                       <input
@@ -1023,7 +992,7 @@ export default function YolYardimModal({ onClose }) {
                 ) : (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Ad
                       </label>
                       <input
@@ -1036,7 +1005,7 @@ export default function YolYardimModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Soyad
                       </label>
                       <input
@@ -1051,7 +1020,7 @@ export default function YolYardimModal({ onClose }) {
                     <div className="sm:col-span-2">
                       <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
                         <div className="flex items-center justify-between mb-3">
-                          <label className="text-sm font-medium text-[#404040]">
+                          <label className="text-sm font-medium text-[#ebebeb]">
                             Kimlik Bilgileri
                           </label>
                           <div className="flex items-center gap-2">
@@ -1069,7 +1038,7 @@ export default function YolYardimModal({ onClose }) {
                               }}
                               className="w-4 h-4 rounded border-[#404040] bg-[#141414] text-yellow-500 focus:ring-yellow-500 focus:ring-offset-[#141414]"
                             />
-                            <label htmlFor="tcVatandasi" className="text-sm text-[#404040]">
+                            <label htmlFor="tcVatandasi" className="text-sm text-[#ebebeb]">
                               TC Vatandaşıyım
                             </label>
                           </div>
@@ -1097,7 +1066,7 @@ export default function YolYardimModal({ onClose }) {
                   </>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     Telefon
                   </label>
                   <input
@@ -1114,7 +1083,7 @@ export default function YolYardimModal({ onClose }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     E-posta
                   </label>
                   <input
@@ -1148,11 +1117,11 @@ export default function YolYardimModal({ onClose }) {
               </div>
               <div className="mt-4 text-center">
                 <p className="text-xs text-[#404040]">
-                  Devam Et butonuna tıkladığınızda{' '}
-                  <a href="/kvkk" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
-                  <a href="/acik-riza" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</a>,{' '}
-                  <a href="/aydinlatma" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</a> ve{' '}
-                  <a href="/sorumluluk-reddi" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</a> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
+                  Siparişi Onayla butonuna tıkladığınızda{' '}
+                  <a href="/docs/KVKKvegizlilik.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
+                  <a href="/docs/acikrizametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</a>,{' '}
+                  <a href="/docs/aydinlatmametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</a> ve{' '}
+                  <a href="/docs/sorumlulukreddibeyani.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</a> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
                 </p>
               </div>
             </form>

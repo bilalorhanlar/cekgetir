@@ -1,7 +1,7 @@
 'use client'
 
 // Eğer React Icons kullanacaksan:
-import { FaInstagram, FaXTwitter, FaTiktok, FaYoutube } from 'react-icons/fa6'
+import { FaInstagram, FaXTwitter, FaLinkedin, FaYoutube } from 'react-icons/fa6'
 // Logo olarak resim kullanacaksan:
 import Image from 'next/image'
 import Link from 'next/link'
@@ -167,6 +167,12 @@ export default function Footer() {
             </ul>
           </div>
         </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-4 space-x-8  text-xs text-gray-400 md:-mt-8 text-center">
+            <a href="/docs/KVKKvegizlilik.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">KVKK ve Gizlilik</a>
+            <a href="/docs/acikrizametni.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">Açık Rıza Metni</a>
+            <a href="/docs/aydinlatmametni.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">Aydınlatma Metni</a>
+            <a href="/docs/sorumlulukreddibeyani.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">Sorumluluk Reddi Beyanı</a>
+          </div>
 
         {/* Alt Footer */}
         <div className="mt-12 pt-8 border-t border-gray-700">
@@ -194,13 +200,13 @@ export default function Footer() {
                 <FaXTwitter className="h-5 w-5 sm:h-6 sm:w-6" />
               </a>
               <a 
-                href="#" 
+                href="https://www.linkedin.com/company/cekgetir" 
                 className="text-gray-400 hover:text-yellow-400 transition-colors transform hover:scale-110"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <span className="sr-only">TikTok</span>
-                <FaTiktok className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span className="sr-only">LinkedIn</span>
+                <FaLinkedin className="h-5 w-5 sm:h-6 sm:w-6" />
               </a>
             </div>
           </div>

@@ -812,7 +812,7 @@ export default function OzelCekiciModal({ onClose }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[#404040] mb-2">
+          <label className="block text-sm font-medium text-[#ebebeb] mb-2">
             Araç Segmenti
           </label>
           <select
@@ -827,7 +827,7 @@ export default function OzelCekiciModal({ onClose }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#404040] mb-2">
+          <label className="block text-sm font-medium text-[#ebebeb] mb-2">
             Marka
           </label>
           <select
@@ -842,7 +842,7 @@ export default function OzelCekiciModal({ onClose }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#404040] mb-2">
+          <label className="block text-sm font-medium text-[#ebebeb] mb-2">
             Model
           </label>
           <select
@@ -858,7 +858,7 @@ export default function OzelCekiciModal({ onClose }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#404040] mb-2">
+          <label className="block text-sm font-medium text-[#ebebeb] mb-2">
             Yıl
           </label>
           <select
@@ -873,7 +873,7 @@ export default function OzelCekiciModal({ onClose }) {
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-[#404040] mb-2">
+          <label className="block text-sm font-medium text-[#ebebeb] mb-2">
             Plaka
           </label>
           <input
@@ -887,7 +887,7 @@ export default function OzelCekiciModal({ onClose }) {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-[#404040] mb-2">
+        <label className="block text-sm font-medium text-[#ebebeb] mb-2">
           Araç Durumu
         </label>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -936,7 +936,7 @@ export default function OzelCekiciModal({ onClose }) {
               <div className="space-y-4">
                 {/* Alınacak Konum */}
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     Teslim Alınacak Konum
                   </label>
                   <div className="relative">
@@ -1008,7 +1008,7 @@ export default function OzelCekiciModal({ onClose }) {
 
                 {/* Teslim Edilecek Konum */}
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     Teslim Edilecek Konum
                   </label>
                   <div className="relative">
@@ -1142,44 +1142,39 @@ export default function OzelCekiciModal({ onClose }) {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Fiyat Teklifi */}
                     <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-white">Fiyat Teklifi</h3>
-                        <div className="flex items-center gap-2">
-                          {isNightTime && (
-                            <div className="text-[10px] text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded max-w-[180px]">
-                              Gece Tarifesi (22:00 - 08:00) • Gündüz daha uygun
-                            </div>
-                          )}
-                          <div className="text-3xl font-bold text-yellow-500">
-                            {price?.toLocaleString('tr-TR')} TL
-                          </div>
-                          <div className="text-xs text-[#404040] mt-1">Fiyatlara KDV dahildir</div>
-                        </div>
-                      </div>
                       <div className="block text-sm">
                         <div className="bg-[#202020] rounded-lg p-2 mb-3">
-                          <div className="text-[#404040]">Araç</div>
+                          <div className="text-white/60">Araç</div>
                           <div className="text-white font-medium truncate" title={`${aracBilgileri.marka} ${aracBilgileri.model} (${aracBilgileri.yil})`}>
                             {aracBilgileri.marka} {aracBilgileri.model} ({aracBilgileri.yil})
                           </div>
                         </div>
                         <div className="bg-[#202020] rounded-lg p-2 mb-3">
-                          <div className="text-[#404040]">Plaka</div>
+                          <div className="text-white/60">Plaka</div>
                           <div className="text-white font-medium">{aracBilgileri.plaka}</div>
                         </div>
                         <div className="bg-[#202020] rounded-lg p-2 mb-3">
-                          <div className="text-[#404040]">Teslim Alınacak Konum</div>
+                          <div className="text-white/60">Teslim Alınacak Konum</div>
                           <div className="text-white font-medium text-xs" title={pickupLocation?.address}>
                             {pickupLocation?.address}
                           </div>
                         </div>
                         <div className="bg-[#202020] rounded-lg p-2">
-                          <div className="text-[#404040]">Teslim Edilecek Konum</div>
+                          <div className="text-white/60">Teslim Edilecek Konum</div>
                           <div className="text-white font-medium text-xs" title={deliveryLocation?.address}>
                             {deliveryLocation?.address}
                           </div>
                         </div>
-                        <button
+                      </div>
+                      <div className="flex items-center justify-between mb-3 mt-3">
+                        Toplam : <span className="text-3xl font-bold text-yellow-500">{price?.toLocaleString('tr-TR')} TL</span>
+                      </div>
+                      {isNightTime && (
+                        <div className="text-xs text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded w-full">
+                          Gece Tarifesi • Önerilen (08:00 - 22:00)
+                        </div>
+                      )}
+                      <button
                           type="button"
                           onClick={() => {
                             const isIstanbul = sehirFiyatlandirma && (
@@ -1215,12 +1210,7 @@ export default function OzelCekiciModal({ onClose }) {
                               'KDV (%20)': kdv.toLocaleString('tr-TR') + ' TL',
                               'Genel Toplam': Math.round(finalPrice).toLocaleString('tr-TR') + ' TL'
                             });
-                          }}
-                          className="w-full mt-3 py-2 px-4 bg-[#202020] text-[#404040] hover:text-white transition-colors rounded-lg text-sm font-medium"
-                        >
-                          Fiyat Detaylarını Gör
-                        </button>
-                      </div>
+                          }} className="text-xs text-[#404040] mt-3">Fiyatlara KDV dahildir</button>
                     </div>
 
                     {/* Rota ve Harita */}
@@ -1340,7 +1330,7 @@ export default function OzelCekiciModal({ onClose }) {
                 {musteriBilgileri.musteriTipi === 'kurumsal' ? (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Firma Adı
                       </label>
                       <input
@@ -1353,7 +1343,7 @@ export default function OzelCekiciModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Vergi Numarası
                       </label>
                       <input
@@ -1366,7 +1356,7 @@ export default function OzelCekiciModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Vergi Dairesi
                       </label>
                       <input
@@ -1382,7 +1372,7 @@ export default function OzelCekiciModal({ onClose }) {
                 ) : (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Ad
                       </label>
                       <input
@@ -1395,7 +1385,7 @@ export default function OzelCekiciModal({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#404040] mb-2">
+                      <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                         Soyad
                       </label>
                       <input
@@ -1410,7 +1400,7 @@ export default function OzelCekiciModal({ onClose }) {
                     <div className="sm:col-span-2">
                       <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
                         <div className="flex items-center justify-between mb-3">
-                          <label className="text-sm font-medium text-[#404040]">
+                          <label className="text-sm font-medium text-[#ebebeb]">
                             Kimlik Bilgileri
                           </label>
                           <div className="flex items-center gap-2">
@@ -1428,7 +1418,7 @@ export default function OzelCekiciModal({ onClose }) {
                               }}
                               className="w-4 h-4 rounded border-[#404040] bg-[#141414] text-yellow-500 focus:ring-yellow-500 focus:ring-offset-[#141414]"
                             />
-                            <label htmlFor="tcVatandasi" className="text-sm text-[#404040]">
+                            <label htmlFor="tcVatandasi" className="text-sm text-[#ebebeb]">
                               TC Vatandaşıyım
                             </label>
                           </div>
@@ -1456,7 +1446,7 @@ export default function OzelCekiciModal({ onClose }) {
                   </>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     Telefon
                   </label>
                   <input
@@ -1473,7 +1463,7 @@ export default function OzelCekiciModal({ onClose }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#404040] mb-2">
+                  <label className="block text-sm font-medium text-[#ebebeb] mb-2">
                     E-posta
                   </label>
                   <input
@@ -1506,7 +1496,7 @@ export default function OzelCekiciModal({ onClose }) {
               <div className="mt-4 text-center">
                 <p className="text-xs text-[#404040]">
                   Siparişi Onayla butonuna tıkladığınızda{' '}
-                  <a href="/kvkk" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
+                  <a href="/docs/KVKKvegizlilik.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
                   <a href="/acik-riza" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</a>,{' '}
                   <a href="/aydinlatma" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</a> ve{' '}
                   <a href="/sorumluluk-reddi" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</a> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.

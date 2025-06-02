@@ -53,29 +53,36 @@ export default function Contact() {
       <Navbar />
       <main className="min-h-screen bg-white">
         {/* Hero Section */}
-        <section className="relative h-[50vh] sm:h-[40vh] flex items-center justify-center">
+        <section className="relative h-[40vh] sm:h-[65vh] md:h-[100vh] flex text-center items-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/images/home.jpeg"
-              alt="Çekgetir İletişim"
+              src="/images/sari.jpeg"
+              alt="Çekgetir SSS"
               fill
-              className="object-cover brightness-50"
+              className="object-cover transform scale-105"
+              priority
             />
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-black/50 to-white"></div>
           </div>
-          <div className="relative z-10 text-center text-white px-4 sm:px-6">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">İletişim</h1>
-            <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto">7/24 Tüm Yol Yardım Hizmetleri İçin Bize Ulaşın</p>
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-16">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-3xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
+                İletişim
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-2xl mx-auto leading-relaxed md:mb-20 lg:mb-24">
+              Bizimle iletişime geçmek için aşağıdaki formu doldurabilir ya da diğer iletişim kanallarımızdan ulaşabilirsiniz
+              </p>
+            </div>
           </div>
         </section>
-
         {/* İletişim Bilgileri ve Form */}
-        <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6">
+        <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 -mt-24 sm:-mt-48 md:-mt-64 relative z-10  ">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
             {/* İletişim Bilgileri */}
-            <div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-10 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-black">İletişim Bilgileri</h2>
               
-              <div className="space-y-4 sm:space-y-6">
+              <div className="space-y-8 sm:space-y-14">
                 <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400 rounded-full flex items-center justify-center">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +152,7 @@ export default function Contact() {
             </div>
 
             {/* İletişim Formu */}
-            <div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-10 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-black">Bize Ulaşın</h2>
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 <div>
@@ -204,12 +211,15 @@ export default function Contact() {
                     onChange={handleChange}
                     className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500 text-sm sm:text-base text-gray-900"
                   >
+                    <option value="is-ortakligi">İş Ortaklığı</option>
                     <option value="genel">Genel Bilgi</option>
+                    <option value="genel">Şikayet</option>
+                    <option value="genel">Öneri</option>
+                    <option value="genel">İstek</option>
+                    <option value="genel">Toplu Çekici Hizmeti</option>
                     <option value="cekici">Çekici Hizmeti</option>
-                    <option value="lastik">Lastik Yardımı</option>
-                    <option value="aku">Akü Takviye</option>
-                    <option value="yakit">Yakıt İkmali</option>
-                    <option value="kurtarma">Araç Kurtarma</option>
+                    <option value="lastik">Yol Yardım Hizmeti</option>
+                    <option value="kurtarma">Araç Kurtarma Hizmeti</option>
                   </select>
                 </div>
 
