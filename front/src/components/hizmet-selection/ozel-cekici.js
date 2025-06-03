@@ -1528,11 +1528,11 @@ export default function OzelCekiciModal({ onClose }) {
                   <div className="space-y-3">
                     <div className="bg-[#202020] rounded-lg p-3">
                       <div className="text-[#404040] text-sm mb-1">Banka</div>
-                      <div className="text-white font-medium">Garanti Bankası</div>
+                      <div className="text-white font-medium">QNB Finansbank</div>
                     </div>
                     <div className="bg-[#202020] rounded-lg p-3">
                       <div className="text-[#404040] text-sm mb-1">IBAN</div>
-                      <div className="text-white font-medium">TR12 3456 7890 1234 5678 9012 34</div>
+                      <div className="text-white font-medium">TR65 0011 1000 0000 0098 6222 45</div>
                     </div>
                     <div className="bg-[#202020] rounded-lg p-3">
                       <div className="text-[#404040] text-sm mb-1">Tutar</div>

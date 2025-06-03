@@ -196,7 +196,7 @@ export default function PnrSorgula() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className=" rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-xs mb-1">Banka</span>
-                      <span className="text-white font-medium">Garanti Bankası</span>
+                      <span className="text-white font-medium">QNB Finansbank</span>
                     </div>
                     <div className=" rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-xs mb-1">Hesap Sahibi</span>
@@ -204,7 +204,7 @@ export default function PnrSorgula() {
                     </div>
                     <div className="bg-[#141414] rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-xs mb-1">IBAN</span>
-                      <span className="text-white font-mono tracking-widest">TR12 3456 7890 1234 5678 9012 34</span>
+                      <span className="text-white font-mono tracking-widest">56 7890 1234 5678 9012 34</span>
                     </div>
                     <div className=" rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-xs mb-1">Açıklama</span>

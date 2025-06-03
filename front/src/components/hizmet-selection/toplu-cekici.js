@@ -2010,10 +2010,10 @@ export default function TopluCekiciModal({ onClose }) {
                     <div className="text-[#ebebeb] text-sm mb-1">Ödeme Bilgileri</div>
                     <div className="space-y-2">
                       <div className="text-white">
-                        <span className="font-medium">Banka:</span> Garanti Bankası
+                        <span className="font-medium">Banka:</span> QNB Finansbank
                       </div>
                       <div className="text-white">
-                        <span className="font-medium">IBAN:</span> TR12 3456 7890 1234 5678 9012 34
+                        <span className="font-medium">IBAN:</span> TR65 0011 1000 0000 0098 6222 45
                       </div>
                       <div className="text-white">
                         <span className="font-medium">Hesap Sahibi:</span> Çekgetir A.Ş.
