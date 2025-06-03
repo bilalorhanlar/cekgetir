@@ -91,6 +91,24 @@ export class OrderService {
         console.log('Bulk vehicles saved successfully');
       }
 
+      // E-posta gönder
+      if (savedOrder.customerEmail) {
+        try {
+          console.log('Attempting to send order creation email');
+          await this.emailService.sendOrderCreationEmail(
+            savedOrder.customerEmail,
+            savedOrder.id,
+            savedOrder.pnrNo,
+            savedOrder.serviceType,
+            savedOrder.price,
+          );
+          console.log('Order creation email sent successfully');
+        } catch (emailError) {
+          console.error('Email gönderme hatası:', emailError);
+          // Email hatası sipariş oluşturmayı etkilemesin
+        }
+      }
+
       // SMS gönder
       try {
         console.log('Attempting to send SMS for order:', savedOrder);

@@ -241,4 +241,66 @@ export class EmailService {
       throw error;
     }
   }
+
+  async sendOrderCreationEmail(
+    to: string,
+    orderId: string,
+    pnrNo: string,
+    serviceType: string,
+    price: number,
+  ) {
+    const serviceTypeText = {
+      YOL_YARDIM: 'Yol Yardım',
+      OZEL_CEKICI: 'Özel Çekici',
+      TOPLU_CEKICI: 'Toplu Çekici',
+    }[serviceType] || serviceType;
+
+    const subject = `Yeni Sipariş Oluşturuldu - ${pnrNo}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Yeni Sipariş</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+        <div style="background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Yeni Siparişiniz Oluşturuldu</h2>
+          <p>Sayın Müşterimiz,</p>
+          <p>${pnrNo} numaralı siparişiniz başarıyla oluşturulmuştur.</p>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e9ecef;">
+            <p style="margin: 10px 0;"><strong>Sipariş Numarası:</strong> ${pnrNo}</p>
+            <p style="margin: 10px 0;"><strong>Hizmet Türü:</strong> ${serviceTypeText}</p>
+            <p style="margin: 10px 0;"><strong>Tutar:</strong> ${price.toLocaleString('tr-TR')} TL</p>
+            <p style="margin: 10px 0;"><strong>Durum:</strong> Onay Bekleniyor</p>
+          </div>
+          <p>Bizi tercih ettiğiniz için teşekkür ederiz.</p>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+            <p style="color: #666; font-size: 14px;">Saygılarımızla,<br>Çekgetir Ekibi</p>
+            <p style="color: #666; font-size: 12px; margin-top: 20px;">
+              Bu e-posta ${process.env.SMTP_FROM} adresinden gönderilmiştir.<br>
+              E-posta almak istemiyorsanız <a href="mailto:${process.env.SMTP_FROM}?subject=unsubscribe" style="color: #666;">buraya tıklayın</a>.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      this.logger.debug(`Attempting to send order creation email to ${to}`);
+      const info = await this.sendWithRetry({
+        from: `"Çekgetir" <${process.env.SMTP_FROM}>`,
+        to,
+        subject,
+        html,
+        replyTo: process.env.SMTP_REPLY_TO,
+      });
+      return info;
+    } catch (error) {
+      this.logger.error('Email gönderimi sırasında hata:', error);
+      throw error;
+    }
+  }
 } 

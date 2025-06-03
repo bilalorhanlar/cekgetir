@@ -192,9 +192,6 @@ export class VariablesSeedService {
                         fiyat.kmBasiUcret
                     );
                 }
-                console.log('Toplu çekici KM fiyatları başarıyla oluşturuldu');
-            } else {
-                console.log('Toplu çekici KM fiyatları zaten mevcut, atlanıyor...');
             }
         } catch (error) {
             console.error('Toplu çekici KM fiyatları oluşturulurken hata:', error);

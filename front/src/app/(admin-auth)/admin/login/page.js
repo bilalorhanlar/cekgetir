@@ -108,7 +108,6 @@ export default function AdminLoginPage() {
                 priority
               />
             </div>
-            <span className="text-3xl font-bold text-yellow-400 tracking-wide">Çekgetir</span>
           </div>
 
           {/* Title */}

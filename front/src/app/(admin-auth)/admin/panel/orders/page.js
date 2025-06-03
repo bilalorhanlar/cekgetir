@@ -14,6 +14,7 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [viewMode, setViewMode] = useState('grid')
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' })
   
 
   useEffect(() => {
@@ -68,7 +69,6 @@ export default function OrdersPage() {
       setLoading(true)
       setError(null)
       const response = await api.get('api/orders')
-      console.log('Siparişler yüklendi:', response.data)
       setOrders(response.data)
     } catch (error) {
       console.error('Siparişler yüklenirken hata oluştu:', error)
@@ -137,6 +137,38 @@ export default function OrdersPage() {
     return matchesSearch && matchesStatus
   })
 
+  const handleSort = (key) => {
+    let direction = 'asc'
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+  }
+
+  const sortedAndFilteredOrders = [...filteredOrders].sort((a, b) => {
+    if (sortConfig.key === 'createdAt') {
+      return sortConfig.direction === 'asc' 
+        ? new Date(a.createdAt) - new Date(b.createdAt)
+        : new Date(b.createdAt) - new Date(a.createdAt)
+    }
+    if (sortConfig.key === 'price') {
+      return sortConfig.direction === 'asc' 
+        ? a.price - b.price
+        : b.price - a.price
+    }
+    if (sortConfig.key === 'status') {
+      return sortConfig.direction === 'asc'
+        ? a.status.localeCompare(b.status)
+        : b.status.localeCompare(a.status)
+    }
+    return 0
+  })
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return null
+    return sortConfig.direction === 'asc' ? '↑' : '↓'
+  }
+
   return (
     <div className="min-h-screen bg-[#141414]">
       <AdminNavbar />
@@ -145,7 +177,7 @@ export default function OrdersPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">Siparişler</h1>
-              <p className="text-gray-400 mt-1">Toplam {filteredOrders.length} sipariş</p>
+              <p className="text-gray-400 mt-1">Toplam {sortedAndFilteredOrders.length} sipariş</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               <div className="relative flex-1 md:flex-none">
@@ -172,6 +204,19 @@ export default function OrdersPage() {
                 <option value="TRANSFER_SURECINDE">Transfer Sürecinde</option>
                 <option value="TAMAMLANDI">Tamamlandı</option>
                 <option value="IPTAL_EDILDI">İptal Edildi</option>
+              </select>
+              <select
+                value={`${sortConfig.key}-${sortConfig.direction}`}
+                onChange={(e) => {
+                  const [key, direction] = e.target.value.split('-')
+                  setSortConfig({ key, direction })
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+              >
+                <option value="createdAt-desc">Tarih (Yeni → Eski)</option>
+                <option value="createdAt-asc">Tarih (Eski → Yeni)</option>
+                <option value="price-desc">Tutar (Yüksek → Düşük)</option>
+                <option value="price-asc">Tutar (Düşük → Yüksek)</option>
               </select>
               <div className="flex items-center gap-2 bg-[#202020] rounded-lg border border-[#404040] p-1">
                 <button
@@ -209,7 +254,7 @@ export default function OrdersPage() {
                 Tekrar Dene
               </button>
             </div>
-          ) : filteredOrders.length === 0 ? (
+          ) : sortedAndFilteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">Sipariş bulunamadı</div>
               <button 
@@ -224,7 +269,7 @@ export default function OrdersPage() {
             </div>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredOrders.map((order) => (
+              {sortedAndFilteredOrders.map((order) => (
                 <div key={order.id} className="bg-[#202020] rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -307,17 +352,23 @@ export default function OrdersPage() {
                 <table className="w-full">
                   <thead className="hidden md:table-header-group">
                     <tr className="border-b border-[#404040]">
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Talep No</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-400 cursor-pointer hover:text-white" onClick={() => handleSort('createdAt')}>
+                        Talep No {getSortIcon('createdAt')}
+                      </th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Müşteri</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Araç</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Hizmet</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Tutar</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Durum</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-400 cursor-pointer hover:text-white" onClick={() => handleSort('price')}>
+                        Tutar {getSortIcon('price')}
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-400 cursor-pointer hover:text-white" onClick={() => handleSort('status')}>
+                        Durum {getSortIcon('status')}
+                      </th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">İşlemler</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#404040]">
-                    {filteredOrders.map((order) => (
+                    {sortedAndFilteredOrders.map((order) => (
                       <tr key={order.id} className="hover:bg-[#2a2a2a] transition-colors block md:table-row">
                         <td className="px-6 py-4 block md:table-cell">
                           <div className="flex justify-between items-center md:block">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '@/utils/axios'
 import Navbar from '@/components/Navbar'
 
 export default function PnrSorgula() {
@@ -25,7 +25,7 @@ export default function PnrSorgula() {
     setOrder(null)
 
     try {
-      const response = await axios.get(`/api/orders/pnr/${pnrNumber.toUpperCase()}`)
+      const response = await api.get(`/api/orders/pnr/${pnrNumber.toUpperCase()}`)
       setOrder(response.data)
       // Başarılı sorgulamada PNR'ı localStorage'a kaydet
       localStorage.setItem('lastPnr', pnrNumber)
