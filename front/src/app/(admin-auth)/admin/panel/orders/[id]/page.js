@@ -187,9 +187,9 @@ export default function OrderDetailPage({ params }) {
               </div>
               <div>
                 <div className="text-gray-400 text-sm mb-1">Bırakılacak Yer</div>
-                <div className="text-white text-lg">{order.dropoffLocation}</div>
+                <div className="text-white text-lg">{order.dropoffLocation || order.destinationLocation}</div>
                 {order.isDeliveryToParking && (
-                  <div className="text-yellow-500 text-sm mt-1">Otopark : {order.destinationLocation}</div>
+                  <div className="text-yellow-500 text-sm mt-1">Otoparka Bırakılacak</div>
                 )}
               </div>
             </div>

@@ -779,7 +779,7 @@ export default function OzelCekiciModal({ onClose }) {
           vergiDairesi: musteriBilgileri.vergiDairesi
         },
         pickupLocation: pickupLocation.address,
-        deliveryLocation: deliveryLocation.address,
+        dropoffLocation: deliveryLocation.address,
         isPickupFromParking: false,
         isDeliveryToParking: false
       };
