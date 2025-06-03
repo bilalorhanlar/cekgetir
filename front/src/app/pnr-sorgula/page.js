@@ -204,7 +204,7 @@ export default function PnrSorgula() {
                     </div>
                     <div className="bg-[#141414] rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-xs mb-1">IBAN</span>
-                      <span className="text-white font-mono tracking-widest">56 7890 1234 5678 9012 34</span>
+                      <span className="text-white font-mono tracking-widest">TR65 0011 1000 0000 0098 6222 45</span>
                     </div>
                     <div className=" rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-xs mb-1">Açıklama</span>
