@@ -59,19 +59,19 @@ export class Order {
   @Column({ nullable: true })
   pickupLocation: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 6 })
   pickupLocationLat: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 6 })
   pickupLocationLng: number;
 
   @Column({ nullable: true })
   dropoffLocation: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 6 })
   dropoffLocationLat: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 6 })
   dropoffLocationLng: number;
 
   @Column({ type: 'boolean', default: false })
