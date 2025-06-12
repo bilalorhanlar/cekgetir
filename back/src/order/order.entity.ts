@@ -49,6 +49,12 @@ export class Order {
   @Column({ nullable: true })
   breakdownLocation: string;
 
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 6 })
+  breakdownLocationLat: number;
+
+  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 6 })
+  breakdownLocationLng: number;
+
   @Column({ nullable: true })
   breakdownDescription: string;
 

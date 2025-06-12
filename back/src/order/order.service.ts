@@ -48,11 +48,17 @@ export class OrderService {
       serviceType: orderData.serviceType || 'YOL_YARDIM',
       // Yol Yardım için konum bilgileri
       breakdownLocation: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownLocation : null,
+      breakdownLocationLat: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownLocationLat : null,
+      breakdownLocationLng: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownLocationLng : null,
       breakdownDescription: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownDescription : null,
       destinationLocation: orderData.serviceType === 'YOL_YARDIM' ? orderData.destinationLocation : null,
       // Özel ve Toplu Çekici için konum bilgileri
       pickupLocation: orderData.serviceType !== 'YOL_YARDIM' ? orderData.pickupLocation : null,
+      pickupLocationLat: orderData.serviceType !== 'YOL_YARDIM' ? orderData.pickupLocationLat : null,
+      pickupLocationLng: orderData.serviceType !== 'YOL_YARDIM' ? orderData.pickupLocationLng : null,
       dropoffLocation: orderData.serviceType !== 'YOL_YARDIM' ? orderData.dropoffLocation : null,
+      dropoffLocationLat: orderData.serviceType !== 'YOL_YARDIM' ? orderData.dropoffLocationLat : null,
+      dropoffLocationLng: orderData.serviceType !== 'YOL_YARDIM' ? orderData.dropoffLocationLng : null,
       isPickupFromParking: orderData.isPickupFromParking || false,
       isDeliveryToParking: orderData.isDeliveryToParking || false,
       vehicleSegment: orderData.vehicles?.[0]?.tip || '',
