@@ -242,11 +242,26 @@ export default function PnrSorgula() {
                       <>
                         <div>
                           <div className="text-[#bdbdbd] text-sm mb-1">Teslim Alınacak</div>
-                          <div className="text-white font-medium">{order.pickupLocation}</div>
+                          <div>
+                            <div className="text-white font-medium">{order.pickupLocation}</div>
+                            <button 
+                              onClick={() => {
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${order.pickupLocationLat},${order.pickupLocationLng}`, '_blank')
+                              }}
+                              className="text-white bg-yellow-500 px-2 py-1 rounded-md font-medium">Adresi Görüntüle</button>
+                          </div>
+                          
                         </div>
                         <div>
                           <div className="text-[#bdbdbd] text-sm mb-1">Bırakılacak</div>
-                          <div className="text-white font-medium">{order.dropoffLocation}</div>
+                          <div>
+                            <div className="text-white font-medium">{order.dropoffLocation}</div>
+                            <button 
+                              onClick={() => {
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${order.dropoffLocationLat},${order.dropoffLocationLng}`, '_blank')
+                              }}
+                              className="text-white bg-yellow-500 px-2 py-1 rounded-md font-medium">Adresi Görüntüle</button>
+                          </div>
                         </div>
                       </>
                     )}

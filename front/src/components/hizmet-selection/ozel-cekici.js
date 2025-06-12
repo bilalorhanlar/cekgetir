@@ -1,10 +1,22 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { GoogleMap, Marker, useLoadScript, DirectionsRenderer } from '@react-google-maps/api'
 import api from '@/utils/axios'
 import axios from 'axios'
 import { toast } from 'react-hot-toast'
+import dynamic from "next/dynamic";
+
+// Leaflet'i SSR olmadan sadece client'ta render etmek için
+const MapComponent = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+});
+
+// LocationPicker bileşenini dinamik olarak import et
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
+  ssr: false,
+});
+
 
 const libraries = ['places']
 
@@ -89,6 +101,23 @@ export default function OzelCekiciModal({ onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const autocompleteService = useRef(null)
   const [extraFee, setExtraFee] = useState(0)
+  const [sehir, setSehir] = useState(null)
+
+  // MapComponent için memoized location objeler
+  const memoizedStartLocation = useMemo(() => 
+    pickupLocation ? { lat: pickupLocation.lat, lng: pickupLocation.lng } : null, 
+    [pickupLocation?.lat, pickupLocation?.lng]
+  )
+  
+  const memoizedEndLocation = useMemo(() => 
+    deliveryLocation ? { lat: deliveryLocation.lat, lng: deliveryLocation.lng } : null, 
+    [deliveryLocation?.lat, deliveryLocation?.lng]
+  )
+
+  // MapComponent için memoized callback
+  const handleValuesChange = useCallback((distance, duration) => {
+    setRouteInfo({ distance, duration })
+  }, [])
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
@@ -97,6 +126,9 @@ export default function OzelCekiciModal({ onClose }) {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("111111111111111111111111111111")
+      console.log("111111111111111111111111111111")
+      console.log("111111111111111111111111111111")
       try {
         setLoading(true);
         const [
@@ -149,43 +181,30 @@ export default function OzelCekiciModal({ onClose }) {
     }
   }, [isLoaded])
 
+  const handleCityChange = (city) => {
+    setSehir(city);
+  }
+
+  const getCity = () => {
+    return sehir;
+  }
   // Konumdan adres reverse geocode için
   const getAddressFromLatLng = async (lat, lng) => {
-    if (!window.google) return ''
-    const geocoder = new window.google.maps.Geocoder()
     return new Promise((resolve) => {
-      geocoder.geocode({ location: { lat, lng } }, async (results, status) => {
-        if (status === 'OK' && results[0]) {
-          const address = results[0].formatted_address;
-          
-          // Şehir bilgisini bul
-          let sehir = '';
-          for (const component of results[0].address_components) {
-            if (component.types.includes('administrative_area_level_1')) {
-              sehir = component.long_name;
-              break;
-            }
-          }
-
           // Şehir fiyatlandırmasını getir
           if (sehir) {
             try {
               const normalizedSehir = normalizeSehirAdi(sehir);
-              const response = await api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`);
+              const response = api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`);
               setSehirFiyatlandirma(response.data);
             } catch (error) {
               console.error('Şehir fiyatlandırması getirilemedi:', error);
               setSehirFiyatlandirma(null);
             }
           }
-
-          resolve(address);
-        } else {
-          resolve('');
-        }
       });
-    });
-  }
+    };
+  
 
   // Fiyat hesaplama fonksiyonu
   const fiyatHesapla = useCallback(() => {
@@ -232,6 +251,8 @@ export default function OzelCekiciModal({ onClose }) {
 
   // Fiyat hesaplamayı useEffect ile tetikle
   useEffect(() => {
+    console.log("222222222222222222222222")
+
     if (
       pickupLocation &&
       deliveryLocation &&
@@ -328,12 +349,7 @@ export default function OzelCekiciModal({ onClose }) {
       setDirections(result)
       setRouteInfo({
         distance,
-        duration,
-        steps: route.legs[0].steps.map(step => ({
-          instruction: step.instructions,
-          distance: step.distance.text,
-          duration: step.duration.text
-        }))
+        duration
       })
     } catch (error) {
       console.error('Error calculating route:', error)
@@ -433,26 +449,8 @@ export default function OzelCekiciModal({ onClose }) {
     }
   }
 
-  const handleMapClick = async (e) => {
-    const lat = e.latLng.lat()
-    const lng = e.latLng.lng()
-    const address = await getAddressFromLatLng(lat, lng)
+  const handleMapClick = async (lat, lng , address, sehir) => {
     
-    // Şehir bilgisini bul
-    let sehir = ''
-    if (window.google) {
-      const geocoder = new window.google.maps.Geocoder()
-      const result = await geocoder.geocode({ location: { lat, lng } })
-      if (result.results[0]) {
-        for (const component of result.results[0].address_components) {
-          if (component.types.includes('administrative_area_level_1')) {
-            sehir = component.long_name
-            break
-          }
-        }
-      }
-    }
-
     const newLocation = { lat, lng, address, sehir }
 
     if (activeLocation === 'pickup') {
@@ -637,6 +635,7 @@ export default function OzelCekiciModal({ onClose }) {
   }
 
   useEffect(() => {
+    console.log("333333333333333333333333333333")
     if (isLoaded && window.google) {
       const pickupInput = document.getElementById('pickup-input');
       const deliveryInput = document.getElementById('delivery-input');
@@ -737,14 +736,15 @@ export default function OzelCekiciModal({ onClose }) {
   };
 
   // Add useEffect for route calculation
-  useEffect(() => {
-    if (pickupLocation && deliveryLocation && isLoaded) {
-      calculateRoute()
-    }
-  }, [pickupLocation, deliveryLocation, isLoaded, calculateRoute])
+//  useEffect(() => {
+//    if (pickupLocation && deliveryLocation && isLoaded) {
+//      calculateRoute()
+//    }
+//  }, [pickupLocation, deliveryLocation, isLoaded, calculateRoute])
 
   // Add useEffect to show route map when both locations are selected
   useEffect(() => {
+    console.log("444444444444444444444444444444")
     if (
       step === 2 &&
       pickupLocation &&
@@ -779,6 +779,10 @@ export default function OzelCekiciModal({ onClose }) {
           vergiDairesi: musteriBilgileri.vergiDairesi
         },
         pickupLocation: pickupLocation.address,
+        pickupLocationLat: pickupLocation.lat,
+        pickupLocationLng: pickupLocation.lng,
+        dropoffLocationLat: deliveryLocation.lat,
+        dropoffLocationLng: deliveryLocation.lng,
         dropoffLocation: deliveryLocation.address,
         isPickupFromParking: false,
         isDeliveryToParking: false
@@ -1077,40 +1081,39 @@ export default function OzelCekiciModal({ onClose }) {
                     )}
                   </div>
                 </div>
-
-                {isLoaded && activeMapPanel && (
-                  <div style={mapStyles} className="relative mt-2">
-                    <GoogleMap
-                      mapContainerStyle={mapStyles}
-                      center={
-                        pickupLocation && deliveryLocation
-                          ? {
-                              lat: (pickupLocation.lat + deliveryLocation.lat) / 2,
-                              lng: (pickupLocation.lng + deliveryLocation.lng) / 2
-                            }
-                          : { lat: 41.0082, lng: 28.9784 }
-                      }
-                      zoom={13}
-                      options={mapOptions}
-                      onClick={handleMapClick}
-                      onLoad={map => (mapRef.current = map)}
-                    >
-                      {pickupLocation && <Marker position={pickupLocation} clickable={false} />}
-                      {deliveryLocation && <Marker position={deliveryLocation} clickable={false} />}
-                      {directions && (
-                        <DirectionsRenderer
-                          directions={directions}
-                          options={{
-                            suppressMarkers: true,
-                            polylineOptions: {
-                              strokeColor: '#EAB308',
-                              strokeWeight: 5,
-                              strokeOpacity: 0.8
-                            }
-                          }}
-                        />
-                      )}
-                    </GoogleMap>
+                {isLoaded && activeMapPanel === "pickup" && (
+                  <div className=" mt-2">
+                    <LocationPicker
+                      isStartPicker={true}
+                      onLocationChange={(lat, lng, address) => {
+                        setPickupLocation({lat: lat, lng: lng, address: address});
+                        setPickupSearchValue("");
+                        handleMapClick(lat, lng, address, getCity());
+                        setActiveMapPanel("delivery");
+                      }}
+                      onCityChange={ (city) => {
+                        setSehir(city);
+                      }}
+                      onCalculateRoute={ () => {}}
+                      mapStyles={mapStyles}
+                    />
+                  </div>
+                )}
+                {isLoaded && activeMapPanel === "delivery" && (
+                  <div className=" mt-2">
+                    <LocationPicker
+                      isStartPicker={false}
+                      onLocationChange={(lat, lng, address) => {
+                        setDeliveryLocation({lat: lat, lng: lng, address: address});
+                        setDeliverySearchValue("");
+                        handleMapClick(lat, lng, address, getCity());
+                      }}
+                      onCityChange={ (city) => {
+                        setSehir(city);
+                      }}
+                      onCalculateRoute={ () => {}}
+                      mapStyles={mapStyles}
+                    />
                   </div>
                 )}
 
@@ -1155,7 +1158,7 @@ export default function OzelCekiciModal({ onClose }) {
                         </div>
                         <div className="bg-[#202020] rounded-lg p-2 mb-3">
                           <div className="text-white/60">Teslim Alınacak Konum</div>
-                          <div className="text-white font-medium text-xs" title={pickupLocation?.address}>
+                          <div className="text-white font-medium text-xs" title={pickupLocation?.address }>
                             {pickupLocation?.address}
                           </div>
                         </div>
@@ -1239,30 +1242,16 @@ export default function OzelCekiciModal({ onClose }) {
                           </div>
                         )}
                       </div>
-                      {activeMapPanel === 'route' && isLoaded && (
+                      {activeMapPanel === 'route' && isLoaded && memoizedStartLocation && memoizedEndLocation && (
+
                         <div style={{ height: '200px' }}>
-                          <GoogleMap
-                            mapContainerStyle={{ width: '100%', height: '100%' }}
-                            center={pickupLocation || { lat: 41.0082, lng: 28.9784 }}
-                            zoom={13}
-                            options={mapOptions}
-                          >
-                            {pickupLocation && <Marker position={pickupLocation} clickable={false} />}
-                            {deliveryLocation && <Marker position={deliveryLocation} clickable={false} />}
-                            {directions && (
-                              <DirectionsRenderer
-                                directions={directions}
-                                options={{
-                                  suppressMarkers: true,
-                                  polylineOptions: {
-                                    strokeColor: '#EAB308',
-                                    strokeWeight: 5,
-                                    strokeOpacity: 0.8
-                                  }
-                                }}
-                              />
-                            )}
-                          </GoogleMap>
+                            <MapComponent 
+                              startLocation={memoizedStartLocation}
+                              endLocation={memoizedEndLocation}
+                              shouldCalculate={true}
+                              mapStyles={mapStyles}
+                              onValuesChange={handleValuesChange}
+                            />
                         </div>
                       )}
                     </div>
@@ -1619,4 +1608,5 @@ export default function OzelCekiciModal({ onClose }) {
       </div>
     </div>
   )
+
 }

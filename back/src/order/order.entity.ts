@@ -60,7 +60,19 @@ export class Order {
   pickupLocation: string;
 
   @Column({ nullable: true })
+  pickupLocationLat: number;
+
+  @Column({ nullable: true })
+  pickupLocationLng: number;
+
+  @Column({ nullable: true })
   dropoffLocation: string;
+
+  @Column({ nullable: true })
+  dropoffLocationLat: number;
+
+  @Column({ nullable: true })
+  dropoffLocationLng: number;
 
   @Column({ type: 'boolean', default: false })
   isPickupFromParking: boolean;

@@ -26,7 +26,7 @@ const mapOptions = {
 
 const normalizeSehirAdi = (sehir) => {
   return sehir
-    .toLocaleLowerCase('tr-TR')
+     .toLocaleLowerCase('tr-TR')
     .replace(/ı/g, 'i')
     .replace(/ğ/g, 'g')
     .replace(/ü/g, 'u')
@@ -1701,15 +1701,15 @@ export default function TopluCekiciModal({ onClose }) {
                   type="button"
                   onClick={async () => {
                     const result = await calculateTotalPrice({
-                      pickupLocation,
-                      deliveryLocation,
-                      pickupOtopark,
-                      deliveryOtopark,
-                      araclar,
-                      fiyatlandirma,
-                      sehirFiyatlandirma,
-                      deliverySehirFiyatlandirma,
-                      kmBasedFees
+                      pickupLocation, // Alınacak konum
+                      deliveryLocation, // Teslim edilecek konum
+                      pickupOtopark, // Alınacak otopark
+                      deliveryOtopark, // Teslim edilecek otopark
+                      araclar, // Araçlar
+                      fiyatlandirma, // Fiyatlandırma
+                      sehirFiyatlandirma, // Şehir fiyatlandırma
+                      deliverySehirFiyatlandirma, // Teslim şehir fiyatlandırma
+                      kmBasedFees // Km bazlı ücretler
                     }, true);
                     setToplamFiyat(result.totalPrice);
                     setRoutes(result.routes);

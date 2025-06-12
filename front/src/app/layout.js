@@ -1,4 +1,5 @@
 import './globals.css'
+import 'leaflet/dist/leaflet.css'
 import { Inter } from 'next/font/google'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import Notification from '@/components/Notification'
