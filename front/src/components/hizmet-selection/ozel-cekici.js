@@ -6,6 +6,7 @@ import api from '@/utils/axios'
 import axios from 'axios'
 import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
+import LocationAutocomplete from '@/components/LocationAutocomplete';
 
 // Leaflet'i SSR olmadan sadece client'ta render etmek için
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
@@ -39,14 +40,14 @@ const mapOptions = {
 // Şehir adını normalize eden fonksiyon
 function normalizeSehirAdi(sehir) {
   return sehir
-    .toLocaleLowerCase('tr-TR')
-    .replace(/ı/g, 'i')
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ö/g, 'o')
-    .replace(/ç/g, 'c')
-    .replace(/İ/g, 'i');
+    .replace("I", 'i')
+    .replace("İ", 'i')
+    .replace("ı", 'i')
+    .replace("ğ", 'g')
+    .replace("ü", 'u')
+    .replace("ş", 's')
+    .replace("ö", 'o')
+    .replace("ç", 'c')
 }
 
 export default function OzelCekiciModal({ onClose }) {
@@ -57,10 +58,6 @@ export default function OzelCekiciModal({ onClose }) {
   const [activeMapPanel, setActiveMapPanel] = useState(null)
   const [pickupSearchValue, setPickupSearchValue] = useState('')
   const [deliverySearchValue, setDeliverySearchValue] = useState('')
-  const [pickupPredictions, setPickupPredictions] = useState([])
-  const [deliveryPredictions, setDeliveryPredictions] = useState([])
-  const [showPickupAutocomplete, setShowPickupAutocomplete] = useState(false)
-  const [showDeliveryAutocomplete, setShowDeliveryAutocomplete] = useState(false)
   const [aracBilgileri, setAracBilgileri] = useState({
     marka: '',
     model: '',
@@ -123,12 +120,11 @@ export default function OzelCekiciModal({ onClose }) {
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
     libraries
   })
-
+  const setSehirFiyatlandirmaHandler = (sehir) => {
+    setSehirFiyatlandirma(sehir)
+  }
   useEffect(() => {
     const fetchData = async () => {
-      console.log("111111111111111111111111111111")
-      console.log("111111111111111111111111111111")
-      console.log("111111111111111111111111111111")
       try {
         setLoading(true);
         const [
@@ -188,26 +184,50 @@ export default function OzelCekiciModal({ onClose }) {
   const getCity = () => {
     return sehir;
   }
-  // Konumdan adres reverse geocode için
-  const getAddressFromLatLng = async (lat, lng) => {
-    return new Promise((resolve) => {
-          // Şehir fiyatlandırmasını getir
-          if (sehir) {
-            try {
-              const normalizedSehir = normalizeSehirAdi(sehir);
-              const response = api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`);
-              setSehirFiyatlandirma(response.data);
-            } catch (error) {
-              console.error('Şehir fiyatlandırması getirilemedi:', error);
-              setSehirFiyatlandirma(null);
-            }
-          }
-      });
-    };
+
+  const getSehirFiyatlandirma = () => {
+    return sehirFiyatlandirma;
+  }
+  // lat ve lng den adrese çevirme
+  //const getAddressFromLatLng = async (lat, lng) => {
+  //  return new Promise((resolve) => {
+  //        // Şehir fiyatlandırmasını getir
+  //        if (sehir) {
+  //          try {
+  //            const normalizedSehir = normalizeSehirAdi(sehir);
+  //            const response = api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`);
+  //            setSehirFiyatlandirma(response.data);
+  //          } catch (error) {
+  //            console.error('Şehir fiyatlandırması getirilemedi:', error);
+  //            setSehirFiyatlandirma(null);
+  //          }
+  //        }
+  //    });
+  //  };
   
 
   // Fiyat hesaplama fonksiyonu
-  const fiyatHesapla = useCallback(() => {
+  const fiyatHesapla = useCallback( async () => {
+    let sehirFiyatlandirma = null;
+    try {
+    // Şehir fiyatlandırmasını getir
+    console.log("getCity", normalizeSehirAdi(sehir)) //istanbul İstanbul
+    const normalizedSehir = normalizeSehirAdi(sehir);
+    const response = await api.get(`/api/variables/ozel-cekici/sehirler`)
+    console.log("response", response)
+    for (const sehir of response.data) {
+      console.log("sehir", sehir.sehirAdi, normalizeSehirAdi(sehir.sehirAdi).toLowerCase(), normalizedSehir.toLowerCase())
+      if (normalizeSehirAdi(sehir.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()) {
+        console.log("sehirFiyatlandirma", sehir)
+        setSehirFiyatlandirmaHandler(sehir)
+        sehirFiyatlandirma = sehir;
+        break
+      }
+    }
+    } catch (error) {
+      console.error('Şehir fiyatlandırması getirilemedi:', error)
+    }
+    console.log("sehirFiyatlandirma", getSehirFiyatlandirma(), sehirFiyatlandirma)
     // Gerekli kontroller
     if (!pickupLocation || !deliveryLocation || !aracBilgileri.tip || !aracBilgileri.durum) {
       setPrice(0);
@@ -245,26 +265,10 @@ export default function OzelCekiciModal({ onClose }) {
     // KDV hesaplama (%20)
     const kdv = totalPrice * 0.20;
     const finalPrice = totalPrice + kdv;
-
+    console.log("finalPrice", finalPrice)
     setPrice(Math.round(finalPrice));
   }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehirFiyatlandirma, extraFee]);
 
-  // Fiyat hesaplamayı useEffect ile tetikle
-  useEffect(() => {
-    console.log("222222222222222222222222")
-
-    if (
-      pickupLocation &&
-      deliveryLocation &&
-      aracBilgileri.tip &&
-      aracBilgileri.durum &&
-      routeInfo &&
-      pricingData &&
-      sehirFiyatlandirma
-    ) {
-      fiyatHesapla();
-    }
-  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehirFiyatlandirma, fiyatHesapla]);
 
   // Rota hesaplama fonksiyonu
   const calculateRoute = useCallback(async () => {
@@ -364,89 +368,6 @@ export default function OzelCekiciModal({ onClose }) {
     } else {
       setDeliverySearchValue(value)
     }
-    
-    if (value.length > 2 && autocompleteService.current) {
-      try {
-        const response = await autocompleteService.current.getPlacePredictions({
-          input: value,
-          componentRestrictions: { country: 'tr' },
-          types: ['address']
-        })
-        if (type === 'pickup') {
-          setPickupPredictions(response.predictions)
-          setShowPickupAutocomplete(true)
-        } else {
-          setDeliveryPredictions(response.predictions)
-          setShowDeliveryAutocomplete(true)
-        }
-      } catch (error) {
-        console.error('Autocomplete error:', error)
-      }
-    } else {
-      if (type === 'pickup') {
-        setPickupPredictions([])
-        setShowPickupAutocomplete(false)
-      } else {
-        setDeliveryPredictions([])
-        setShowDeliveryAutocomplete(false)
-      }
-    }
-  }
-
-  const handlePredictionSelect = async (prediction, type) => {
-    if (!window.google) return
-
-    const geocoder = new window.google.maps.Geocoder()
-    try {
-      const result = await geocoder.geocode({ placeId: prediction.place_id })
-      if (result.results[0]) {
-        const place = result.results[0]
-        const lat = place.geometry.location.lat()
-        const lng = place.geometry.location.lng()
-
-        // Şehir bilgisini bul
-        let sehir = ''
-        for (const component of place.address_components) {
-          if (component.types.includes('administrative_area_level_1')) {
-            sehir = component.long_name
-            break
-          }
-        }
-
-        const newLocation = {
-          lat,
-          lng,
-          address: place.formatted_address,
-          sehir: sehir
-        }
-        
-        if (type === 'pickup') {
-          setPickupLocation(newLocation)
-          setPickupSearchValue(place.formatted_address)
-          setShowPickupAutocomplete(false)
-          setPickupPredictions([])
-
-          // Teslim alınacak konum seçildiğinde şehir fiyatlandırmasını getir
-          if (sehir) {
-            try {
-              const normalizedSehir = normalizeSehirAdi(sehir)
-              const response = await api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`)
-              setSehirFiyatlandirma(response.data)
-            } catch (error) {
-              console.error('Şehir fiyatlandırması getirilemedi:', error)
-              setSehirFiyatlandirma(null)
-            }
-          }
-        } else {
-          setDeliveryLocation(newLocation)
-          setDeliverySearchValue(place.formatted_address)
-          setShowDeliveryAutocomplete(false)
-          setDeliveryPredictions([])
-        }
-      }
-    } catch (error) {
-      console.error('Geocoding error:', error)
-    }
   }
 
   const handleMapClick = async (lat, lng , address, sehir) => {
@@ -462,172 +383,54 @@ export default function OzelCekiciModal({ onClose }) {
     }
     setActiveMapPanel(null)
 
-    // Şehir fiyatlandırmasını getir
-    if (sehir) {
-      try {
-        const normalizedSehir = normalizeSehirAdi(sehir)
-        const response = await api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`)
-        setSehirFiyatlandirma(response.data)
-      } catch (error) {
-        console.error('Şehir fiyatlandırması getirilemedi:', error)
-        setSehirFiyatlandirma(null)
-      }
-    }
   }
 
   const handleCurrentLocation = async (target) => {
-    if (!navigator.geolocation) {
-      toast.error('Tarayıcınız konum özelliğini desteklemiyor.')
-      return
-    }
-
     try {
-      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' })
-      
-      if (permissionStatus.state === 'denied') {
-        toast.error('Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum iznini etkinleştirin.')
-        return
-      }
-
       const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' })
       
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+      const data = await response.json();
+      const address = data.results[0].formatted;
+      const sehir = getCity();
+
+      console.log("sehir", sehir)
+      console.log("address", address)
+      console.log("data", data)
+
+      const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir }
+
+      if (target === 'pickup') {
+        setPickupLocation(newLocation)
+        setPickupSearchValue(address)
+        const pickupInput = document.getElementById('pickup-input');
+        if (pickupInput) {
+          pickupInput.value = address;
+        }
+      } else {
+        setDeliveryLocation(newLocation)
+        setDeliverySearchValue(address)
+        const deliveryInput = document.getElementById('delivery-input');
+        if (deliveryInput) {
+          deliveryInput.value = address;
+        }
       }
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { latitude, longitude } = position.coords
-            const address = await getAddressFromLatLng(latitude, longitude)
-            
-            // Şehir bilgisini bul
-            let sehir = ''
-            if (window.google) {
-              const geocoder = new window.google.maps.Geocoder()
-              const result = await geocoder.geocode({ location: { lat: latitude, lng: longitude } })
-              if (result.results[0]) {
-                for (const component of result.results[0].address_components) {
-                  if (component.types.includes('administrative_area_level_1')) {
-                    sehir = component.long_name
-                    break
-                  }
-                }
-              }
-            }
-
-            const newLocation = { lat: latitude, lng: longitude, address, sehir }
-            
-            if (target === 'pickup') {
-              setPickupLocation(newLocation)
-              setPickupSearchValue(address)
-            } else {
-              setDeliveryLocation(newLocation)
-              setDeliverySearchValue(address)
-            }
-            setActiveMapPanel(null)
-            
-            // Şehir fiyatlandırmasını getir
-            if (sehir) {
-              try {
-                const normalizedSehir = normalizeSehirAdi(sehir)
-                const response = await api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`)
-                setSehirFiyatlandirma(response.data)
-              } catch (error) {
-                console.error('Şehir fiyatlandırması getirilemedi:', error)
-                setSehirFiyatlandirma(null)
-              }
-            }
-
-            toast.success('Konumunuz başarıyla alındı.', { id: 'location' })
-          } catch (error) {
-            console.error('Address lookup error:', error)
-            toast.error('Adres bilgisi alınamadı. Lütfen manuel olarak girin.', { id: 'location' })
-          }
-        },
-        async (error) => {
-          console.error('Geolocation error:', error)
-          
-          if (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT) {
-            try {
-              const lowAccuracyPosition = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(
-                  resolve,
-                  reject,
-                  { ...options, enableHighAccuracy: false }
-                )
-              })
-
-              const { latitude, longitude } = lowAccuracyPosition.coords
-              const address = await getAddressFromLatLng(latitude, longitude)
-              
-              // Şehir bilgisini bul
-              let sehir = ''
-              if (window.google) {
-                const geocoder = new window.google.maps.Geocoder()
-                const result = await geocoder.geocode({ location: { lat: latitude, lng: longitude } })
-                if (result.results[0]) {
-                  for (const component of result.results[0].address_components) {
-                    if (component.types.includes('administrative_area_level_1')) {
-                      sehir = component.long_name
-                      break
-                    }
-                  }
-                }
-              }
-
-              const newLocation = { lat: latitude, lng: longitude, address, sehir }
-
-              if (target === 'pickup') {
-                setPickupLocation(newLocation)
-                setPickupSearchValue(address)
-              } else {
-                setDeliveryLocation(newLocation)
-                setDeliverySearchValue(address)
-              }
-              setActiveMapPanel(null)
-              
-              // Şehir fiyatlandırmasını getir
-              if (sehir) {
-                try {
-                  const normalizedSehir = normalizeSehirAdi(sehir)
-                  const response = await api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`)
-                  setSehirFiyatlandirma(response.data)
-                } catch (error) {
-                  console.error('Şehir fiyatlandırması getirilemedi:', error)
-                  setSehirFiyatlandirma(null)
-                }
-              }
-
-              toast.success('Konumunuz başarıyla alındı.', { id: 'location' })
-              return
-            } catch (retryError) {
-              console.error('Retry geolocation error:', retryError)
-            }
-          }
-
-          let errorMessage = 'Konum alınamadı.'
-          
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum iznini etkinleştirin.'
-              break
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Konum bilgisi alınamadı. Lütfen konum servislerinizin açık olduğundan emin olun ve tekrar deneyin.'
-              break
-            case error.TIMEOUT:
-              errorMessage = 'Konum alma işlemi zaman aşımına uğradı. Lütfen tekrar deneyin.'
-              break
-            default:
-              errorMessage = 'Konum alınamadı. Lütfen manuel olarak girin.'
-          }
-          
-          toast.error(errorMessage, { id: 'location' })
-        },
-        options
-      )
+      toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
     } catch (error) {
       console.error('Permission check error:', error)
       toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.')
@@ -635,48 +438,21 @@ export default function OzelCekiciModal({ onClose }) {
   }
 
   useEffect(() => {
-    console.log("333333333333333333333333333333")
     if (isLoaded && window.google) {
       const pickupInput = document.getElementById('pickup-input');
       const deliveryInput = document.getElementById('delivery-input');
 
       if (pickupInput) {
-        const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupInput, {
-          types: ['address'],
-          componentRestrictions: { country: 'tr' }
-        });
-
-        pickupAutocomplete.addListener('place_changed', () => {
-          const place = pickupAutocomplete.getPlace();
-          if (place.geometry) {
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-              address: place.formatted_address
-            };
-            setPickupLocation(location);
-            setPickupSearchValue(location.address);
-          }
+        pickupInput.addEventListener('click', () => {
+          setActiveLocation('pickup')
+          setActiveMapPanel('pickup')
         });
       }
 
       if (deliveryInput) {
-        const deliveryAutocomplete = new window.google.maps.places.Autocomplete(deliveryInput, {
-          types: ['address'],
-          componentRestrictions: { country: 'tr' }
-        });
-
-        deliveryAutocomplete.addListener('place_changed', () => {
-          const place = deliveryAutocomplete.getPlace();
-          if (place.geometry) {
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-              address: place.formatted_address
-            };
-            setDeliveryLocation(location);
-            setDeliverySearchValue(location.address);
-          }
+        deliveryInput.addEventListener('click', () => {
+          setActiveLocation('delivery')
+          setActiveMapPanel('delivery')
         });
       }
     }
@@ -744,7 +520,6 @@ export default function OzelCekiciModal({ onClose }) {
 
   // Add useEffect to show route map when both locations are selected
   useEffect(() => {
-    console.log("444444444444444444444444444444")
     if (
       step === 2 &&
       pickupLocation &&
@@ -947,23 +722,21 @@ export default function OzelCekiciModal({ onClose }) {
                     {isLoaded && (
                       <div className="w-full">
                         <div className="relative">
-                          <input
-                            type="text"
-                            value={pickupSearchValue}
-                            onChange={(e) => handleInputChange(e, 'pickup')}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault()
-                              }
+                          <LocationAutocomplete
+                            onSelect={({ lat, lng }) => {
+                              const newLocation = { lat, lng, address: pickupSearchValue };
+                              setPickupLocation(newLocation);
+                              handleMapClick(lat, lng, pickupSearchValue, getCity());
+                              setActiveLocation('pickup');
+                              setActiveMapPanel('pickup');
+                              const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                              // promise ile yap
+                              city.then(res => res.json()).then(data => {
+                                const cityData = data;
+                                setSehir(cityData.address.province || "");
+                              });
                             }}
-                            placeholder="Adres girin veya haritadan seçin"
-                            className="w-full pr-16 px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                            onClick={() => {
-                              setActiveLocation('pickup')
-                              setActiveMapPanel('pickup')
-                            }}
-                            onFocus={() => setShowPickupAutocomplete(true)}
-                            onBlur={() => setTimeout(() => setShowPickupAutocomplete(false), 200)}
+                            placeholder="Adres girin veya h222222aritadan seçin"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 bg-[#141414] z-[101]">
                             <button
@@ -992,19 +765,6 @@ export default function OzelCekiciModal({ onClose }) {
                             </button>
                           </div>
                         </div>
-                        {showPickupAutocomplete && pickupPredictions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-[100] max-h-[300px] overflow-y-auto">
-                            {pickupPredictions.map((prediction) => (
-                              <button
-                                key={prediction.place_id}
-                                onClick={() => handlePredictionSelect(prediction, 'pickup')}
-                                className="w-full text-left px-4 py-3 text-white hover:bg-[#202020] transition-colors border-b border-[#404040] last:border-b-0"
-                              >
-                                {prediction.description}
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -1019,23 +779,21 @@ export default function OzelCekiciModal({ onClose }) {
                     {isLoaded && (
                       <div className="w-full">
                         <div className="relative">
-                          <input
-                            type="text"
-                            value={deliverySearchValue}
-                            onChange={(e) => handleInputChange(e, 'delivery')}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault()
-                              }
+                          <LocationAutocomplete
+                            onSelect={({ lat, lng }) => {
+                              const newLocation = { lat, lng, address: deliverySearchValue };
+                              setDeliveryLocation(newLocation);
+                              handleMapClick(lat, lng, deliverySearchValue, getCity());
+                              setActiveLocation('delivery');
+                              setActiveMapPanel('delivery');
+                              const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                              // promise ile yap
+                              city.then(res => res.json()).then(data => {
+                                const cityData = data;
+                                setSehir(cityData.address.province || "");
+                              });
                             }}
                             placeholder="Adres girin veya haritadan seçin"
-                            className="w-full pr-16 px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                            onClick={() => {
-                              setActiveLocation('delivery')
-                              setActiveMapPanel('delivery')
-                            }}
-                            onFocus={() => setShowDeliveryAutocomplete(true)}
-                            onBlur={() => setTimeout(() => setShowDeliveryAutocomplete(false), 200)}
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 bg-[#141414] z-[101]">
                             <button
@@ -1064,19 +822,6 @@ export default function OzelCekiciModal({ onClose }) {
                             </button>
                           </div>
                         </div>
-                        {showDeliveryAutocomplete && deliveryPredictions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-[100] max-h-[300px] overflow-y-auto">
-                            {deliveryPredictions.map((prediction) => (
-                              <button
-                                key={prediction.place_id}
-                                onClick={() => handlePredictionSelect(prediction, 'delivery')}
-                                className="w-full text-left px-4 py-3 text-white hover:bg-[#202020] transition-colors border-b border-[#404040] last:border-b-0"
-                              >
-                                {prediction.description}
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -1130,7 +875,8 @@ export default function OzelCekiciModal({ onClose }) {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !pickupLocation || !deliveryLocation || !aracBilgileri.marka || !aracBilgileri.model || !aracBilgileri.yil || !aracBilgileri.plaka || !aracBilgileri.tip}
+                onClick={() => fiyatHesapla()}
+                disabled={isSubmitting || !pickupLocation || !deliveryLocation || !aracBilgileri.marka || !aracBilgileri.model || !aracBilgileri.yil || !aracBilgileri.plaka || !aracBilgileri.tip || !aracBilgileri.durum}
                 className="w-full py-3 px-6 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Lütfen Bekleyin...' : 'Devam Et'}

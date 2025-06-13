@@ -20,7 +20,7 @@ export function middleware(request) {
     "style-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://*.googleapis.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://api.openrouteservice.org",
     "img-src 'self' data: blob: https://www.google.com/recaptcha/ https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com https://maps.googleapis.com https://*.tile.openstreetmap.org https://cdnjs.cloudflare.com https://api.openrouteservice.org",
     "font-src 'self' https://*.gstatic.com https://fonts.googleapis.com https://cdnjs.cloudflare.com",
-    "connect-src 'self' https://cekgetir.com https://api.cekgetir.com https://cekgetir.up.railway.app https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://nominatim.openstreetmap.org https://api.openrouteservice.org https://api.opencagedata.com",
+    "connect-src 'self' https://cekgetir.com https://api.cekgetir.com https://cekgetir.up.railway.app https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://nominatim.openstreetmap.org https://api.openrouteservice.org https://api.opencagedata.com https://*.opencagedata.com https://photon.komoot.io",
     "frame-src 'self' https://*.googleapis.com https://www.google.com/maps/ https://maps.google.com/ https://www.google.com/ https://*.gstatic.com ",
     "worker-src 'self' blob:"
   ]

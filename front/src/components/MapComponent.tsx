@@ -375,8 +375,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         }
       }
     });
-    
-    // Waypoint markerleri ekle
+
     coordinates.forEach((coord, index) => {
       if (mapRef.current) {
         const markerIcon = L.divIcon({
@@ -418,6 +417,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
           coordinates: segments[i],
           format: "geojson",
         };
+        console.log("routeRequest", routeRequest)
         
         const response = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
           method: "POST",
@@ -508,6 +508,14 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
   
   // Yeni rota hesaplamak için
   const calculateRoute = () => {
+    if(isSingleRouteMode) {
+      while(activeCoordinates.length > 0) {
+        activeCoordinates.pop();
+      }
+      activeCoordinates.push({lat: startLocation!.lat, lng: startLocation!.lng, name: "Başlangıç"});
+      activeCoordinates.push({lat: endLocation!.lat, lng: endLocation!.lng, name: "Bitiş"});
+    } 
+    console.log("🔄 activeCoordinates:", activeCoordinates);
     return calculateMultiSegmentRoute(activeCoordinates);
   };
   

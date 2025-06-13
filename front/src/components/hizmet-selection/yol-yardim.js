@@ -472,10 +472,6 @@ export default function YolYardimModal({ onClose }) {
   };
 
   const handleCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      toast.error('Tarayıcınız konum özelliğini desteklemiyor.');
-      return;
-    }
 
     try {
       const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' });

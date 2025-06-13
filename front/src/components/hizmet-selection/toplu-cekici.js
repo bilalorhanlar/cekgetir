@@ -47,38 +47,6 @@ const normalizeSehirAdi = (sehir) => {
     .replace(/İ/g, 'i');
 }
 
-const sehirTespiti = async (location) => {
-  if (!window.google) return null;
-  const geocoder = new window.google.maps.Geocoder();
-  
-  try {
-    const response = await new Promise((resolve, reject) => {
-      geocoder.geocode({ location: { lat: location.lat, lng: location.lng } }, (results, status) => {
-        if (status === 'OK' && results[0]) {
-          resolve(results[0]);
-        } else {
-          reject(new Error('Geocoding failed'));
-        }
-      });
-    });
-
-    // Türkiye'deki şehirleri kontrol et
-    const addressComponents = response.address_components;
-    const cityComponent = addressComponents.find(component => 
-      component.types.includes('administrative_area_level_1')
-    );
-
-    if (cityComponent) {
-      return cityComponent.long_name;
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Şehir tespiti hatası:', error);
-    return null;
-  }
-};
-
 const isValidCoordinate = (value) => {
   return typeof value === 'number' && !isNaN(value) && isFinite(value);
 };
@@ -205,6 +173,18 @@ export default function TopluCekiciModal({ onClose }) {
     return sehir2;
   }
 
+  const setSelectedCityPickup = (selected) => {
+    console.log('selected', selected);
+    setSelectedPickupCity(selected.target.value);
+    setSehir(selected.target.value);
+  }
+
+  const setSelectedCityDelivery = (selected) => {
+    setSelectedDeliveryCity(selected.target.value);
+    setSehir2(selected.target.value);
+    
+  }
+
   const setRouteInfoHandle = (distance, duration, wayPointsKm) => {
     let routeInfo = {}
     routeInfo.distance = distance;
@@ -317,7 +297,7 @@ export default function TopluCekiciModal({ onClose }) {
     try {
       // 1. Konum -> Otopark rotası (kırmızı)
       if (!pickupOtopark && pickupLocation && sehirFiyatlandirma) {
-        for(let i = 0; i < wayPoints.length; i++) {
+        while (wayPoints.length > 0) {
           wayPoints.pop()
         }
         wayPoints.push({ // eklenmiş
@@ -620,6 +600,7 @@ export default function TopluCekiciModal({ onClose }) {
           const normalizedSehir = normalizeSehirAdi(selectedPickupCity);
           const response = await api.get(`/api/variables/toplu-cekici/sehirler/${normalizedSehir}`);
           setSehirFiyatlandirma(response.data);
+
           if (pickupOtopark) {
             setLocationWithValidation(setPickupLocation, normalizeLocation({
               lat: response.data.otoparkLat,
@@ -723,105 +704,48 @@ export default function TopluCekiciModal({ onClose }) {
   }, [pickupLocation, deliveryLocation, fiyatlandirma]);
 
   // Improve geolocation error handling
-  const handleCurrentLocation = async (target) => {
-    if (!navigator.geolocation) {
-      toast.error('Tarayıcınız konum özelliğini desteklemiyor.');
-      return;
-    }
-
+  const handleCurrentLocation = async (target) => {    
     try {
-      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-      
-      if (permissionStatus.state === 'denied') {
-        toast.error('Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum iznini etkinleştirin.');
-        return;
-      }
-
       const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' });
       
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      };
-
-      const getPosition = (highAccuracy = true) => {
-        return new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            {
-              ...options,
-              enableHighAccuracy: highAccuracy,
-              timeout: highAccuracy ? 15000 : 60000
-            }
-          );
-        });
-      };
-
-      try {
-        const position = await getPosition(true);
-        const { latitude, longitude } = position.coords;
-        const address = await getAddressFromLatLng(latitude, longitude);
-        const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address });
-        
-        if (target === 'pickup') {
-          setPickupLocation(newLocation);
-          setPickupSearchValue(address);
-        } else {
-          setDeliveryLocation(newLocation);
-          setDeliverySearchValue(address);
-        }
-        setActiveMapPanel(null);
-        
-        toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
-      } catch (error) {
-        console.error('High accuracy geolocation error:', error);
-        
-        if (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT) {
-          try {
-            const lowAccuracyPosition = await getPosition(false);
-            const { latitude, longitude } = lowAccuracyPosition.coords;
-            const address = await getAddressFromLatLng(latitude, longitude);
-            const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address });
-
-            if (target === 'pickup') {
-              setPickupLocation(newLocation);
-              setPickupSearchValue(address);
-            } else {
-              setDeliveryLocation(newLocation);
-              setDeliverySearchValue(address);
-            }
-            setActiveMapPanel(null);
-            
-            toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
-            return;
-          } catch (retryError) {
-            console.error('Low accuracy geolocation error:', retryError);
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
           }
-        }
+        );
+      });
 
-        let errorMessage = 'Konum alınamadı.';
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum iznini etkinleştirin.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Konum bilgisi alınamadı. Lütfen konum servislerinizin açık olduğundan emin olun ve tekrar deneyin.';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Konum alma işlemi zaman aşımına uğradı. Lütfen tekrar deneyin.';
-            break;
-          default:
-            errorMessage = 'Konum alınamadı. Lütfen manuel olarak girin.';
-        }
-        
-        toast.error(errorMessage, { id: 'location' });
+      const { latitude, longitude } = position.coords;
+      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+      const data = await response.json();
+      const address = data.results[0].formatted;
+ 
+
+      if (target === 'pickup') {
+        setSehir(data.results[0].components.state);
+        const sehir = getCity();        
+        const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: sehir });
+        setPickupSearchValue(address);
+        setPickupLocation(newLocation);
+  
+      } else {
+        setSehir2(data.results[0].components.state);
+        const sehir = getCity2();        
+        const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: sehir });
+        setDeliveryLocation(newLocation);
+        setDeliverySearchValue(address);
       }
+      setActiveMapPanel(null);
+        
+      toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
     } catch (error) {
-      console.error('Permission check error:', error);
-      toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
+      console.error('Konum alınamadı:', error);
+      toast.error('Konum alınamadı. Lütfen manuel olarak girin.');
     }
   };
 
@@ -917,53 +841,6 @@ export default function TopluCekiciModal({ onClose }) {
       console.error('Geocoding error:', error);
     }
   };
-
-  useEffect(() => {
-    if (isLoaded && window.google) {
-      const pickupInput = document.getElementById('pickup-input');
-      const deliveryInput = document.getElementById('delivery-input');
-
-      if (pickupInput) {
-        const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupInput, {
-          types: ['address'],
-          componentRestrictions: { country: 'tr' }
-        });
-
-        pickupAutocomplete.addListener('place_changed', () => {
-          const place = pickupAutocomplete.getPlace();
-          if (place.geometry) {
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-              address: place.formatted_address
-            };
-            setPickupLocation(location);
-            setPickupSearchValue(location.address);
-          }
-        });
-      }
-
-      if (deliveryInput) {
-        const deliveryAutocomplete = new window.google.maps.places.Autocomplete(deliveryInput, {
-          types: ['address'],
-          componentRestrictions: { country: 'tr' }
-        });
-
-        deliveryAutocomplete.addListener('place_changed', () => {
-          const place = deliveryAutocomplete.getPlace();
-          if (place.geometry) {
-            const location = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-              address: place.formatted_address
-            };
-            setDeliveryLocation(location);
-            setDeliverySearchValue(location.address);
-          }
-        });
-      }
-    }
-  }, [isLoaded]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1130,13 +1007,6 @@ export default function TopluCekiciModal({ onClose }) {
   const handleMapClick = async (lat, lng , address, sehir) => {
 
     const newLocation = { lat, lng, address, sehir }
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    // Şehir tespiti yap
 
     if (activeLocation === 'pickup') {
       const detectedCity = getCity();
@@ -1274,7 +1144,7 @@ export default function TopluCekiciModal({ onClose }) {
                     <div className="grid grid-cols-2 gap-4">
                       <select
                         value={selectedPickupCity}
-                        onChange={(e) => setSelectedPickupCity(e.target.value)}
+                        onChange={(e) => setSelectedCityPickup(e)}
                         className="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500"
                       >
                         <option value="">Şehir Seçin</option>
@@ -1375,7 +1245,7 @@ export default function TopluCekiciModal({ onClose }) {
                     <div className="grid grid-cols-2 gap-4">
                       <select
                         value={selectedDeliveryCity}
-                        onChange={(e) => setSelectedDeliveryCity(e.target.value)}
+                        onChange={(e) => setSelectedCityDelivery(e)}
                         className="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500"
                       >
                         <option value="">Şehir Seçin</option>
