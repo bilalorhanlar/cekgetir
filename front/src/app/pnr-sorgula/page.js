@@ -27,6 +27,7 @@ export default function PnrSorgula() {
     try {
       const response = await api.get(`/api/orders/pnr/${pnrNumber.toUpperCase()}`)
       setOrder(response.data)
+      console.log(response.data)
       // Başarılı sorgulamada PNR'ı localStorage'a kaydet
       localStorage.setItem('lastPnr', pnrNumber)
     } catch (err) {
@@ -229,7 +230,22 @@ export default function PnrSorgula() {
                       <>
                         <div>
                           <div className="text-[#bdbdbd] text-sm mb-1">Konum</div>
-                          <div className="text-white font-medium">{order.breakdownLocation}</div>
+                          <div>
+                            <div className="text-white font-medium">{order.breakdownLocation}</div>
+                            <button 
+                              onClick={() => {
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${order.breakdownLocationLat},${order.breakdownLocationLng}`, '_blank')
+                              }}
+                              className="text-white bg-yellow-500 px-2 py-1 rounded-md font-medium"></button>
+                          </div>e-flex items-center gap-1 text-sm"
+                              title="Adresi Görüntüle"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         {order.breakdownDescription && (
                           <div>
@@ -248,7 +264,14 @@ export default function PnrSorgula() {
                               onClick={() => {
                                 window.open(`https://www.google.com/maps/search/?api=1&query=${order.pickupLocationLat},${order.pickupLocationLng}`, '_blank')
                               }}
-                              className="text-white bg-yellow-500 px-2 py-1 rounded-md font-medium">Adresi Görüntüle</button>
+                              className="text-white bg-yellow-500 hover:bg-yellow-400 px-2 py-1 rounded-md font-medium transition-colors inline-flex items-center gap-1 text-sm"
+                              title="Adresi Görüntüle"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </button>
                           </div>
                           
                         </div>
@@ -260,7 +283,14 @@ export default function PnrSorgula() {
                               onClick={() => {
                                 window.open(`https://www.google.com/maps/search/?api=1&query=${order.dropoffLocationLat},${order.dropoffLocationLng}`, '_blank')
                               }}
-                              className="text-white bg-yellow-500 px-2 py-1 rounded-md font-medium">Adresi Görüntüle</button>
+                              className="text-white bg-yellow-500 hover:bg-yellow-400 px-2 py-1 rounded-md font-medium transition-colors inline-flex items-center gap-1 text-sm"
+                              title="Adresi Görüntüle"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
                       </>

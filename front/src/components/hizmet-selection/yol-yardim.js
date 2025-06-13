@@ -1,11 +1,21 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { GoogleMap, Marker, useLoadScript, DirectionsRenderer } from '@react-google-maps/api'
 import React from 'react'
 import api from '@/utils/axios'
 import axios from 'axios'
 import { toast } from 'react-hot-toast'
+import dynamic from "next/dynamic";
+
+// LocationPicker bileşenini dinamik olarak import et
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
+  ssr: false,
+});
+
+const MapComponent = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+});
 
 const libraries = ['places']
 
@@ -80,6 +90,31 @@ export default function YolYardimModal({ onClose }) {
   const mapRef = useRef(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [locationSearchValue, setLocationSearchValue] = useState('')
+  const [sehir, setSehir] = useState(null)
+  
+  const getCity = () => {
+    return sehir;
+  }
+  
+  // MapComponent için memoized location objeler
+  const memoizedOriginLocation = useMemo(() => 
+    fiyatlandirma ? { lat: fiyatlandirma.baseLat, lng: fiyatlandirma.baseLng } : null, 
+    [fiyatlandirma?.baseLat, fiyatlandirma?.baseLng]
+  )
+  
+  const memoizedEndLocation = useMemo(() => 
+    location ? { lat: location.lat, lng: location.lng } : null, 
+    [location?.lat, location?.lng]
+  )
+
+  // MapComponent için memoized callback
+  const handleValuesChange = useCallback((distance, duration) => {
+    setRouteInfo(prev => ({
+      ...prev,
+      distance,
+      duration
+    }))
+  }, [])
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
@@ -211,10 +246,7 @@ export default function YolYardimModal({ onClose }) {
       return;
     }
     
-    const origin = {
-      lat: fiyatlandirma.baseLat,
-      lng: fiyatlandirma.baseLng
-    };
+    const origin = memoizedOriginLocation;
 
     // Eğer mevcut rota bilgisi varsa ve aynı hedef için hesaplanmışsa, tekrar hesaplama
     if (routeInfo && 
@@ -260,7 +292,7 @@ export default function YolYardimModal({ onClose }) {
       console.error('Rota hesaplama hatası:', error);
       setError('Rota hesaplanırken bir hata oluştu. Lütfen tekrar deneyin.');
     }
-  }, [fiyatlandirma, routeInfo]);
+  }, [fiyatlandirma, routeInfo, memoizedOriginLocation]);
 
   // Konumlar değiştiğinde fiyat hesapla
   useEffect(() => {
@@ -269,9 +301,9 @@ export default function YolYardimModal({ onClose }) {
         routeInfo.destination?.lat !== location.lat || 
         routeInfo.destination?.lng !== location.lng;
       
-      if (shouldCalculateRoute) {
-        calculateRoute(location);
-      }
+//      if (shouldCalculateRoute) {
+//        calculateRoute(location);
+//      }
     }
   }, [location, aracBilgileri.tip, selectedAriza, calculateRoute, routeInfo]);
 
@@ -422,7 +454,7 @@ export default function YolYardimModal({ onClose }) {
         
         setLocation(newLocation)
         setLocationSearchValue(place.formatted_address)
-        calculateRoute(newLocation)
+        //calculateRoute(newLocation)
         setShowAutocomplete(false)
         setPredictions([])
       }
@@ -431,16 +463,13 @@ export default function YolYardimModal({ onClose }) {
     }
   }
 
-  const handleMapClick = async (e) => {
-    const lat = e.latLng.lat();
-    const lng = e.latLng.lng();
-    const address = await getAddressFromLatLng(lat, lng);
+  const handleMapClick = async (lat, lng, address, sehir) => {
     const newLocation = { lat, lng, address };
     setLocation(newLocation);
     setLocationSearchValue(address);
     // Konum seçildikten sonra fiyat hesaplama
     if (aracBilgileri.tip && selectedAriza) {
-      calculateRoute(newLocation);
+      //calculateRoute(newLocation);
     }
   };
 
@@ -482,7 +511,7 @@ export default function YolYardimModal({ onClose }) {
       
       // Konum seçildikten sonra fiyat hesaplama
       if (aracBilgileri.tip && selectedAriza) {
-        calculateRoute(newLocation);
+        //calculateRoute(newLocation);
       }
       
       toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
@@ -575,6 +604,8 @@ export default function YolYardimModal({ onClose }) {
       const orderData = {
         serviceType: 'YOL_YARDIM',
         breakdownLocation: location?.address,
+        breakdownLocationLat: location?.lat,
+        breakdownLocationLng: location?.lng,
         breakdownDescription: selectedAriza?.title,
         destinationLocation: location?.address,
         vehicles: [{
@@ -623,7 +654,9 @@ export default function YolYardimModal({ onClose }) {
   };
 
   useEffect(() => {
-    if (step === 2 && routeInfo) {
+    console.log("routeInfo", routeInfo)
+    console.log("step", step)
+    if (step === 2 ) {
       setShowMap('route');
     }
   }, [step, routeInfo]);
@@ -720,16 +753,19 @@ export default function YolYardimModal({ onClose }) {
 
                 {showMap && isLoaded && (
                   <div style={mapStyles} className="relative mt-2">
-                    <GoogleMap
-                      mapContainerStyle={mapStyles}
-                      center={location || { lat: 41.0082, lng: 28.9784 }}
-                      zoom={13}
-                      options={mapOptions}
-                      onClick={handleMapClick}
-                      onLoad={map => (mapRef.current = map)}
-                    >
-                      {location && <Marker position={location} />}
-                    </GoogleMap>
+                    <LocationPicker
+                      isStartPicker={true}
+                      onLocationChange={(lat, lng, address) => {
+                        setLocation({lat: lat, lng: lng, address: address});
+                        setLocationSearchValue("");
+                        handleMapClick(lat, lng, address, getCity());
+                      }}
+                      onCityChange={ (city) => {
+                        setSehir(city);
+                      }}
+                      onCalculateRoute={ () => {}}
+                      mapStyles={mapStyles}
+                    />
                   </div>
                 )}
 
@@ -861,29 +897,15 @@ export default function YolYardimModal({ onClose }) {
                       </button>
                     </div>
                   </div>
-                  {showMap === 'route' && (
+                  {showMap === 'route' && memoizedOriginLocation && memoizedEndLocation && (
                     <div className="relative" style={{ height: '248px', minHeight: '120px', maxHeight: '248px' }}>
-                      <GoogleMap
-                        mapContainerStyle={{ width: '100%', height: '100%' }}
-                        center={location || { lat: 40.9877, lng: 29.1267 }}
-                        zoom={11}
-                        options={mapOptions}
-                      >
-                        {location && <Marker position={location} />}
-                        {directions && (
-                          <DirectionsRenderer
-                            directions={directions}
-                            options={{
-                              suppressMarkers: true,
-                              polylineOptions: {
-                                strokeColor: '#EAB308',
-                                strokeWeight: 5,
-                                strokeOpacity: 0.8
-                              }
-                            }}
-                          />
-                        )}
-                      </GoogleMap>
+                        <MapComponent
+                          startLocation={memoizedOriginLocation}
+                          endLocation={memoizedEndLocation}
+                          shouldCalculate={true}
+                          mapStyles={mapStyles}
+                          onValuesChange={handleValuesChange}
+                        />
                     </div>
                   )}
                 </div>

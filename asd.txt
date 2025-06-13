@@ -1,23 +1,33 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { GoogleMap, Marker, useLoadScript, DirectionsRenderer, Polyline } from '@react-google-maps/api'
 import React from 'react'
 import api from '@/utils/axios'
 import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
 
-const libraries = ['places']
-// Leaflet'i SSR olmadan sadece client'ta render etmek için
-const MapComponent = dynamic(() => import("@/components/MapComponent"), {
-  ssr: false,
-});
+// const waypoints = [
+//   {
+//     lat: number,
+//     lng: number,
+//     name: string,
+//   }
+// ]
+// way points değişkeni oluştur
+
 
 // LocationPicker bileşenini dinamik olarak import et
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
   ssr: false,
 });
 
+// MapComponent'i dinamik olarak import et
+const MapComponent = dynamic(() => import("@/components/MapComponent"), {
+  ssr: false,
+});
+
+const libraries = ['places']
 
 const mapStyles = {
   width: '100%',
@@ -98,6 +108,7 @@ const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
+    console.log('🔄 useEffect: useDebounce - Debounce timer', { value, delay });
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
@@ -153,6 +164,7 @@ export default function TopluCekiciModal({ onClose }) {
   const [pickupOtopark, setPickupOtopark] = useState(false)
   const [deliveryOtopark, setDeliveryOtopark] = useState(false)
   const [araclar, setAraclar] = useState([])
+  const [waypoints, setWaypoints] = useState([{}])
   const [musteriBilgileri, setMusteriBilgileri] = useState({
     musteriTipi: 'kisisel',
     ad: '',
@@ -192,37 +204,22 @@ export default function TopluCekiciModal({ onClose }) {
   const [routes, setRoutes] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [sehir, setSehir] = useState(null)
-  const [sehir2, setSehir2] = useState(null)
-  const [wayPoints, setWayPoints] = useState([])
-  const [wayPointsKm, setWayPointsKm] = useState([])
 
-  const getCity = () => {
-    console.log('sehaasdasdasdir', sehir);
-    return sehir;
-  }
-  const getCity2 = () => {
-    console.log('sehaasdasdasdir2', sehir2);
-    return sehir2;
-  }
+  // MapComponent için memoized location objeler
+  const memoizedStartLocation = useMemo(() => 
+    pickupLocation ? { lat: pickupLocation.lat, lng: pickupLocation.lng } : null, 
+    [pickupLocation?.lat, pickupLocation?.lng]
+  )
+  
+  const memoizedEndLocation = useMemo(() => 
+    deliveryLocation ? { lat: deliveryLocation.lat, lng: deliveryLocation.lng } : null, 
+    [deliveryLocation?.lat, deliveryLocation?.lng]
+  )
 
-  const setRouteInfoHandle = (distance, duration, wayPointsKm) => {
-    let routeInfo = {}
-    routeInfo.distance = distance;
-    routeInfo.duration = duration;
-    routeInfo.wayPointsKm = []
-    for (let i = 0; i < wayPointsKm.length; i++) {
-      routeInfo.wayPointsKm.push(wayPointsKm[i])
-    }
-    setRouteInfo(routeInfo);
-    console.log('routeInfodd', routeInfo, getRouteInfo())
-  }
-
-  const getRouteInfo = () => {
-    return routeInfo;
-  }
-  const getWayPoints = () => {
-    return wayPoints;
-  }
+  // MapComponent için memoized callback
+  const handleValuesChange = useCallback((distance, duration) => {
+    setRouteInfo({ distance, duration })
+  }, [])
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
@@ -230,6 +227,7 @@ export default function TopluCekiciModal({ onClose }) {
   })
 
   useEffect(() => {
+    console.log('🔄 useEffect: fetchData - İlk veri yükleme');
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -257,6 +255,7 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Araç segmentleri ve durumlarını API'den çek
   useEffect(() => {
+    console.log('🔄 useEffect: fetchSegmentsAndStatuses - Araç verilerini yükleme');
     const fetchSegmentsAndStatuses = async () => {
       try {
         const [segmentsRes, statusesRes, vehicleInfoRes] = await Promise.all([
@@ -286,6 +285,7 @@ export default function TopluCekiciModal({ onClose }) {
   }, []);
 
   useEffect(() => {
+    console.log('🔄 useEffect: fetchKmFiyatlar - KM fiyatlarını yükleme');
     const fetchKmFiyatlar = async () => {
       try {
         const response = await api.get('/api/variables/toplu-cekici/km-fiyatlar');
@@ -299,75 +299,88 @@ export default function TopluCekiciModal({ onClose }) {
     fetchKmFiyatlar();
   }, []);
 
-  const normalizeSehirAdi = (sehir) => {
-    return sehir
-      .replace("I", 'i')
-      .replace("İ", 'i')
-      .replace("ı", 'i')
-      .replace("ğ", 'g')
-      .replace("ü", 'u')
-      .replace("ş", 's')
-      .replace("ö", 'o')
-      .replace("ç", 'c')
-  }
-
   // Rota hesaplama fonksiyonu
-  const addWaypoints = useCallback(async () => {
+  const calculateRoute = useCallback(async () => {
     if (!pickupLocation || !deliveryLocation || !window.google) return;
     try {
+      const directionsService = new window.google.maps.DirectionsService();
+      let routes = [];
+
       // 1. Konum -> Otopark rotası (kırmızı)
       if (!pickupOtopark && pickupLocation && sehirFiyatlandirma) {
-        for(let i = 0; i < wayPoints.length; i++) {
-          wayPoints.pop()
-        }
-        wayPoints.push({ // eklenmiş
-          lat: Number(pickupLocation.lat),
-          lng: Number(pickupLocation.lng),
-          address: pickupLocation.address,
-          name: "pickupLocation"
-        })
+        const pickupOtoparkLocation = {
+          lat: Number(sehirFiyatlandirma.otoparkLat),
+          lng: Number(sehirFiyatlandirma.otoparkLng)
+        };
+        const result1 = await directionsService.route({
+          origin: pickupLocation,
+          destination: pickupOtoparkLocation,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        });
+        routes.push({
+          directions: result1,
+          color: '#FF0000'
+        });
       }
 
       // 2. Otopark -> Otopark rotası (sarı)
       if (sehirFiyatlandirma && deliverySehirFiyatlandirma) {
-        // sehir fiyatlandırma çek find yaparak
-        const pickupSehirFiyatlandirma32 = fiyatlandirma.sehirler.find(s => normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizeSehirAdi(getCity()).toLowerCase());
-        console.log('pickupSehirFiyatlandirma32', pickupSehirFiyatlandirma32);
         const pickupOtoparkLocation = {
-          lat: Number(pickupSehirFiyatlandirma32.otoparkLat),
-          lng: Number(pickupSehirFiyatlandirma32.otoparkLng)
+          lat: Number(sehirFiyatlandirma.otoparkLat),
+          lng: Number(sehirFiyatlandirma.otoparkLng)
         };
-        wayPoints.push({
-          lat: Number(pickupOtoparkLocation.lat),
-          lng: Number(pickupOtoparkLocation.lng),
-          address: "sehirFiyatlandirma.otoparkAdres",
-          name: "pickupOtoparkLocation"
-        })
-
-        const deliverySehirFiyatlandirma32 = fiyatlandirma.sehirler.find(s => normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizeSehirAdi(getCity2()).toLowerCase());
-        console.log('deliverySehirFiyatlandirma32', deliverySehirFiyatlandirma32);
         const deliveryOtoparkLocation = {
-          lat: Number(deliverySehirFiyatlandirma32.otoparkLat),
-          lng: Number(deliverySehirFiyatlandirma32.otoparkLng) 
+          lat: Number(deliverySehirFiyatlandirma.otoparkLat),
+          lng: Number(deliverySehirFiyatlandirma.otoparkLng)
         };
-        wayPoints.push({ // eklenmiş
-          lat: Number(deliveryOtoparkLocation.lat),
-          lng: Number(deliveryOtoparkLocation.lng),
-          address: "deliverySehirFiyatlandirma.otoparkAdres",
-          name: "deliveryOtoparkLocation"
-        })
+        const result2 = await directionsService.route({
+          origin: pickupOtoparkLocation,
+          destination: deliveryOtoparkLocation,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        });
+        routes.push({
+          directions: result2,
+          color: '#FFFF00'
+        });
       }
 
       // 3. Otopark -> Konum rotası (yeşil)
       if (!deliveryOtopark && deliveryLocation && deliverySehirFiyatlandirma) {
-        wayPoints.push({
-          lat: Number(deliveryLocation.lat),
-          lng: Number(deliveryLocation.lng),
-          address: "deliverySehirFiyatlandirma.otoparkAdres",
-          name: "deliveryLocation"
-        })
+        const deliveryOtoparkLocation = {
+          lat: Number(deliverySehirFiyatlandirma.otoparkLat),
+          lng: Number(deliverySehirFiyatlandirma.otoparkLng)
+        };
+        const result3 = await directionsService.route({
+          origin: deliveryOtoparkLocation,
+          destination: deliveryLocation,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        });
+        routes.push({
+          directions: result3,
+          color: '#00FF00'
+        });
       }
 
+      // Toplam mesafe ve süre hesaplama
+      let totalDistance = 0;
+      let totalDuration = 0;
+
+      routes.forEach(route => {
+        const leg = route.directions.routes[0].legs[0];
+        totalDistance += leg.distance.value;
+        totalDuration += leg.duration.value;
+      });
+
+      // Rota bilgilerini güncelle
+      setRouteInfo({
+        distance: `${(totalDistance / 1000).toFixed(1)} km`,
+        duration: `${Math.round(totalDuration / 60)} dakika`,
+        distanceValue: totalDistance,
+        durationValue: totalDuration
+      });
+
+      // Rotaları güncelle
+      setRoutes(routes);
     } catch (error) {
       if (error.message && error.message.includes('ZERO_RESULTS')) {
         toast.error('Seçilen iki nokta arasında yol bulunamadı. Lütfen farklı bir konum seçin.');
@@ -380,9 +393,11 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Konumlar değiştiğinde rotayı hesapla
   useEffect(() => {
+    console.log('🔄 useEffect: calculateRoute - Rota hesaplama', { pickupLocation, deliveryLocation });
     if (pickupLocation && deliveryLocation) {
+//calculateRoute();
     }
-  }, [pickupLocation, deliveryLocation, addWaypoints]);
+  }, [pickupLocation, deliveryLocation]);
 
   const getKmBasedPrice = (km, kmBasedFees) => {
     // Backend'den gelen KM fiyatlarına göre hesaplama
@@ -404,7 +419,7 @@ export default function TopluCekiciModal({ onClose }) {
 
   // setLocationWithValidation fonksiyonunu güncelle
   const setLocationWithValidation = (setter, location) => {
-    const loc = normalizeLocation({lat: location.lat, lng: location.lng, address: location.address});
+    const loc = normalizeLocation(location);
     if (loc && isValidCoordinate(loc.lat) && isValidCoordinate(loc.lng)) {
       setter(loc);
     } else {
@@ -452,22 +467,49 @@ export default function TopluCekiciModal({ onClose }) {
     }
   };
 
-  const calculateTotalPrice = async (input, showDebug = false) => {
-    input.routeInfo = getRouteInfo();
-    console.log('input.routeInfo.wayPointsKm', input.routeInfo);
+  const calculateWaypoints = async (input) => {
+      // 1. Aşama: Konum -> Otopark (Alınacak şehir)
+      if (!input.pickupOtopark && input.pickupLocation && input.sehirFiyatlandirma) {
+        const pickupOtoparkLocation = {
+          lat: Number(input.sehirFiyatlandirma.otoparkLat),
+          lng: Number(input.sehirFiyatlandirma.otoparkLng)
+        };
+        setWaypoints([...waypoints, {lat: pickupOtoparkLocation.lat, lng: pickupOtoparkLocation.lng, name: "pickupOtoparkLocation"}])
 
+      } else if (showDebug) {
+        console.log('\n1️⃣ Alınacak Konum -> Otopark: Gerekli parametreler eksik!');
+      }
+
+      // 2. Aşama: Otopark -> Otopark (Toplu Çekici)
+      if (input.sehirFiyatlandirma && input.deliverySehirFiyatlandirma && input.fiyatlandirma) {
+        const pickupOtoparkLocation = {
+          lat: Number(input.sehirFiyatlandirma.otoparkLat),
+          lng: Number(input.sehirFiyatlandirma.otoparkLng)
+        };
+        const deliveryOtoparkLocation = {
+          lat: Number(input.deliverySehirFiyatlandirma.otoparkLat),
+          lng: Number(input.deliverySehirFiyatlandirma.otoparkLng)
+        };
+        setWaypoints([...waypoints, {lat: deliveryOtoparkLocation.lat, lng: deliveryOtoparkLocation.lng, name: "deliveryOtoparkLocation"}])
+      } else if (showDebug) {
+        console.log('\n2️⃣ Otopark -> Otopark (Toplu Çekici): Gerekli parametreler eksik!');
+      }
+
+      // 3. Aşama: Otopark -> Konum (Teslim edilecek şehir)
+      if (!input.deliveryOtopark && input.deliveryLocation && input.deliverySehirFiyatlandirma) {
+        const deliveryOtoparkLocation = {
+          lat: Number(input.deliverySehirFiyatlandirma.otoparkLat),
+          lng: Number(input.deliverySehirFiyatlandirma.otoparkLng)
+        };
+        setWaypoints([...waypoints, {lat: deliveryOtoparkLocation.lat, lng: deliveryOtoparkLocation.lng, name: "deliveryOtoparkLocation"}])
+      } else if (showDebug) {
+        console.log('\n3️⃣ Otopark -> Teslim Edilecek Konum: Gerekli parametreler eksik!');
+      }
+
+  }
+
+  const calculateTotalPrice = async (input, showDebug = false) => {
     try {
-      console.log('💰 calculateTotalPrice çağrıldı');
-      console.log('Alınacak Konum:', input.pickupLocation);
-      console.log('Alınacak Otopark:', input.pickupOtopark);
-      console.log('Alınacak Şehir Fiyatlandırması:', input.sehirFiyatlandirma);
-      console.log('Teslim Edilecek Konum:', input.deliveryLocation);
-      console.log('Teslim Edilecek Otopark:', input.deliveryOtopark);
-      console.log('Teslim Edilecek Şehir Fiyatlandırması:', input.deliverySehirFiyatlandirma);
-      console.log('Genel Fiyatlandırma:', input.fiyatlandirma);
-      console.log('KM Bazlı Ücretler:', input.kmBasedFees);
-      console.log('Araçlar:', input.araclar);
-      
       if (showDebug) {
         console.log('--- DEBUG GİRDİLERİ ---');
         console.log('Alınacak Konum:', input.pickupLocation);
@@ -482,74 +524,15 @@ export default function TopluCekiciModal({ onClose }) {
         console.log('-------------------');
       }
 
-      // Check if routeInfo exists and has wayPointsKm
-      if (!input.routeInfo || !input.routeInfo.wayPointsKm) {
-        console.warn('Route info or wayPointsKm is missing, cannot calculate price');
-        return { totalPrice: 0 };
-      }
-      
       let totalPrice = 0;
       let routes = [];
-      let index = 0;
-      // 1. Aşama: Konum -> Otopark (Alınacak şehir)
-      console.log('input.routeInfo.wayPointsKm', input.routeInfo.wayPointsKm);
-      if (!input.pickupOtopark && input.pickupLocation && input.sehirFiyatlandirma) {
-        const response = await api.get(`/api/variables/toplu-cekici/sehirler/${input.sehirFiyatlandirma}`);
-        let sehirFiyatlandirma = response.data;
-        let pikcupkm = input.routeInfo.wayPointsKm[index];
-        let pickupOtoparkBasePrice = Number(sehirFiyatlandirma.basePrice);
-        let pickupOtoparkKmPrice = Number(sehirFiyatlandirma.basePricePerKm);
-        let pickupOtoparkPrice = pickupOtoparkBasePrice + (pikcupkm * pickupOtoparkKmPrice);
-        // 1.aşama fiyatı
-        console.log('1.aşama yazdır')
-        console.log('sehirFiyatlandirma', sehirFiyatlandirma)
-        console.log('pikcupkm', pikcupkm)
-        console.log('pickupOtoparkBasePrice', pickupOtoparkBasePrice)
-        console.log('pickupOtoparkKmPrice', pickupOtoparkKmPrice)
-        console.log('pickupOtoparkPrice', pickupOtoparkPrice)
-        totalPrice += pickupOtoparkPrice;
-        console.log('totalPrice', totalPrice)
-        console.log('--------------------------------')
-        index++;
-      }
 
-      // 2. Aşama: Otopark -> Otopark (Toplu Çekici)
-      if (input.sehirFiyatlandirma && input.deliverySehirFiyatlandirma && input.fiyatlandirma) {
-        let otoparkToOtoparkKm = input.routeInfo.wayPointsKm[index];
-        const kmBasedPrice = getKmBasedPrice(otoparkToOtoparkKm, input.kmBasedFees);
-        const otoparkToOtoparkPrice = Number(input.fiyatlandirma.basePrice) + (otoparkToOtoparkKm * kmBasedPrice);
-        totalPrice += otoparkToOtoparkPrice;
-        console.log('2.aşama yazdır')
-        console.log('fiyatlandirma', input.fiyatlandirma)
-        console.log('otoparkToOtoparkKm', otoparkToOtoparkKm)
-        console.log('kmBasedPrice', kmBasedPrice)
-        console.log('otoparkToOtoparkPrice', otoparkToOtoparkPrice)
-        console.log('totalPrice', totalPrice)
-        console.log('--------------------------------')
-        index++;
-      }
-      showDebug = true;
-      // 3. Aşama: Otopark -> Konum (Teslim edilecek şehir)
-      if (!input.deliveryOtopark && input.deliveryLocation && input.deliverySehirFiyatlandirma) {
-        const response = await api.get(`/api/variables/toplu-cekici/sehirler/${input.deliverySehirFiyatlandirma}`);
-        let deliverySehirFiyatlandirma = response.data;
-        let deliveryKm = input.routeInfo.wayPointsKm[index];
-        let deliveryOtoparkBasePrice = Number(deliverySehirFiyatlandirma.basePrice);
-        let deliveryOtoparkKmPrice = Number(deliverySehirFiyatlandirma.basePricePerKm);
-        let deliveryOtoparkPrice = deliveryOtoparkBasePrice + (deliveryKm * deliveryOtoparkKmPrice);
-        totalPrice += deliveryOtoparkPrice;
-        console.log('3.aşama yazdır')
-        console.log('deliverySehirFiyatlandirma', deliverySehirFiyatlandirma)
-        console.log('deliveryKm', deliveryKm)
-        console.log('deliveryOtoparkBasePrice', deliveryOtoparkBasePrice)
-        console.log('deliveryOtoparkKmPrice', deliveryOtoparkKmPrice)
-        console.log('deliveryOtoparkPrice', deliveryOtoparkPrice)
-        console.log('totalPrice', totalPrice)
-        console.log('--------------------------------')
-        index++;
-      }
-      let tempPrice = totalPrice; // 10000
+
+      totalPrice = routeInfo.distance * input.fiyatlandirma.basePricePerKm;
       // 4. Aşama: Araç bazlı hesaplama
+      if (showDebug) {
+        console.log('\n4️⃣ Araç Detayları:');
+      }
       for (const arac of input.araclar) {
         if (showDebug) {
           console.log(`\n🚗 Araç ${input.araclar.indexOf(arac) + 1}:`);
@@ -566,14 +549,11 @@ export default function TopluCekiciModal({ onClose }) {
           console.log('- Segment Çarpanı:', segmentMultiplier.toFixed(2));
           console.log('- Durum Ücreti:', statusMultiplier.toFixed(2), 'TL');
         }
-        const aracPrice = (tempPrice * ((segmentMultiplier) - 1)) + (statusMultiplier); //1.2 
+        const aracPrice = (totalPrice * segmentMultiplier) + statusMultiplier;
         if (showDebug) {
           console.log('- Araç Toplam Fiyatı:', aracPrice.toFixed(2), 'TL');
         }
-        totalPrice += aracPrice;
-        console.log('aracPrice', aracPrice)
-        console.log('totalPrice', totalPrice)
-        console.log('--------------------------------')
+        totalPrice = aracPrice;
       }
 
       // 5. Aşama: KDV Hesaplama
@@ -588,32 +568,116 @@ export default function TopluCekiciModal({ onClose }) {
         console.log('\n💰 Final Fiyat (KDV Dahil):', totalPrice.toFixed(2), 'TL');
       }
 
-      return { totalPrice: Math.round(totalPrice) };
+      return { totalPrice: Math.round(totalPrice), routes };
     } catch (error) {
       console.error('Fiyat hesaplama hatası:', error);
       throw error;
     }
   };
 
+  // Fiyat hesaplama useEffect'ini güncelle
+  useEffect(() => {
+    console.log('🔄 useEffect: calculatePrice - Fiyat hesaplama', {
+      pickupLocation: !!pickupLocation,
+      deliveryLocation: !!deliveryLocation,
+      araclarLength: araclar.length,
+      sehirFiyatlandirma: !!sehirFiyatlandirma,
+      fiyatlandirma: !!fiyatlandirma
+    });
+    const calculatePrice = async () => {
+      if (
+        pickupLocation &&
+        deliveryLocation &&
+        araclar.length > 0 &&
+        sehirFiyatlandirma &&
+        fiyatlandirma
+      ) {
+//        const result = await calculateTotalPrice({
+//          pickupLocation,
+//          deliveryLocation,
+//          pickupOtopark,
+//          deliveryOtopark,
+//          araclar,
+//          sehirFiyatlandirma,
+//          deliverySehirFiyatlandirma,
+//          fiyatlandirma,
+//          kmBasedFees
+//        });
+        setToplamFiyat(result.totalPrice);
+        setRoutes(result.routes);
+      }
+    };
+
+//    calculatePrice();
+  }, [pickupLocation, deliveryLocation, araclar, sehirFiyatlandirma, deliverySehirFiyatlandirma, fiyatlandirma, pickupOtopark, deliveryOtopark, kmBasedFees]);
+
+  // Debounce edilmiş değerler
+  const debouncedPickupLocation = useDebounce(pickupLocation, 500);
+  const debouncedDeliveryLocation = useDebounce(deliveryLocation, 500);
+  const debouncedAraclar = useDebounce(araclar, 500);
+  const debouncedRouteInfo = useDebounce(routeInfo, 500);
+
+  // Konumlar değiştiğinde fiyat hesapla
+  useEffect(() => {
+    console.log('🔄 useEffect: calculateTotalPrice (Debounced Locations) - Konum değişikliği fiyat hesaplama', {
+      debouncedPickupLocation: !!debouncedPickupLocation,
+      debouncedDeliveryLocation: !!debouncedDeliveryLocation
+    });
+    if (debouncedPickupLocation && debouncedDeliveryLocation) {
+//      calculateTotalPrice({
+//        pickupLocation,
+//        deliveryLocation,
+//        pickupOtopark,
+//        deliveryOtopark,
+//        araclar,
+//        fiyatlandirma,
+//        sehirFiyatlandirma
+//      });
+    }
+  }, [debouncedPickupLocation, debouncedDeliveryLocation, calculateTotalPrice, pickupLocation, deliveryLocation, pickupOtopark, deliveryOtopark, araclar, fiyatlandirma, sehirFiyatlandirma]);
 
   // Araç listesi değiştiğinde fiyat hesapla
   useEffect(() => {
-    if (araclar?.length > 0) {
-      calculateTotalPrice({
-        pickupLocation,
-        deliveryLocation,
-        pickupOtopark,
-        deliveryOtopark,
-        araclar,
-        fiyatlandirma,
-        sehirFiyatlandirma
-      });
+    console.log('🔄 useEffect: calculateTotalPrice (Debounced Vehicles) - Araç değişikliği fiyat hesaplama', {
+      debouncedAraclarLength: debouncedAraclar?.length || 0
+    });
+    if (debouncedAraclar?.length > 0) {
+//      calculateTotalPrice({
+//        pickupLocation,
+//        deliveryLocation,
+//        pickupOtopark,
+//        deliveryOtopark,
+//        araclar,
+//        fiyatlandirma,
+//        sehirFiyatlandirma
+//      });
     }
-  }, [araclar, calculateTotalPrice, pickupLocation, deliveryLocation, pickupOtopark, deliveryOtopark, araclar, fiyatlandirma, sehirFiyatlandirma]);
+  }, [debouncedAraclar, calculateTotalPrice, pickupLocation, deliveryLocation, pickupOtopark, deliveryOtopark, araclar, fiyatlandirma, sehirFiyatlandirma]);
 
+  // Rota bilgisi güncellendiğinde fiyat hesapla
+  useEffect(() => {
+    console.log('🔄 useEffect: calculateTotalPrice (Debounced Route Info) - Rota bilgisi değişikliği fiyat hesaplama', {
+      debouncedRouteInfo: !!debouncedRouteInfo
+    });
+    if (debouncedRouteInfo) {
+//      calculateTotalPrice({
+//        pickupLocation,
+//        deliveryLocation,
+//        pickupOtopark,
+//        deliveryOtopark,
+//        araclar,
+//        fiyatlandirma,
+//        sehirFiyatlandirma
+//      });
+    }
+  }, [debouncedRouteInfo, calculateTotalPrice, pickupLocation, deliveryLocation, pickupOtopark, deliveryOtopark, araclar, fiyatlandirma, sehirFiyatlandirma]);
 
   // Şehir seçildiğinde fiyatlandırma ve otopark bilgisi çek
   useEffect(() => {
+    console.log('🔄 useEffect: fetchSehirFiyat (Pickup) - Alış şehri fiyatlandırma', {
+      selectedPickupCity,
+      pickupOtopark
+    });
     if (selectedPickupCity) {
       const fetchSehirFiyat = async () => {
         try {
@@ -638,6 +702,10 @@ export default function TopluCekiciModal({ onClose }) {
   }, [selectedPickupCity, pickupOtopark]);
 
   useEffect(() => {
+    console.log('🔄 useEffect: fetchSehirFiyat (Delivery) - Teslim şehri fiyatlandırma', {
+      selectedDeliveryCity,
+      deliveryOtopark
+    });
     if (selectedDeliveryCity) {
       const fetchSehirFiyat = async () => {
         try {
@@ -661,6 +729,13 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Remove duplicate useEffect hooks and consolidate them
   useEffect(() => {
+    console.log('🔄 useEffect: handleLocationUpdate - Konum güncelleme', {
+      pickupOtopark,
+      deliveryOtopark,
+      selectedPickupCity,
+      selectedDeliveryCity,
+      fiyatlandirma: !!fiyatlandirma
+    });
     const handleLocationUpdate = async (isPickup) => {
       const city = isPickup ? selectedPickupCity : selectedDeliveryCity;
       const isOtopark = isPickup ? pickupOtopark : deliveryOtopark;
@@ -669,15 +744,15 @@ export default function TopluCekiciModal({ onClose }) {
       const setSehirFiyat = isPickup ? setSehirFiyatlandirma : setDeliverySehirFiyatlandirma;
 
       if (isOtopark && city && fiyatlandirma?.sehirler) {
-        const sehirValueFiyat = fiyatlandirma.sehirler.find(s => s.sehirAdi === city);
-        if (sehirValueFiyat) {
-          setSearchValue(sehirValueFiyat.otoparkAdres);
+        const sehir = fiyatlandirma.sehirler.find(s => s.sehirAdi === city);
+        if (sehir) {
+          setSearchValue(sehir.otoparkAdres);
           setLocation({
-            lat: Number(sehirValueFiyat.otoparkLat),
-            lng: Number(sehirValueFiyat.otoparkLng),
-            address: sehirValueFiyat.otoparkAdres
+            lat: Number(sehir.otoparkLat),
+            lng: Number(sehir.otoparkLng),
+            address: sehir.otoparkAdres
           });
-          setSehirFiyat(sehirValueFiyat);
+          setSehirFiyat(sehir);
         }
       }
     };
@@ -688,26 +763,30 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Add new useEffect for handling city detection
   useEffect(() => {
+    console.log('🔄 useEffect: detectCityAndSetPricing - Şehir tespit etme', {
+      pickupLocation: !!pickupLocation,
+      deliveryLocation: !!deliveryLocation,
+      fiyatlandirma: !!fiyatlandirma
+    });
     const detectCityAndSetPricing = async (location, isPickup) => {
       if (!location || !window.google) return;
 
       try {
- 
-        if ( fiyatlandirma?.sehirler) {
+        const cityComponent = getCity();
 
+        if (cityComponent && fiyatlandirma?.sehirler) {
+          const cityName = cityComponent.long_name;
+          const sehir = fiyatlandirma.sehirler.find(s => s.sehirAdi === cityName);
+          
+          if (sehir) {
             if (isPickup) {
-              const cityName = getCity();
-              if (cityName) {
-                setSelectedPickupCity(cityName);
-                setSehirFiyatlandirma(getCity());
-              }
+              setSelectedPickupCity(cityName);
+              setSehirFiyatlandirma(sehir);
             } else {
-              const cityName = getCity2();
-              if (cityName) {
-                setSelectedDeliveryCity(cityName);
-                setDeliverySehirFiyatlandirma(getCity2());
-              }
+              setSelectedDeliveryCity(cityName);
+              setDeliverySehirFiyatlandirma(sehir);
             }
+          }
         }
       } catch (error) {
         console.error('City detection error:', error);
@@ -722,6 +801,15 @@ export default function TopluCekiciModal({ onClose }) {
     }
   }, [pickupLocation, deliveryLocation, fiyatlandirma]);
 
+    // City helper functions
+    const getCity = () => {
+      return sehir;
+    };
+  
+    const handleCityChange = (city) => {
+      setSehir(city);
+    };
+  
   // Improve geolocation error handling
   const handleCurrentLocation = async (target) => {
     if (!navigator.geolocation) {
@@ -919,6 +1007,7 @@ export default function TopluCekiciModal({ onClose }) {
   };
 
   useEffect(() => {
+    console.log('🔄 useEffect: Google Autocomplete - Otomatik tamamlama kurulumu', { isLoaded });
     if (isLoaded && window.google) {
       const pickupInput = document.getElementById('pickup-input');
       const deliveryInput = document.getElementById('delivery-input');
@@ -1127,26 +1216,38 @@ export default function TopluCekiciModal({ onClose }) {
     });
   };
 
-  const handleMapClick = async (lat, lng , address, sehir) => {
+  const handleMapClick = async (lat, lng, address, sehir) => {
+    const newLocation = {lat, lng, address}
 
-    const newLocation = { lat, lng, address, sehir }
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    console.log('newLocation', newLocation);
-    // Şehir tespiti yap
+    // Şehir fiyatlandırmasını getir
+    if (sehir) {
+      try {
+        const normalizedSehir = normalizeSehirAdi(sehir);
+        const response = await api.get(`/api/variables/toplu-cekici/sehirler/${normalizedSehir}`);
+        if (activeLocation === 'pickup') {
+          setSehirFiyatlandirma(response.data);
+        } else {
+          setDeliverySehirFiyatlandirma(response.data);
+        }
+      } catch (error) {
+        console.error('Şehir fiyatlandırması getirilemedi:', error);
+        if (activeLocation === 'pickup') {
+          setSehirFiyatlandirma(null);
+        } else {
+          setDeliverySehirFiyatlandirma(null);
+        }
+      }
+    }
+    
+
 
     if (activeLocation === 'pickup') {
-      const detectedCity = getCity();
       setLocationWithValidation(setPickupLocation, newLocation);
       setPickupSearchValue(address);
-      if (detectedCity) {
-        setSelectedPickupCity(detectedCity);
+      if (sehir) {
+        setSelectedPickupCity(sehir);
       }
     } else {
-      const detectedCity = getCity2();
       setLocationWithValidation(setDeliveryLocation, newLocation);
       setDeliverySearchValue(address);
       if (detectedCity) {
@@ -1183,12 +1284,21 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Add useEffect to show route map when both locations are selected
   useEffect(() => {
+    console.log('🔄 useEffect: Route Map Activation - Rota haritası etkinleştirme', {
+      pickupLocation: !!pickupLocation,
+      deliveryLocation: !!deliveryLocation
+    });
     if (pickupLocation && deliveryLocation) {
       setActiveMapPanel('route');
     }
   }, [pickupLocation, deliveryLocation]);
 
   useEffect(() => {
+    console.log('🔄 useEffect: Step 3 Route Map - 3. adımda rota haritası', {
+      step,
+      pickupLocation: !!pickupLocation,
+      deliveryLocation: !!deliveryLocation
+    });
     if (
       step === 3 &&
       pickupLocation &&
@@ -1228,7 +1338,18 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Fiyat hesaplamayı useEffect ile tetikle
   useEffect(() => {
-    fiyatHesapla();
+    console.log('🔄 useEffect: fiyatHesapla - Final fiyat hesaplama', {
+      pickupLocation: !!pickupLocation,
+      deliveryLocation: !!deliveryLocation,
+      araclarLength: araclar.length,
+      sehirFiyatlandirma: !!sehirFiyatlandirma,
+      deliverySehirFiyatlandirma: !!deliverySehirFiyatlandirma,
+      fiyatlandirma: !!fiyatlandirma,
+      pickupOtopark,
+      deliveryOtopark,
+      kmBasedFeesLength: kmBasedFees.length
+    });
+    //fiyatHesapla();
   }, [pickupLocation, deliveryLocation, araclar, sehirFiyatlandirma, deliverySehirFiyatlandirma, fiyatlandirma, pickupOtopark, deliveryOtopark, kmBasedFees, fiyatHesapla]);
 
   return (
@@ -1333,21 +1454,21 @@ export default function TopluCekiciModal({ onClose }) {
                         </div>
                       </div>
                       {isLoaded && activeMapPanel === 'pickup' && (
-                        <div style={mapStyles} className="relative mt-2">
+                        <div className="mt-2">
                           <LocationPicker
                             isStartPicker={true}
                             onLocationChange={(lat, lng, address) => {
+                              setPickupSearchValue(address);
                               setActiveLocation('pickup');
-                              setPickupLocation({lat: lat, lng: lng, address: address});
-                              setPickupSearchValue("");
                               handleMapClick(lat, lng, address, getCity());
+                              setActiveMapPanel("delivery");
+                              setSelectedPickupCity(getCity());
+                              setPickupLocation({ lat, lng});
                             }}
-                            onCityChange={ (city) => {
-                              setSehir(city);
-                            }}
-                            onCalculateRoute={ () => {}}
+                            onCityChange={handleCityChange}
+                            onCalculateRoute={() => {}}
                             mapStyles={mapStyles}
-                            />
+                          />
                         </div>
                       )}
                     </div>
@@ -1434,18 +1555,20 @@ export default function TopluCekiciModal({ onClose }) {
                         </div>
                       </div>
                       {isLoaded && activeMapPanel === 'delivery' && (
-                        <div style={mapStyles} className="relative mt-2">
+                        <div className="mt-2">
                           <LocationPicker
                             isStartPicker={false}
                             onLocationChange={(lat, lng, address) => {
+                              setDeliverySearchValue(address);
                               setActiveLocation('delivery');
-                              setDeliveryLocation({lat: lat, lng: lng, address: address});
-                              setDeliverySearchValue("");
-                              handleMapClick(lat, lng, address, getCity2());
+                              handleMapClick(lat, lng, address, getCity());
+                              // sehiri kaydeyt
+                              setSelectedDeliveryCity(getCity());
+                              setDeliveryLocation({ lat, lng});
                             }}
-                            onCityChange={ (city) => {
-                              setSehir2(city);
-                            }}
+                            onCityChange={handleCityChange}
+                            onCalculateRoute={() => {}}
+                            mapStyles={mapStyles}
                           />
                         </div>
                       )}
@@ -1458,9 +1581,6 @@ export default function TopluCekiciModal({ onClose }) {
                 type="submit"
                 disabled={!pickupLocation || !deliveryLocation || (pickupOtopark && !selectedPickupCity) || (deliveryOtopark && !selectedDeliveryCity)}
                 className="w-full py-2.5 px-4 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => {
-                  addWaypoints();
-                }}
               >
                 Devam Et
               </button>
@@ -1660,18 +1780,14 @@ export default function TopluCekiciModal({ onClose }) {
                 </button>
               </div>
 
-              {isLoaded && (
-                <div key="map" style={mapStyles} className="relative mt-2">
-                  <MapComponent
-                    waypoints={wayPoints}
-                    mapStyles={mapStyles}
+              {isLoaded && memoizedStartLocation && memoizedEndLocation && (
+                <div style={{ height: '300px' }}>
+                  <MapComponent 
+                    waypoints={waypoints}
                     shouldCalculate={true}
-                    onValuesChange={(distance, duration, wayPointsKm) => {
-                      console.log('3232wayPointsKm', wayPointsKm);
-                      setRouteInfoHandle(distance, duration, wayPointsKm)
-                    }}          
+                    mapStyles={mapStyles}
+                    onValuesChange={handleValuesChange}
                   />
-
                 </div>
               )}
 

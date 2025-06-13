@@ -3,19 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 
-// Leaflet marker ikonlarını düzelt
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
 interface MapComponentProps {
-  startLocation: { lat: number; lng: number };
-  endLocation: { lat: number; lng: number };
+  // Mevcut tek rota modu (backward compatibility için)
+  startLocation?: { lat: number; lng: number };
+  endLocation?: { lat: number; lng: number };
+  
+  // Yeni çoklu durak modu
+  waypoints?: { 
+    lat: number; 
+    lng: number; 
+    name?: string; // "Durak 1", "Merkez", vs.
+  }[];
+  
   shouldCalculate: boolean;
-  onValuesChange: (distance: number, duration: number) => void;
+  onValuesChange: (distance: number, duration: number, wayPointsKm: number[] ) => void;
   mapStyles?: {
     width: string;
     height: string;
@@ -61,33 +62,6 @@ const BRIDGES = [
       east: 29.0000,
       west: 28.9700
     }
-  },
-  { 
-    name: "Marmaray", 
-    bounds: {
-      north: 41.0040, 
-      south: 40.9960, 
-      east: 29.0180,
-      west: 28.9900
-    }
-  },
-  { 
-    name: "Haliç Köprüsü", 
-    bounds: {
-      north: 41.0350, 
-      south: 41.0320, 
-      east: 28.9490,
-      west: 28.9400
-    }
-  },
-  { 
-    name: "Galata Köprüsü", 
-    bounds: {
-      north: 41.0210, 
-      south: 41.0180, 
-      east: 28.9760,
-      west: 28.9710
-    }
   }
 ];
 
@@ -109,11 +83,29 @@ interface Point {
   lat: number;
 }
 
-const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, onValuesChange }: MapComponentProps) => {
+const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, mapStyles, onValuesChange }: MapComponentProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const [route, setRoute] = useState<any>(null);
   const [detectedBridges, setDetectedBridges] = useState<string[]>([]);
   const controlRef = useRef<L.Control | null>(null);
+  
+  // Props validation ve mode belirleme
+  const isWaypointMode = waypoints && waypoints.length >= 2;
+  const isSingleRouteMode = startLocation && endLocation;
+  
+  // Mode validation
+  if (!isWaypointMode && !isSingleRouteMode) {
+    console.error("❌ MapComponent: Ya waypoints (min 2) ya da startLocation+endLocation sağlanmalı!");
+    return <div className="text-red-500 p-4">Harita için geçerli koordinatlar sağlanmadı.</div>;
+  }
+  
+  // Aktif koordinatları belirle (waypoints öncelikli)
+  const activeCoordinates = isWaypointMode 
+    ? waypoints! 
+    : [
+        { lat: startLocation!.lat, lng: startLocation!.lng, name: "Başlangıç" },
+        { lat: endLocation!.lat, lng: endLocation!.lng, name: "Bitiş" }
+      ];
   
   // Koordinatları x, y (lng, lat) noktasına dönüştür
   const coordToPoint = (lng: number, lat: number): Point => ({
@@ -246,14 +238,17 @@ const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, 
       // Rota İstanbul'un iki yakası arasında mı kontrol et
       const isEuropeanSide = (lng: number) => lng < 29.00; // Yaklaşık olarak boğazın batısı
       
-      const startIsEuropean = isEuropeanSide(startLocation.lng);
-      const endIsEuropean = isEuropeanSide(endLocation.lng);
+      const firstCoord = activeCoordinates[0];
+      const lastCoord = activeCoordinates[activeCoordinates.length - 1];
+      
+      const startIsEuropean = isEuropeanSide(firstCoord.lng);
+      const endIsEuropean = isEuropeanSide(lastCoord.lng);
       
       if (startIsEuropean !== endIsEuropean) {
         console.warn("🌉 Rota, boğazın iki yakası arasında geçiş içeriyor ama köprü tespit edilemedi!");
         
         // Boğaz geçişi olan rotalar için manuel köprü tespiti
-        const possibleBridge = determinePossibleBridge(startLocation, endLocation);
+        const possibleBridge = determinePossibleBridge(firstCoord, lastCoord);
         if (possibleBridge) {
           console.log(`🌉 Manuel tespit: Muhtemelen ${possibleBridge} kullanılıyor`);
           bridges.push(`${possibleBridge} (tahmini)`);
@@ -347,11 +342,10 @@ const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, 
     return "Avrasya Tüneli veya Marmaray";
   };
   
-  // Yeni rota hesaplamak için
-  const calculateRoute = () => {
-    console.log("🚗 Rota hesaplanıyor...");
-    console.log("🚗 Başlangıç noktası:", startLocation);
-    console.log("🚗 Bitiş noktası:", endLocation);
+  // Çoklu segment rota hesaplama fonksiyonu
+  const calculateMultiSegmentRoute = async (coordinates: typeof activeCoordinates) => {
+    console.log("🚗 Çoklu segment rota hesaplanıyor...");
+    console.log("📍 Koordinatlar:", coordinates);
     
     if (!mapRef.current) {
       console.error("❌ Harita referansı bulunamadı!");
@@ -371,14 +365,10 @@ const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, 
       controlRef.current = null;
     }
 
-    const startPoint: [number, number] = [startLocation.lat, startLocation.lng];
-    const endPoint: [number, number] = [endLocation.lat, endLocation.lng];
-    
-    // Markerleri güncelle
+    // Tüm markerleri temizle (köprü markerleri hariç)
     console.log("📍 Markerler temizleniyor ve yenileri ekleniyor...");
     mapRef.current.eachLayer((layer) => {
       if (layer instanceof L.Marker) {
-        // Marker köprü markeri değilse temizle
         const markerLayer = layer as CustomLayer;
         if (!markerLayer._bridgeMarker && mapRef.current) {
           mapRef.current.removeLayer(layer);
@@ -386,60 +376,102 @@ const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, 
       }
     });
     
-    // Yeni markerleri ekle
-    const startMarker = L.marker(startPoint).addTo(mapRef.current);
-    startMarker.bindPopup("<b>Başlangıç Noktası</b>").openPopup();
-    
-    const endMarker = L.marker(endPoint).addTo(mapRef.current);
-    endMarker.bindPopup("<b>Bitiş Noktası</b>");
-    
-    // Rota isteği yap
-    const routeRequest = {
-      coordinates: [
-        [startLocation.lng, startLocation.lat], // OpenRouteService için (lon, lat) formatında
-        [endLocation.lng, endLocation.lat],
-      ],
-      format: "geojson",
-    };
-
-    console.log("🌐 OpenRouteService API'ye istek gönderiliyor...", routeRequest);
-    
-    fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
-      method: "POST",
-      headers: {
-        Authorization: "5b3ce3597851110001cf62484f7095854058404ead4a446b369ac2bc",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(routeRequest),
-    })
-      .then((res) => {
-        console.log("🌐 API yanıt verdi, durum kodu:", res.status);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("📄 Rota verisi alındı:", data);
-        console.log("🔍 Rota verisi: km cinsinden", Math.round(data.features[0].properties.segments[0].distance / 1000));
-        onValuesChange(Math.round(data.features[0].properties.segments[0].distance / 1000), Math.round(data.features[0].properties.segments[0].duration / 60));
-        // Köprüleri tespit et
-        const bridges = detectBridgesOnRoute(data);
-        setDetectedBridges(bridges);
+    // Waypoint markerleri ekle
+    coordinates.forEach((coord, index) => {
+      if (mapRef.current) {
+        const markerIcon = L.divIcon({
+          html: `<div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">${index + 1}</div>`,
+          className: 'waypoint-marker',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
         
-        // Köprü bilgisini popup'ta göster
-        let popupContent = "";
-        if (bridges.length > 0) {
-          popupContent = `<b>Rota üzerindeki köprüler:</b><br/>` + 
-            bridges.map(bridge => `- ${bridge}`).join('<br/>');
-          console.log("📝 Köprü bilgisi popup içeriği oluşturuldu.");
-        } else {
-          popupContent = "<b>Rota üzerinde köprü bulunamadı.</b>";
-          console.log("📝 Rota üzerinde köprü bulunamadı.");
+        const marker = L.marker([coord.lat, coord.lng], { icon: markerIcon }).addTo(mapRef.current);
+        marker.bindPopup(`<b>${coord.name || `Durak ${index + 1}`}</b>`);
+        
+        if (index === 0) marker.openPopup();
+      }
+    });
+    
+    // Segmentleri oluştur (A->B, B->C, C->D...)
+    const segments = [];
+    for (let i = 0; i < coordinates.length - 1; i++) {
+      segments.push([
+        [coordinates[i].lng, coordinates[i].lat],
+        [coordinates[i + 1].lng, coordinates[i + 1].lat]
+      ]);
+    }
+    
+    console.log(`🔄 ${segments.length} segment için rota hesaplanacak...`);
+    
+    let totalDistance = 0;
+    let totalDuration = 0;
+    const allRouteData = [];
+    const allBridges = new Set<string>();
+    let wayPointsKm2 = [];
+    try {
+      // Her segment için rota hesapla
+      for (let i = 0; i < segments.length; i++) {
+        console.log(`🌐 Segment ${i + 1}/${segments.length} için API isteği gönderiliyor...`);
+        
+        const routeRequest = {
+          coordinates: segments[i],
+          format: "geojson",
+        };
+        
+        const response = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
+          method: "POST",
+          headers: {
+            Authorization: "5b3ce3597851110001cf62484f7095854058404ead4a446b369ac2bc",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(routeRequest),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Segment ${i + 1} için API hatası: ${response.status}`);
         }
         
-        // Özelleştirilmiş stil ile GeoJSON ekleme
-        console.log("🗺️ Rota haritaya ekleniyor...");
-        const newRoute = L.geoJSON(data, {
+        const segmentData = await response.json();
+        console.log(`📄 Segment ${i + 1} verisi alındı:`, segmentData);
+        
+        // Segment bilgilerini topla
+        const segmentDistance = segmentData.features[0].properties.segments[0].distance;
+        const segmentDuration = segmentData.features[0].properties.segments[0].duration;
+        
+        const segmentKm = Math.round(segmentDistance / 1000);
+        console.log(`📍 Segment ${i + 1} mesafesi: ${segmentKm}km`);
+        wayPointsKm2.push(segmentKm);
+        
+        totalDistance += segmentDistance;
+        totalDuration += segmentDuration;
+        allRouteData.push(segmentData);
+        
+        console.log(`📊 Segment ${i + 1}: ${segmentKm}km, ${Math.round(segmentDuration / 60)}dk`);
+        
+        // Bu segment için köprüleri tespit et
+        const segmentBridges = detectBridgesOnRoute(segmentData);
+        segmentBridges.forEach(bridge => allBridges.add(bridge));
+      }
+      
+      console.log(`📊 Toplam: ${Math.round(totalDistance / 1000)}km, ${Math.round(totalDuration / 60)}dk`);
+      console.log('📍 Tüm segment mesafeleri:', wayPointsKm2);
+      
+      // Parent component'e toplam değerleri bildir
+      onValuesChange(Math.round(totalDistance / 1000), Math.round(totalDuration / 60), wayPointsKm2);
+      
+      // Tüm köprüleri güncelle
+      const bridgeList = Array.from(allBridges);
+      setDetectedBridges(bridgeList);
+      
+      // Tüm segment rotalarını haritaya ekle
+      console.log("🗺️ Tüm segmentler haritaya ekleniyor...");
+      const combinedRoute = L.layerGroup();
+      
+      allRouteData.forEach((segmentData, index) => {
+        const segmentRoute = L.geoJSON(segmentData, {
           style: {
-            color: "#3388ff",
+            color: `hsl(${(index * 60) % 360}, 70%, 50%)`, // Her segment farklı renk
             weight: 6,
             opacity: 0.8,
             lineJoin: "round",
@@ -447,56 +479,36 @@ const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, 
           },
           onEachFeature: (feature, layer) => {
             if (feature.properties && feature.properties.segments) {
-              layer.bindPopup(popupContent);
+              const segmentDistance = Math.round(feature.properties.segments[0].distance / 1000);
+              const segmentDuration = Math.round(feature.properties.segments[0].duration / 60);
+              layer.bindPopup(`<b>Segment ${index + 1}</b><br/>Mesafe: ${segmentDistance}km<br/>Süre: ${segmentDuration}dk`);
             }
           }
-        }).addTo(mapRef.current!);
-        
-        setRoute(newRoute);
-        console.log("✅ Rota başarıyla haritaya eklendi.");
-
-        // Tüm rotayı haritada göstermek için sınırlara yakınlaştır
-        const bounds = L.latLngBounds([startPoint, endPoint]);
-        mapRef.current?.fitBounds(bounds, { padding: [50, 50] });
-        console.log("🔍 Harita görünümü ayarlandı.");
-        
-        // Eğer köprü varsa, bir bildirim göster
-        if (bridges.length > 0) {
-          console.log("📢 Köprü bilgisi paneli oluşturuluyor...");
-          const bridgeInfo = document.createElement('div');
-          bridgeInfo.className = 'bridge-info';
-          bridgeInfo.innerHTML = `
-            <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded shadow-md mb-4">
-              <p class="font-bold">Rota üzerinde ${bridges.length} köprü bulundu:</p>
-              <ul class="mt-2">
-                ${bridges.map(bridge => `<li>- ${bridge}</li>`).join('')}
-              </ul>
-            </div>
-          `;
-          
-          // Bildirim kutusunu haritaya ekle
-          const CustomControl = L.Control.extend({
-            options: {
-              position: 'bottomleft'
-            },
-            onAdd: function() {
-              return bridgeInfo;
-            }
-          });
-          
-          // Yeni kontrolü ekle ve referansını tut
-          const control = new CustomControl();
-          if (mapRef.current) {
-            mapRef.current.addControl(control);
-            controlRef.current = control;
-            console.log("✅ Köprü bilgisi paneli haritaya eklendi.");
-          }
-        }
-      })
-      .catch(error => {
-        console.error("❌ Rota hesaplanırken bir hata oluştu:", error);
-        alert("Rota hesaplanırken bir hata oluştu. Lütfen koordinatları kontrol edin.");
+        });
+        combinedRoute.addLayer(segmentRoute);
       });
+      
+      combinedRoute.addTo(mapRef.current);
+      setRoute(combinedRoute);
+      
+      console.log("✅ Tüm segmentler başarıyla haritaya eklendi.");
+
+      // Tüm rotayı haritada göstermek için sınırlara yakınlaştır
+      const allPoints = coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
+      const bounds = L.latLngBounds(allPoints);
+      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+      console.log("🔍 Harita görünümü ayarlandı.");
+
+      
+    } catch (error) {
+      console.error("❌ Rota hesaplanırken bir hata oluştu:", error);
+      alert("Rota hesaplanırken bir hata oluştu. Lütfen koordinatları kontrol edin.");
+    }
+  };
+  
+  // Yeni rota hesaplamak için
+  const calculateRoute = () => {
+    return calculateMultiSegmentRoute(activeCoordinates);
   };
   
   // Her shouldCalculate değişiminde rotayı hesapla
@@ -505,14 +517,15 @@ const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, 
       console.log("🔄 shouldCalculate değişti, rota yeniden hesaplanıyor...");
       calculateRoute();
     }
-  }, [shouldCalculate, startLocation, endLocation]);
+  }, [shouldCalculate, JSON.stringify(activeCoordinates)]);
   
   useEffect(() => {
     if (mapRef.current !== null) return;
     
     // Başlangıçta haritayı oluştur
     console.log("🗺️ Harita başlatılıyor...");
-    const map = L.map("map").setView([startLocation.lat, startLocation.lng], 13);
+    const firstCoord = activeCoordinates[0];
+    const map = L.map("map").setView([firstCoord.lat, firstCoord.lng], 13);
     mapRef.current = map;
     
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -546,17 +559,7 @@ const MapComponent = ({ startLocation, endLocation, shouldCalculate, mapStyles, 
           border: mapStyles?.border || '',
         }}
       ></div>
-      
-      {detectedBridges.length > 0 && (
-        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded shadow-md mt-4">
-          <p className="font-bold">Rota üzerinde {detectedBridges.length} köprü bulundu:</p>
-          <ul className="mt-2">
-            {detectedBridges.map((bridge, index) => (
-              <li key={index}>- {bridge}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+    
     </div>
   );
 };
