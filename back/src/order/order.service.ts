@@ -48,6 +48,8 @@ export class OrderService {
       serviceType: orderData.serviceType || 'YOL_YARDIM',
       // Yol Yardım için konum bilgileri
       breakdownLocation: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownLocation : null,
+      breakdownLocationLat: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownLocationLat : null,
+      breakdownLocationLng: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownLocationLng : null,
       breakdownDescription: orderData.serviceType === 'YOL_YARDIM' ? orderData.breakdownDescription : null,
       destinationLocation: orderData.serviceType === 'YOL_YARDIM' ? orderData.destinationLocation : null,
       // Özel ve Toplu Çekici için konum bilgileri

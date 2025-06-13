@@ -45,8 +45,6 @@ export default function YolYardimModal({ onClose }) {
   })
 
   const [pnrNumber, setPnrNumber] = useState(null)
-  const [pickupLocation, setPickupLocation] = useState(null)
-  const [deliveryLocation, setDeliveryLocation] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
   const [araclar, setAraclar] = useState([])
   const [musteriBilgileri, setMusteriBilgileri] = useState({
@@ -480,13 +478,6 @@ export default function YolYardimModal({ onClose }) {
     }
 
     try {
-      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-      
-      if (permissionStatus.state === 'denied') {
-        toast.error('Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum iznini etkinleştirin.');
-        return;
-      }
-
       const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' });
       
       const position = await new Promise((resolve, reject) => {
@@ -495,24 +486,34 @@ export default function YolYardimModal({ onClose }) {
           reject,
           {
             enableHighAccuracy: true,
-            timeout: 15000,
+            timeout: 10000,
             maximumAge: 0
           }
         );
       });
 
       const { latitude, longitude } = position.coords;
-      const address = await getAddressFromLatLng(latitude, longitude);
-      const newLocation = { lat: latitude, lng: longitude, address };
+      
+      // İstanbul sınırları kontrolü
+      if (!isWithinIstanbul(latitude, longitude)) {
+        toast.error('Yol yardım hizmeti sadece İstanbul içinde geçerlidir.', { id: 'location' });
+        return;
+      }
+      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+      const data = await response.json();
+      const address = data.results[0].formatted;
+
+      // Basit bir adres formatı oluştur
+      const newLocation = { lat: latitude, lng: longitude, address : address };
       
       setLocation(newLocation);
       setLocationSearchValue(address);
       setShowMap(null);
       
       // Konum seçildikten sonra fiyat hesaplama
-      if (aracBilgileri.tip && selectedAriza) {
-        //calculateRoute(newLocation);
-      }
+      // if (aracBilgileri.tip && selectedAriza) {
+      //   // calculateRoute(newLocation);
+      // }
       
       toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
     } catch (error) {
@@ -751,7 +752,7 @@ export default function YolYardimModal({ onClose }) {
                   </div>
                 </div>
 
-                {showMap && isLoaded && (
+                {showMap && isLoaded && location === null && (
                   <div style={mapStyles} className="relative mt-2">
                     <LocationPicker
                       isStartPicker={true}
