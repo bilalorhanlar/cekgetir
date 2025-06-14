@@ -7,6 +7,7 @@ import api from '@/utils/axios'
 import axios from 'axios'
 import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
+import LocationAutocomplete from '@/components/LocationAutocomplete';
 
 // LocationPicker bileşenini dinamik olarak import et
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
@@ -89,7 +90,22 @@ export default function YolYardimModal({ onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [locationSearchValue, setLocationSearchValue] = useState('')
   const [sehir, setSehir] = useState(null)
+  const [isMapSelected, setIsMapSelected] = useState(false)
+  const [activeMapPanel, setActiveMapPanel] = useState(null)
   
+  // Şehir adını normalize eden fonksiyon
+  function normalizeSehirAdi(sehir) {
+    return sehir
+      .replace("I", 'i')
+      .replace("İ", 'i')
+      .replace("ı", 'i')
+      .replace("ğ", 'g')
+      .replace("ü", 'u')
+      .replace("ş", 's')
+      .replace("ö", 'o')
+      .replace("ç", 'c')
+  }
+
   const getCity = () => {
     return sehir;
   }
@@ -401,74 +417,12 @@ export default function YolYardimModal({ onClose }) {
     })
   }
 
-  const handleInputChange = async (e) => {
-    const value = e.target.value
-    setLocationSearchValue(value)
-    
-    if (value.length > 2 && autocompleteService.current) {
-      try {
-        const response = await autocompleteService.current.getPlacePredictions({
-          input: value,
-          componentRestrictions: { country: 'tr' },
-          types: ['address'],
-          bounds: new window.google.maps.LatLngBounds(
-            { lat: 40.8, lng: 28.4 }, // Güneybatı
-            { lat: 41.5, lng: 29.5 }  // Kuzeydoğu
-          )
-        })
-        setPredictions(response.predictions)
-        setShowAutocomplete(true)
-      } catch (error) {
-        console.error('Autocomplete error:', error)
-      }
-    } else {
-      setPredictions([])
-      setShowAutocomplete(false)
-    }
-  }
-
-  const handlePredictionSelect = async (prediction) => {
-    if (!window.google) return
-
-    const geocoder = new window.google.maps.Geocoder()
-    try {
-      const result = await geocoder.geocode({ placeId: prediction.place_id })
-      if (result.results[0]) {
-        const place = result.results[0]
-        const lat = place.geometry.location.lat()
-        const lng = place.geometry.location.lng()
-
-        // İstanbul sınırları kontrolü
-        if (!isWithinIstanbul(lat, lng)) {
-          toast.error('Yol yardım hizmeti sadece İstanbul içinde geçerlidir.')
-          return
-        }
-
-        const newLocation = {
-          lat,
-          lng,
-          address: place.formatted_address
-        }
-        
-        setLocation(newLocation)
-        setLocationSearchValue(place.formatted_address)
-        //calculateRoute(newLocation)
-        setShowAutocomplete(false)
-        setPredictions([])
-      }
-    } catch (error) {
-      console.error('Geocoding error:', error)
-    }
-  }
-
   const handleMapClick = async (lat, lng, address, sehir) => {
-    const newLocation = { lat, lng, address };
-    setLocation(newLocation);
-    setLocationSearchValue(address);
-    // Konum seçildikten sonra fiyat hesaplama
-    if (aracBilgileri.tip && selectedAriza) {
-      //calculateRoute(newLocation);
-    }
+    setLocation({ lat, lng, address });
+    setSearchValue(address);
+    setIsMapSelected(true);
+    setActiveMapPanel(null);
+    setSehir(sehir);
   };
 
   const handleCurrentLocation = async () => {
@@ -503,7 +457,7 @@ export default function YolYardimModal({ onClose }) {
       const newLocation = { lat: latitude, lng: longitude, address : address };
       
       setLocation(newLocation);
-      setLocationSearchValue(address);
+      setSearchValue(address);
       setShowMap(null);
       
       // Konum seçildikten sonra fiyat hesaplama
@@ -684,32 +638,72 @@ export default function YolYardimModal({ onClose }) {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-[#ebebeb] mb-2">
-                    Konum Seçin
+                    Konum
                   </label>
                   <div className="relative">
                     {isLoaded && (
                       <div className="w-full">
                         <div className="relative">
-                          <input
-                            type="text"
-                            id="location-input"
-                            value={locationSearchValue}
-                            onChange={handleInputChange}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault()
+                          <LocationAutocomplete
+                            value={searchValue}
+                            onChange={e => {
+                              const value = e.target?.value ?? e.value ?? '';
+                              setSearchValue(value);
+                              if (!value) {
+                                setLocation(null);
+                                setSehir(null);
+                                setIsMapSelected(false);
                               }
                             }}
+                            onInputChange={(value) => {
+                              setSearchValue(value);
+                              if (!value) {
+                                setLocation(null);
+                                setSehir(null);
+                                setIsMapSelected(false);
+                              }
+                            }}
+                            onSelect={({ lat, lng, address }) => {
+                              const newLocation = { lat, lng, address: address || searchValue };
+                              setLocation(newLocation);
+                              setSearchValue(address || searchValue);
+                              handleMapClick(lat, lng, address, getCity());
+                              setIsMapSelected(true);
+                              const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                              city.then(res => res.json()).then(data => {
+                                const cityData = data;
+                                setSehir(cityData.address.province || "");
+                              });
+                            }}
                             placeholder="Adres girin veya haritadan seçin"
-                            className="w-full pr-16 px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                            onClick={() => setShowMap(true)}
-                            onFocus={() => setShowAutocomplete(true)}
-                            onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
+                            isMapSelected={isMapSelected}
+                            inputClassName="w-full py-2.5 px-4 bg-[#121212] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 shadow-md placeholder-[#404040]"
+                            suggestionClassName="bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-50 max-h-72 overflow-y-auto text-white"
+                            suggestionItemClassName="px-4 py-3 cursor-pointer hover:bg-yellow-500/10 border-b border-[#404040] last:border-b-0"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 bg-[#141414] z-[101]">
                             <button
                               type="button"
-                              onClick={handleCurrentLocation}
+                              onClick={async () => {
+                                try {
+                                  const position = await new Promise((resolve, reject) => {
+                                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                                  });
+                                  const { latitude, longitude } = position.coords;
+                                  const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+                                  const data = await response.json();
+                                  const address = data.results[0].formatted;
+                                  let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
+                                  setSehir(sehir);
+                                  const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
+                                  setLocation(newLocation);
+                                  setSearchValue(address);
+                                  setIsMapSelected(true);
+                                  toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
+                                } catch (error) {
+                                  toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
+                                }
+                              }}
                               className="text-[#404040] hover:text-white transition-colors"
                               title="Mevcut Konumu Kullan"
                             >
@@ -720,8 +714,11 @@ export default function YolYardimModal({ onClose }) {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setShowMap(!showMap)}
-                              className={`text-[#404040] hover:text-yellow-500 transition-colors ${showMap ? 'text-yellow-500' : ''}`}
+                              onClick={() => {
+                                setShowMap(showMap === 'location' ? null : 'location');
+                                setActiveMapPanel(activeMapPanel === 'location' ? null : 'location');
+                              }}
+                              className={`text-[#404040] hover:text-yellow-500 transition-colors ${activeMapPanel === 'location' ? 'text-yellow-500' : ''}`}
                               title="Haritadan Seç"
                             >
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -730,37 +727,26 @@ export default function YolYardimModal({ onClose }) {
                             </button>
                           </div>
                         </div>
-                        {showAutocomplete && predictions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-[100] max-h-[300px] overflow-y-auto">
-                            {predictions.map((prediction) => (
-                              <button
-                                key={prediction.place_id}
-                                onClick={() => handlePredictionSelect(prediction)}
-                                className="w-full text-left px-4 py-3 text-white hover:bg-[#202020] transition-colors border-b border-[#404040] last:border-b-0"
-                              >
-                                {prediction.description}
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {showMap && isLoaded && location === null && (
+                {showMap === 'location' && isLoaded && (
                   <div style={mapStyles} className="relative mt-2">
                     <LocationPicker
                       isStartPicker={true}
                       onLocationChange={(lat, lng, address) => {
                         setLocation({lat: lat, lng: lng, address: address});
-                        setLocationSearchValue("");
+                        setSearchValue(address);
                         handleMapClick(lat, lng, address, getCity());
+                        setShowMap(null);
+                        setActiveMapPanel(null);
                       }}
-                      onCityChange={ (city) => {
+                      onCityChange={(city) => {
                         setSehir(city);
                       }}
-                      onCalculateRoute={ () => {}}
+                      onCalculateRoute={() => {}}
                       mapStyles={mapStyles}
                     />
                   </div>
@@ -975,7 +961,7 @@ export default function YolYardimModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.firmaAdi}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, firmaAdi: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, firmaAdi: e.target.value }))}
                         required
                         className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Firma Adı"
@@ -988,7 +974,7 @@ export default function YolYardimModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.vergiNo}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, vergiNo: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, vergiNo: e.target.value }))}
                         required
                         className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Vergi Numarası"
@@ -1001,7 +987,7 @@ export default function YolYardimModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.vergiDairesi}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, vergiDairesi: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, vergiDairesi: e.target.value }))}
                         required
                         className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Vergi Dairesi"
@@ -1017,7 +1003,7 @@ export default function YolYardimModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.ad}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, ad: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, ad: e.target.value }))}
                         required
                         className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Adınız"
@@ -1030,7 +1016,7 @@ export default function YolYardimModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.soyad}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, soyad: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, soyad: e.target.value }))}
                         required
                         className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Soyadınız"
@@ -1068,7 +1054,7 @@ export default function YolYardimModal({ onClose }) {
                             value={musteriBilgileri.tcKimlik}
                             onChange={(e) => {
                               const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
-                              setMusteriBilgileri({ ...musteriBilgileri, tcKimlik: value });
+                              setMusteriBilgileri(prev => ({ ...prev, tcKimlik: value }));
                             }}
                             required
                             maxLength={11}
@@ -1093,7 +1079,7 @@ export default function YolYardimModal({ onClose }) {
                     value={musteriBilgileri.telefon}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
-                      setMusteriBilgileri({ ...musteriBilgileri, telefon: value });
+                      setMusteriBilgileri(prev => ({ ...prev, telefon: value }));
                     }}
                     required
                     maxLength={11}
@@ -1108,7 +1094,7 @@ export default function YolYardimModal({ onClose }) {
                   <input
                     type="email"
                     value={musteriBilgileri.email}
-                    onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, email: e.target.value })}
+                    onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, email: e.target.value }))}
                     required
                     className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     placeholder="ornek@email.com"

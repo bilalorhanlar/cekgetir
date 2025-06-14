@@ -195,7 +195,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
   ) => {
     // Çizgi köprü sınırlarını kesiyor mu?
     if (doesLineIntersectRectangle(line, bridge.bounds)) {
-      console.log(`✅ Köprü tespit edildi: ${bridge.name} - Köprüyü kesen çizgi bulundu!`);
+      //console.log(`✅ Köprü tespit edildi: ${bridge.name} - Köprüyü kesen çizgi bulundu!`);
       return true;
     }
     return false;
@@ -203,7 +203,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
   
   // GeoJSON rotasındaki koordinatları kontrol ederek köprüleri tespit eder
   const detectBridgesOnRoute = (routeData: any) => {
-    console.log("🔄 Rota verileri alındı, köprü tespiti başlatılıyor...");
+    //console.log("🔄 Rota verileri alındı, köprü tespiti başlatılıyor...");
     
     if (!routeData || !routeData.features || routeData.features.length === 0) {
       console.warn("⚠️ Rota verisi bulunamadı veya boş!");
@@ -216,20 +216,20 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     routeData.features.forEach((feature: any, featureIndex: number) => {
       if (feature.geometry && feature.geometry.type === 'LineString') {
         const coordinates = feature.geometry.coordinates;
-        console.log(`🔄 LineString bulundu, ${coordinates.length} koordinat içeriyor`);
+        //console.log(`🔄 LineString bulundu, ${coordinates.length} koordinat içeriyor`);
         
         // Her köprü için çizginin kesişimini kontrol et
         BRIDGES.forEach(bridge => {
           if (doesLineIntersectBridge(coordinates, bridge)) {
             foundBridges.add(bridge.name);
-            console.log(`💡 Rota üzerinde köprü bulundu: ${bridge.name}`);
+            //console.log(`💡 Rota üzerinde köprü bulundu: ${bridge.name}`);
           }
         });
       }
     });
     
     const bridges = Array.from(foundBridges);
-    console.log(`📊 Tespit edilen köprüler (${bridges.length}):`, bridges);
+    //console.log(`📊 Tespit edilen köprüler (${bridges.length}):`, bridges);
     
     // Köprü tespit edilemediyse, boğaz geçişi olan rotalar için uyarı göster
     if (bridges.length === 0) {
@@ -250,7 +250,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         // Boğaz geçişi olan rotalar için manuel köprü tespiti
         const possibleBridge = determinePossibleBridge(firstCoord, lastCoord);
         if (possibleBridge) {
-          console.log(`🌉 Manuel tespit: Muhtemelen ${possibleBridge} kullanılıyor`);
+          //console.log(`🌉 Manuel tespit: Muhtemelen ${possibleBridge} kullanılıyor`);
           bridges.push(`${possibleBridge} (tahmini)`);
         }
       }
@@ -344,8 +344,8 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
   
   // Çoklu segment rota hesaplama fonksiyonu
   const calculateMultiSegmentRoute = async (coordinates: typeof activeCoordinates) => {
-    console.log("🚗 Çoklu segment rota hesaplanıyor...");
-    console.log("📍 Koordinatlar:", coordinates);
+    //console.log("🚗 Çoklu segment rota hesaplanıyor...");
+    //console.log("📍 Koordinatlar:", coordinates);
     
     if (!mapRef.current) {
       console.error("❌ Harita referansı bulunamadı!");
@@ -354,19 +354,19 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     
     // Önceki rotayı temizle
     if (route) {
-      console.log("🔄 Önceki rota temizleniyor...");
+      //console.log("🔄 Önceki rota temizleniyor...");
       mapRef.current.removeLayer(route);
     }
     
     // Önceki kontrolü kaldır
     if (controlRef.current) {
-      console.log("🔄 Önceki köprü bilgisi kontrolü kaldırılıyor...");
+      //console.log("🔄 Önceki köprü bilgisi kontrolü kaldırılıyor...");
       mapRef.current.removeControl(controlRef.current);
       controlRef.current = null;
     }
 
     // Tüm markerleri temizle (köprü markerleri hariç)
-    console.log("📍 Markerler temizleniyor ve yenileri ekleniyor...");
+    //console.log("📍 Markerler temizleniyor ve yenileri ekleniyor...");
     mapRef.current.eachLayer((layer) => {
       if (layer instanceof L.Marker) {
         const markerLayer = layer as CustomLayer;
@@ -401,7 +401,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       ]);
     }
     
-    console.log(`🔄 ${segments.length} segment için rota hesaplanacak...`);
+    //console.log(`🔄 ${segments.length} segment için rota hesaplanacak...`);
     
     let totalDistance = 0;
     let totalDuration = 0;
@@ -411,13 +411,13 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     try {
       // Her segment için rota hesapla
       for (let i = 0; i < segments.length; i++) {
-        console.log(`🌐 Segment ${i + 1}/${segments.length} için API isteği gönderiliyor...`);
+        //console.log(`🌐 Segment ${i + 1}/${segments.length} için API isteği gönderiliyor...`);
         
         const routeRequest = {
           coordinates: segments[i],
           format: "geojson",
         };
-        console.log("routeRequest", routeRequest)
+        //console.log("routeRequest", routeRequest)
         
         const response = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
           method: "POST",
@@ -433,29 +433,29 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         }
         
         const segmentData = await response.json();
-        console.log(`📄 Segment ${i + 1} verisi alındı:`, segmentData);
+        //console.log(`📄 Segment ${i + 1} verisi alındı:`, segmentData);
         
         // Segment bilgilerini topla
         const segmentDistance = segmentData.features[0].properties.segments[0].distance;
         const segmentDuration = segmentData.features[0].properties.segments[0].duration;
         
         const segmentKm = Math.round(segmentDistance / 1000);
-        console.log(`📍 Segment ${i + 1} mesafesi: ${segmentKm}km`);
+        //console.log(`📍 Segment ${i + 1} mesafesi: ${segmentKm}km`);
         wayPointsKm2.push(segmentKm);
         
         totalDistance += segmentDistance;
         totalDuration += segmentDuration;
         allRouteData.push(segmentData);
         
-        console.log(`📊 Segment ${i + 1}: ${segmentKm}km, ${Math.round(segmentDuration / 60)}dk`);
+        //console.log(`📊 Segment ${i + 1}: ${segmentKm}km, ${Math.round(segmentDuration / 60)}dk`);
         
         // Bu segment için köprüleri tespit et
         const segmentBridges = detectBridgesOnRoute(segmentData);
         segmentBridges.forEach(bridge => allBridges.add(bridge));
       }
       
-      console.log(`📊 Toplam: ${Math.round(totalDistance / 1000)}km, ${Math.round(totalDuration / 60)}dk`);
-      console.log('📍 Tüm segment mesafeleri:', wayPointsKm2);
+      //console.log(`📊 Toplam: ${Math.round(totalDistance / 1000)}km, ${Math.round(totalDuration / 60)}dk`);
+      //console.log('📍 Tüm segment mesafeleri:', wayPointsKm2);
       
       // Parent component'e toplam değerleri bildir
       onValuesChange(Math.round(totalDistance / 1000), Math.round(totalDuration / 60), wayPointsKm2);
@@ -465,7 +465,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       setDetectedBridges(bridgeList);
       
       // Tüm segment rotalarını haritaya ekle
-      console.log("🗺️ Tüm segmentler haritaya ekleniyor...");
+      //console.log("🗺️ Tüm segmentler haritaya ekleniyor...");
       const combinedRoute = L.layerGroup();
       
       allRouteData.forEach((segmentData, index) => {
@@ -491,13 +491,13 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       combinedRoute.addTo(mapRef.current);
       setRoute(combinedRoute);
       
-      console.log("✅ Tüm segmentler başarıyla haritaya eklendi.");
+      //console.log("✅ Tüm segmentler başarıyla haritaya eklendi.");
 
       // Tüm rotayı haritada göstermek için sınırlara yakınlaştır
       const allPoints = coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
       const bounds = L.latLngBounds(allPoints);
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
-      console.log("🔍 Harita görünümü ayarlandı.");
+      //console.log("🔍 Harita görünümü ayarlandı.");
 
       
     } catch (error) {
@@ -515,14 +515,14 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       activeCoordinates.push({lat: startLocation!.lat, lng: startLocation!.lng, name: "Başlangıç"});
       activeCoordinates.push({lat: endLocation!.lat, lng: endLocation!.lng, name: "Bitiş"});
     } 
-    console.log("🔄 activeCoordinates:", activeCoordinates);
+    //console.log("🔄 activeCoordinates:", activeCoordinates);
     return calculateMultiSegmentRoute(activeCoordinates);
   };
   
   // Her shouldCalculate değişiminde rotayı hesapla
   useEffect(() => {
     if (mapRef.current) {
-      console.log("🔄 shouldCalculate değişti, rota yeniden hesaplanıyor...");
+      //console.log("🔄 shouldCalculate değişti, rota yeniden hesaplanıyor...");
       calculateRoute();
     }
   }, [shouldCalculate, JSON.stringify(activeCoordinates)]);
@@ -531,7 +531,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     if (mapRef.current !== null) return;
     
     // Başlangıçta haritayı oluştur
-    console.log("🗺️ Harita başlatılıyor...");
+    //console.log("🗺️ Harita başlatılıyor...");
     const firstCoord = activeCoordinates[0];
     const map = L.map("map").setView([firstCoord.lat, firstCoord.lng], 13);
     mapRef.current = map;
@@ -541,13 +541,13 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    console.log("✅ Harita başlatıldı, ilk rota hesaplanıyor...");
+    //console.log("✅ Harita başlatıldı, ilk rota hesaplanıyor...");
     // İlk rotayı hesapla
     calculateRoute();
       
     // Temizleme işlevi
     return () => {
-      console.log("🧹 Harita temizleniyor...");
+      //console.log("🧹 Harita temizleniyor...");
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;

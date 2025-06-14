@@ -28,15 +28,6 @@ const mapStyles = {
   border: '1px solid rgba(64, 64, 64, 0.4)'
 }
 
-const mapOptions = {
-  disableDefaultUI: true,
-  zoomControl: true,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
-  clickableIcons: false
-}
-
 // Şehir adını normalize eden fonksiyon
 function normalizeSehirAdi(sehir) {
   return sehir
@@ -100,6 +91,8 @@ export default function OzelCekiciModal({ onClose }) {
   const [extraFee, setExtraFee] = useState(0)
   const [sehir, setSehir] = useState(null)
   const [sehir2, setSehir2] = useState(null)  
+  const [isPickupMapSelected, setIsPickupMapSelected] = useState(false);
+  const [isDeliveryMapSelected, setIsDeliveryMapSelected] = useState(false);
 
   // MapComponent için memoized location objeler
   const memoizedStartLocation = useMemo(() => 
@@ -185,26 +178,6 @@ export default function OzelCekiciModal({ onClose }) {
   const getCity2 = () => {
     return sehir2;
   }
-
-  const getSehirFiyatlandirma = () => {
-    return sehirFiyatlandirma;
-  }
-  // lat ve lng den adrese çevirme
-  //const getAddressFromLatLng = async (lat, lng) => {
-  //  return new Promise((resolve) => {
-  //        // Şehir fiyatlandırmasını getir
-  //        if (sehir) {
-  //          try {
-  //            const normalizedSehir = normalizeSehirAdi(sehir);
-  //            const response = api.get(`/api/variables/ozel-cekici/sehirler/${normalizedSehir}`);
-  //            setSehirFiyatlandirma(response.data);
-  //          } catch (error) {
-  //            console.error('Şehir fiyatlandırması getirilemedi:', error);
-  //            setSehirFiyatlandirma(null);
-  //          }
-  //        }
-  //    });
-  //  };
   
 
   // Fiyat hesaplama fonksiyonu
@@ -265,172 +238,19 @@ export default function OzelCekiciModal({ onClose }) {
   }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee]);
 
 
-  // Rota hesaplama fonksiyonu
-  const calculateRoute = useCallback(async () => {
-    if (!pickupLocation || !deliveryLocation || !window.google) return
-
-    const directionsService = new window.google.maps.DirectionsService()
-    const request = {
-      origin: new window.google.maps.LatLng(pickupLocation.lat, pickupLocation.lng),
-      destination: new window.google.maps.LatLng(deliveryLocation.lat, deliveryLocation.lng),
-      travelMode: window.google.maps.TravelMode.DRIVING,
-      region: 'tr'
-    }
-
-    try {
-      const result = await new Promise((resolve, reject) => {
-        directionsService.route(request, (result, status) => {
-          if (status === 'OK') {
-            resolve(result)
-          } else {
-            reject(new Error(`Directions request failed: ${status}`))
-          }
-        })
-      })
-
-      const route = result.routes[0]
-      const distance = route.legs[0].distance.value / 1000 // km
-      const duration = route.legs[0].duration.value / 60 // dk
-
-      // Rota üzerinde köprü ve tünel kontrolü
-      const routePath = route.overview_path
-      
-      // Köprü ve tünel koordinatları
-      const firstBridgeLat = 41.0445  // 15 Temmuz Şehitler Köprüsü (1. köprü)
-      const firstBridgeLng = 29.0345
-      const secondBridgeLat = 41.0935 // Fatih Sultan Mehmet Köprüsü (2. köprü)
-      const secondBridgeLng = 29.0635
-      const thirdBridgeLat = 41.0785  // Yavuz Sultan Selim Köprüsü (3. köprü)
-      const thirdBridgeLng = 29.0935
-      const tunnelLat = 41.0082       // Avrasya Tüneli
-      const tunnelLng = 28.9784
-      const kuzeyMarmaraLat = 41.1234 // Kuzey Marmara Otoyolu
-      const kuzeyMarmaraLng = 29.1234
-
-      // Köprü ve tünel kullanım kontrolü
-      const isUsingFirstBridge = routePath.some(point => 
-        Math.abs(point.lat() - firstBridgeLat) < 0.01 && Math.abs(point.lng() - firstBridgeLng) < 0.01
-      )
-      const isUsingSecondBridge = routePath.some(point => 
-        Math.abs(point.lat() - secondBridgeLat) < 0.01 && Math.abs(point.lng() - secondBridgeLng) < 0.01
-      )
-      const isUsingThirdBridge = routePath.some(point => 
-        Math.abs(point.lat() - thirdBridgeLat) < 0.01 && Math.abs(point.lng() - thirdBridgeLng) < 0.01
-      )
-      const isUsingTunnel = routePath.some(point => 
-        Math.abs(point.lat() - tunnelLat) < 0.01 && Math.abs(point.lng() - tunnelLng) < 0.01
-      )
-      const isUsingKuzeyMarmara = routePath.some(point => 
-        Math.abs(point.lat() - kuzeyMarmaraLat) < 0.01 && Math.abs(point.lng() - kuzeyMarmaraLng) < 0.01
-      )
-
-      // Ek ücret hesaplama
-      let extraFeeCalc = 0
-      let bridgeMessage = ''
-
-      if (isUsingFirstBridge || isUsingTunnel) {
-        extraFeeCalc = 500
-        bridgeMessage = '15 Temmuz Şehitler Köprüsü veya Avrasya Tüneli'
-      } else if (isUsingSecondBridge) {
-        extraFeeCalc = 150
-        bridgeMessage = 'Fatih Sultan Mehmet Köprüsü'
-      } else if (isUsingThirdBridge) {
-        extraFeeCalc = 500
-        bridgeMessage = 'Yavuz Sultan Selim Köprüsü'
-      } else if (isUsingKuzeyMarmara) {
-        extraFeeCalc = 300
-        bridgeMessage = 'Kuzey Marmara Otoyolu'
-      }
-
-      // Ek ücreti state'e ata
-      setExtraFee(extraFeeCalc)
-
-      setDirections(result)
-      setRouteInfo({
-        distance,
-        duration
-      })
-    } catch (error) {
-      console.error('Error calculating route:', error)
-      toast.error('Rota hesaplanırken bir hata oluştu. Lütfen farklı bir rota deneyin.')
-    }
-  }, [pickupLocation, deliveryLocation])
-
-  const handleInputChange = async (e, type) => {
-    const value = e.target.value
-    if (type === 'pickup') {
-      setPickupSearchValue(value)
-    } else {
-      setDeliverySearchValue(value)
-    }
-  }
-
-  const handleMapClick = async (lat, lng , address, sehir) => {
-    
-    const newLocation = { lat, lng, address, sehir }
-
+  const handleMapClick = (lat, lng, address, city) => {
     if (activeLocation === 'pickup') {
-      setPickupLocation(newLocation)
-      setPickupSearchValue(address)
-    } else {
-      setDeliveryLocation(newLocation)
-      setDeliverySearchValue(address)
+      setPickupLocation({ lat, lng, address });
+      setPickupSearchValue(address);
+      setSehir(city);
+    } else if (activeLocation === 'delivery') {
+      setDeliveryLocation({ lat, lng, address });
+      setDeliverySearchValue(address);
+      setSehir2(city);
     }
-    setActiveMapPanel(null)
-
-  }
-
-  const handleCurrentLocation = async (target) => {
-    try {
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-          }
-        );
-      });
-
-      const { latitude, longitude } = position.coords;
-      
-      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
-      const data = await response.json();
-      const address = data.results[0].formatted;
-      let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
-
-      if (target === 'pickup') {
-        setSehir(sehir);
-      } else {
-        setSehir2(sehir);
-      }
-
-      const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir }
-
-      if (target === 'pickup') {
-        setPickupLocation(newLocation)
-        setPickupSearchValue(address)
-        const pickupInput = document.getElementById('pickup-input');
-        if (pickupInput) {
-          pickupInput.value = address;
-        }
-      } else {
-        setDeliveryLocation(newLocation)
-        setDeliverySearchValue(address)
-        const deliveryInput = document.getElementById('delivery-input');
-        if (deliveryInput) {
-          deliveryInput.value = address;
-        }
-      }
-
-      toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
-    } catch (error) {
-      console.error('Permission check error:', error)
-      toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.')
-    }
-  }
+    // Harita panelini kapatmak istiyorsanız:
+    setActiveMapPanel(null);
+  };
 
   useEffect(() => {
     if (isLoaded && window.google) {
@@ -439,15 +259,15 @@ export default function OzelCekiciModal({ onClose }) {
 
       if (pickupInput) {
         pickupInput.addEventListener('click', () => {
-          setActiveLocation('pickup')
-          setActiveMapPanel('pickup')
+          setActiveLocation('pickup');
+          setActiveMapPanel('pickup');
         });
       }
 
       if (deliveryInput) {
         deliveryInput.addEventListener('click', () => {
-          setActiveLocation('delivery')
-          setActiveMapPanel('delivery')
+          setActiveLocation('delivery');
+          setActiveMapPanel('delivery');
         });
       }
     }
@@ -515,14 +335,7 @@ export default function OzelCekiciModal({ onClose }) {
     }
   };
 
-  // Add useEffect for route calculation
-//  useEffect(() => {
-//    if (pickupLocation && deliveryLocation && isLoaded) {
-//      calculateRoute()
-//    }
-//  }, [pickupLocation, deliveryLocation, isLoaded, calculateRoute])
 
-  // Add useEffect to show route map when both locations are selected
   useEffect(() => {
     if (
       step === 2 &&
@@ -744,14 +557,17 @@ export default function OzelCekiciModal({ onClose }) {
                         <div className="relative">
                           <LocationAutocomplete
                             value={pickupSearchValue}
-                            onChange={e => setPickupSearchValue(e.target?.value ?? e.value ?? '')}
+                            onChange={e => {
+                              setPickupSearchValue(e.target?.value ?? e.value ?? '');
+                              setIsPickupMapSelected(false); // elle yazınca map seçimi devre dışı
+                            }}
+                            onInputChange={() => setIsPickupMapSelected(false)}
                             onSelect={({ lat, lng, address }) => {
                               const newLocation = { lat, lng, address: address || pickupSearchValue };
                               setPickupLocation(newLocation);
                               setPickupSearchValue(address || pickupSearchValue);
                               handleMapClick(lat, lng, address || pickupSearchValue, getCity());
-                              setActiveLocation('pickup');
-                              setActiveMapPanel('pickup');
+                              setIsPickupMapSelected(true); // autocomplete kapansın
                               const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
                               city.then(res => res.json()).then(data => {
                                 const cityData = data;
@@ -759,7 +575,8 @@ export default function OzelCekiciModal({ onClose }) {
                               });
                             }}
                             placeholder="Adres girin veya haritadan seçin"
-                            inputClassName="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 shadow-md placeholder-[#404040]"
+                            isMapSelected={isPickupMapSelected}
+                            inputClassName="w-full py-2.5 px-4 bg-[#121212] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 shadow-md placeholder-[#404040]"
                             suggestionClassName="bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-50 max-h-72 overflow-y-auto text-white"
                             suggestionItemClassName="px-4 py-3 cursor-pointer hover:bg-yellow-500/10 border-b border-[#404040] last:border-b-0"
                           />
@@ -781,6 +598,7 @@ export default function OzelCekiciModal({ onClose }) {
                                   const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
                                   setPickupLocation(newLocation);
                                   setPickupSearchValue(address); // inputa adresi yaz
+                                  setIsPickupMapSelected(true); // konumdan seçildi
                                   toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
                                 } catch (error) {
                                   toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
@@ -825,14 +643,17 @@ export default function OzelCekiciModal({ onClose }) {
                         <div className="relative">
                           <LocationAutocomplete
                             value={deliverySearchValue}
-                            onChange={e => setDeliverySearchValue(e.target?.value ?? e.value ?? '')}
+                            onChange={e => {
+                              setDeliverySearchValue(e.target?.value ?? e.value ?? '');
+                              setIsDeliveryMapSelected(false); // elle yazınca map seçimi devre dışı
+                            }}
+                            onInputChange={() => setIsDeliveryMapSelected(false)}
                             onSelect={({ lat, lng, address }) => {
                               const newLocation = { lat, lng, address: address || deliverySearchValue };
                               setDeliveryLocation(newLocation);
                               setDeliverySearchValue(address || deliverySearchValue);
                               handleMapClick(lat, lng, address || deliverySearchValue, getCity2());
-                              setActiveLocation('delivery');
-                              setActiveMapPanel('delivery');
+                              setIsDeliveryMapSelected(true); // autocomplete kapansın
                               const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
                               city.then(res => res.json()).then(data => {
                                 const cityData = data;
@@ -840,7 +661,8 @@ export default function OzelCekiciModal({ onClose }) {
                               });
                             }}
                             placeholder="Adres girin veya haritadan seçin"
-                            inputClassName="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 shadow-md placeholder-[#404040]"
+                            isMapSelected={isDeliveryMapSelected}
+                            inputClassName="w-full py-2.5 px-4 bg-[#121212] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 shadow-md placeholder-[#404040]"
                             suggestionClassName="bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-50 max-h-72 overflow-y-auto text-white"
                             suggestionItemClassName="px-4 py-3 cursor-pointer hover:bg-yellow-500/10 border-b border-[#404040] last:border-b-0"
                           />
@@ -862,8 +684,10 @@ export default function OzelCekiciModal({ onClose }) {
                                   const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
                                   setDeliveryLocation(newLocation);
                                   setDeliverySearchValue(address); // inputa adresi yaz
+                                  setIsDeliveryMapSelected(true); // konumdan seçildi
                                   toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
                                 } catch (error) {
+                                  setIsMapSelected(false);
                                   toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
                                 }
                               }}
@@ -902,7 +726,8 @@ export default function OzelCekiciModal({ onClose }) {
                         setPickupLocation({lat: lat, lng: lng, address: address});
                         setPickupSearchValue(address);
                         handleMapClick(lat, lng, address, getCity());
-                        setActiveMapPanel("delivery");
+                        setIsPickupMapSelected(true); // mapten seçildi
+                        setActiveMapPanel(null); // Seçim sonrası paneli kapat
                       }}
                       onCityChange={ (city) => {
                         setSehir(city);
@@ -920,6 +745,8 @@ export default function OzelCekiciModal({ onClose }) {
                         setDeliveryLocation({lat: lat, lng: lng, address: address});
                         setDeliverySearchValue(address);
                         handleMapClick(lat, lng, address, getCity2());
+                        setIsDeliveryMapSelected(true); // mapten seçildi
+                        setActiveMapPanel(null); // Seçim sonrası paneli kapat
                       }}
                       onCityChange={ (city) => {
                         setSehir2(city);
@@ -1137,9 +964,9 @@ export default function OzelCekiciModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.firmaAdi}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, firmaAdi: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, firmaAdi: e.target.value }))}
                         required
-                        className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Firma Adı"
                       />
                     </div>
@@ -1150,9 +977,9 @@ export default function OzelCekiciModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.vergiNo}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, vergiNo: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, vergiNo: e.target.value }))}
                         required
-                        className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Vergi Numarası"
                       />
                     </div>
@@ -1163,9 +990,9 @@ export default function OzelCekiciModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.vergiDairesi}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, vergiDairesi: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, vergiDairesi: e.target.value }))}
                         required
-                        className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Vergi Dairesi"
                       />
                     </div>
@@ -1179,9 +1006,9 @@ export default function OzelCekiciModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.ad}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, ad: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, ad: e.target.value }))}
                         required
-                        className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Adınız"
                       />
                     </div>
@@ -1192,9 +1019,9 @@ export default function OzelCekiciModal({ onClose }) {
                       <input
                         type="text"
                         value={musteriBilgileri.soyad}
-                        onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, soyad: e.target.value })}
+                        onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, soyad: e.target.value }))}
                         required
-                        className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Soyadınız"
                       />
                     </div>
@@ -1230,7 +1057,7 @@ export default function OzelCekiciModal({ onClose }) {
                             value={musteriBilgileri.tcKimlik}
                             onChange={(e) => {
                               const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
-                              setMusteriBilgileri({ ...musteriBilgileri, tcKimlik: value });
+                              setMusteriBilgileri(prev => ({ ...prev, tcKimlik: value }));
                             }}
                             required
                             maxLength={11}
@@ -1255,11 +1082,11 @@ export default function OzelCekiciModal({ onClose }) {
                     value={musteriBilgileri.telefon}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
-                      setMusteriBilgileri({ ...musteriBilgileri, telefon: value });
+                      setMusteriBilgileri(prev => ({ ...prev, telefon: value }));
                     }}
                     required
                     maxLength={11}
-                    className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     placeholder="05XX XXX XX XX"
                   />
                 </div>
@@ -1270,9 +1097,9 @@ export default function OzelCekiciModal({ onClose }) {
                   <input
                     type="email"
                     value={musteriBilgileri.email}
-                    onChange={(e) => setMusteriBilgileri({ ...musteriBilgileri, email: e.target.value })}
+                    onChange={(e) => setMusteriBilgileri(prev => ({ ...prev, email: e.target.value }))}
                     required
-                    className="w-full px-4 py-3 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 bg-[#141414] border border-[#404040] rounded-lg text-white placeholder-[#404040] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     placeholder="ornek@email.com"
                   />
                 </div>
