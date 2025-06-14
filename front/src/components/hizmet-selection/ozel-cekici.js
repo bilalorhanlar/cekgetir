@@ -743,25 +743,49 @@ export default function OzelCekiciModal({ onClose }) {
                       <div className="w-full">
                         <div className="relative">
                           <LocationAutocomplete
-                            onSelect={({ lat, lng }) => {
-                              const newLocation = { lat, lng, address: pickupSearchValue };
+                            value={pickupSearchValue}
+                            onChange={e => setPickupSearchValue(e.target?.value ?? e.value ?? '')}
+                            onSelect={({ lat, lng, address }) => {
+                              const newLocation = { lat, lng, address: address || pickupSearchValue };
                               setPickupLocation(newLocation);
-                              handleMapClick(lat, lng, pickupSearchValue, getCity());
+                              setPickupSearchValue(address || pickupSearchValue);
+                              handleMapClick(lat, lng, address || pickupSearchValue, getCity());
                               setActiveLocation('pickup');
                               setActiveMapPanel('pickup');
                               const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-                              // promise ile yap
                               city.then(res => res.json()).then(data => {
                                 const cityData = data;
                                 setSehir(cityData.address.province || "");
                               });
                             }}
-                            placeholder="Adres girin veya h222222aritadan seçin"
+                            placeholder="Adres girin veya haritadan seçin"
+                            inputClassName="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 shadow-md placeholder-[#404040]"
+                            suggestionClassName="bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-50 max-h-72 overflow-y-auto text-white"
+                            suggestionItemClassName="px-4 py-3 cursor-pointer hover:bg-yellow-500/10 border-b border-[#404040] last:border-b-0"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 bg-[#141414] z-[101]">
                             <button
                               type="button"
-                              onClick={() => handleCurrentLocation('pickup')}
+                              onClick={async () => {
+                                // Mevcut konumdan seçim
+                                try {
+                                  const position = await new Promise((resolve, reject) => {
+                                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                                  });
+                                  const { latitude, longitude } = position.coords;
+                                  const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+                                  const data = await response.json();
+                                  const address = data.results[0].formatted;
+                                  let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
+                                  setSehir(sehir);
+                                  const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
+                                  setPickupLocation(newLocation);
+                                  setPickupSearchValue(address); // inputa adresi yaz
+                                  toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
+                                } catch (error) {
+                                  toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
+                                }
+                              }}
                               className="text-[#404040] hover:text-white transition-colors"
                               title="Mevcut Konumu Kullan"
                             >
@@ -773,8 +797,8 @@ export default function OzelCekiciModal({ onClose }) {
                             <button
                               type="button"
                               onClick={() => {
-                                setActiveLocation('pickup')
-                                setActiveMapPanel(activeMapPanel === 'pickup' ? null : 'pickup')
+                                setActiveLocation('pickup');
+                                setActiveMapPanel(activeMapPanel === 'pickup' ? null : 'pickup');
                               }}
                               className={`text-[#404040] hover:text-yellow-500 transition-colors ${activeMapPanel === 'pickup' ? 'text-yellow-500' : ''}`}
                               title="Haritadan Seç"
@@ -800,25 +824,49 @@ export default function OzelCekiciModal({ onClose }) {
                       <div className="w-full">
                         <div className="relative">
                           <LocationAutocomplete
-                            onSelect={({ lat, lng }) => {
-                              const newLocation = { lat, lng, address: deliverySearchValue };
+                            value={deliverySearchValue}
+                            onChange={e => setDeliverySearchValue(e.target?.value ?? e.value ?? '')}
+                            onSelect={({ lat, lng, address }) => {
+                              const newLocation = { lat, lng, address: address || deliverySearchValue };
                               setDeliveryLocation(newLocation);
-                              handleMapClick(lat, lng, deliverySearchValue, getCity2());
+                              setDeliverySearchValue(address || deliverySearchValue);
+                              handleMapClick(lat, lng, address || deliverySearchValue, getCity2());
                               setActiveLocation('delivery');
                               setActiveMapPanel('delivery');
                               const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-                              // promise ile yap
                               city.then(res => res.json()).then(data => {
                                 const cityData = data;
                                 setSehir2(cityData.address.province || "");
                               });
                             }}
                             placeholder="Adres girin veya haritadan seçin"
+                            inputClassName="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 shadow-md placeholder-[#404040]"
+                            suggestionClassName="bg-[#141414] border border-[#404040] rounded-lg shadow-lg z-50 max-h-72 overflow-y-auto text-white"
+                            suggestionItemClassName="px-4 py-3 cursor-pointer hover:bg-yellow-500/10 border-b border-[#404040] last:border-b-0"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 bg-[#141414] z-[101]">
                             <button
                               type="button"
-                              onClick={() => handleCurrentLocation('delivery')}
+                              onClick={async () => {
+                                // Mevcut konumdan seçim
+                                try {
+                                  const position = await new Promise((resolve, reject) => {
+                                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                                  });
+                                  const { latitude, longitude } = position.coords;
+                                  const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+                                  const data = await response.json();
+                                  const address = data.results[0].formatted;
+                                  let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
+                                  setSehir2(sehir);
+                                  const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
+                                  setDeliveryLocation(newLocation);
+                                  setDeliverySearchValue(address); // inputa adresi yaz
+                                  toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
+                                } catch (error) {
+                                  toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
+                                }
+                              }}
                               className="text-[#404040] hover:text-white transition-colors"
                               title="Mevcut Konumu Kullan"
                             >
@@ -830,8 +878,8 @@ export default function OzelCekiciModal({ onClose }) {
                             <button
                               type="button"
                               onClick={() => {
-                                setActiveLocation('delivery')
-                                setActiveMapPanel(activeMapPanel === 'delivery' ? null : 'delivery')
+                                setActiveLocation('delivery');
+                                setActiveMapPanel(activeMapPanel === 'delivery' ? null : 'delivery');
                               }}
                               className={`text-[#404040] hover:text-yellow-500 transition-colors ${activeMapPanel === 'delivery' ? 'text-yellow-500' : ''}`}
                               title="Haritadan Seç"
@@ -852,7 +900,7 @@ export default function OzelCekiciModal({ onClose }) {
                       isStartPicker={true}
                       onLocationChange={(lat, lng, address) => {
                         setPickupLocation({lat: lat, lng: lng, address: address});
-                        setPickupSearchValue("");
+                        setPickupSearchValue(address);
                         handleMapClick(lat, lng, address, getCity());
                         setActiveMapPanel("delivery");
                       }}
@@ -870,7 +918,7 @@ export default function OzelCekiciModal({ onClose }) {
                       isStartPicker={false}
                       onLocationChange={(lat, lng, address) => {
                         setDeliveryLocation({lat: lat, lng: lng, address: address});
-                        setDeliverySearchValue("");
+                        setDeliverySearchValue(address);
                         handleMapClick(lat, lng, address, getCity2());
                       }}
                       onCityChange={ (city) => {
