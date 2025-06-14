@@ -99,6 +99,7 @@ export default function OzelCekiciModal({ onClose }) {
   const autocompleteService = useRef(null)
   const [extraFee, setExtraFee] = useState(0)
   const [sehir, setSehir] = useState(null)
+  const [sehir2, setSehir2] = useState(null)  
 
   // MapComponent için memoized location objeler
   const memoizedStartLocation = useMemo(() => 
@@ -177,12 +178,12 @@ export default function OzelCekiciModal({ onClose }) {
     }
   }, [isLoaded])
 
-  const handleCityChange = (city) => {
-    setSehir(city);
-  }
-
   const getCity = () => {
     return sehir;
+  }
+
+  const getCity2 = () => {
+    return sehir2;
   }
 
   const getSehirFiyatlandirma = () => {
@@ -208,26 +209,21 @@ export default function OzelCekiciModal({ onClose }) {
 
   // Fiyat hesaplama fonksiyonu
   const fiyatHesapla = useCallback( async () => {
-    let sehirFiyatlandirma = null;
+    let sehirFiyatlandirmaLocal = null;
     try {
     // Şehir fiyatlandırmasını getir
-    console.log("getCity", normalizeSehirAdi(sehir)) //istanbul İstanbul
     const normalizedSehir = normalizeSehirAdi(sehir);
     const response = await api.get(`/api/variables/ozel-cekici/sehirler`)
-    console.log("response", response)
-    for (const sehir of response.data) {
-      console.log("sehir", sehir.sehirAdi, normalizeSehirAdi(sehir.sehirAdi).toLowerCase(), normalizedSehir.toLowerCase())
-      if (normalizeSehirAdi(sehir.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()) {
-        console.log("sehirFiyatlandirma", sehir)
-        setSehirFiyatlandirmaHandler(sehir)
-        sehirFiyatlandirma = sehir;
+    for (const sehirObj of response.data) {
+      if (normalizeSehirAdi(sehirObj.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()) {
+        setSehirFiyatlandirmaHandler(sehirObj)
+        sehirFiyatlandirmaLocal = sehirObj;
         break
       }
     }
     } catch (error) {
       console.error('Şehir fiyatlandırması getirilemedi:', error)
     }
-    console.log("sehirFiyatlandirma", getSehirFiyatlandirma(), sehirFiyatlandirma)
     // Gerekli kontroller
     if (!pickupLocation || !deliveryLocation || !aracBilgileri.tip || !aracBilgileri.durum) {
       setPrice(0);
@@ -235,9 +231,9 @@ export default function OzelCekiciModal({ onClose }) {
     }
 
     // Şehir adı normalize edilmiş şekilde alınmalı!
-    const isIstanbul = sehirFiyatlandirma && (
-      sehirFiyatlandirma.sehirAdi?.toLocaleLowerCase('tr-TR') === 'istanbul'
-        || sehirFiyatlandirma.sehirAdi?.toLocaleLowerCase('tr-TR') === 'i̇stanbul'
+    const isIstanbul = sehirFiyatlandirmaLocal && (
+      sehirFiyatlandirmaLocal.sehirAdi?.toLocaleLowerCase('tr-TR') === 'istanbul'
+        || sehirFiyatlandirmaLocal.sehirAdi?.toLocaleLowerCase('tr-TR') === 'i̇stanbul'
     );
 
     const currentHour = new Date().getHours();
@@ -248,8 +244,8 @@ export default function OzelCekiciModal({ onClose }) {
       : 1;
     
     // Fiyat hesaplama bileşenleri - Teslim alınacak konumun şehir fiyatlarını kullan
-    const basePrice = Number(sehirFiyatlandirma?.basePrice) || 0;  // Teslim alınacak şehrin baz fiyatı
-    const distanceMultiplier = routeInfo?.distance ? routeInfo.distance * (Number(sehirFiyatlandirma?.basePricePerKm) || 0) : 0;  // Teslim alınacak şehrin km ücreti
+    const basePrice = Number(sehirFiyatlandirmaLocal?.basePrice) || 0;  // Teslim alınacak şehrin baz fiyatı
+    const distanceMultiplier = routeInfo?.distance ? routeInfo.distance * (Number(sehirFiyatlandirmaLocal?.basePricePerKm) || 0) : 0;  // Teslim alınacak şehrin km ücreti
     
     // Araç tipine göre segment katsayısı (diziden bul)
     const segmentObj = pricingData?.segments?.find(seg => String(seg.id) === String(aracBilgileri.tip));
@@ -265,9 +261,8 @@ export default function OzelCekiciModal({ onClose }) {
     // KDV hesaplama (%20)
     const kdv = totalPrice * 0.20;
     const finalPrice = totalPrice + kdv;
-    console.log("finalPrice", finalPrice)
     setPrice(Math.round(finalPrice));
-  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehirFiyatlandirma, extraFee]);
+  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee]);
 
 
   // Rota hesaplama fonksiyonu
@@ -387,8 +382,6 @@ export default function OzelCekiciModal({ onClose }) {
 
   const handleCurrentLocation = async (target) => {
     try {
-      const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' })
-      
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           resolve,
@@ -406,11 +399,13 @@ export default function OzelCekiciModal({ onClose }) {
       const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
       const data = await response.json();
       const address = data.results[0].formatted;
-      const sehir = getCity();
+      let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
 
-      console.log("sehir", sehir)
-      console.log("address", address)
-      console.log("data", data)
+      if (target === 'pickup') {
+        setSehir(sehir);
+      } else {
+        setSehir2(sehir);
+      }
 
       const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir }
 
@@ -479,9 +474,18 @@ export default function OzelCekiciModal({ onClose }) {
           return;
         }
 
+        console.log("fiyatHesapla")
+        await fiyatHesapla();
+        console.log("fiyatHesapla sonrası", price)
+
         setStep(2);
       } else if (step === 2) {
-        if (!price) {
+        if (!price || price === 0) {
+          // Fiyat hesaplamasını bekle!
+          console.log("fiyatHesapla")
+          await fiyatHesapla();
+          console.log("fiyatHesapla sonrası", price)
+
           toast.error('Lütfen fiyat hesaplamasını bekleyin');
           return;
         }
@@ -586,6 +590,22 @@ export default function OzelCekiciModal({ onClose }) {
       toast.error('Sipariş oluşturulurken bir hata oluştu: ' + (error?.response?.data?.message || error?.message || 'Bilinmeyen hata'));
     }
   };
+
+  useEffect(() => {
+    // routeInfo güncellendiğinde ve gerekli bilgiler varsa fiyatı hesapla
+    if (
+      pickupLocation &&
+      deliveryLocation &&
+      aracBilgileri.tip &&
+      aracBilgileri.durum &&
+      routeInfo &&
+      sehir
+    ) {
+      fiyatHesapla();
+      console.log("fiyatHesapla" , price)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeInfo]);
 
   const renderAracBilgileri = () => (
     <div className="space-y-4">
@@ -783,14 +803,14 @@ export default function OzelCekiciModal({ onClose }) {
                             onSelect={({ lat, lng }) => {
                               const newLocation = { lat, lng, address: deliverySearchValue };
                               setDeliveryLocation(newLocation);
-                              handleMapClick(lat, lng, deliverySearchValue, getCity());
+                              handleMapClick(lat, lng, deliverySearchValue, getCity2());
                               setActiveLocation('delivery');
                               setActiveMapPanel('delivery');
                               const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
                               // promise ile yap
                               city.then(res => res.json()).then(data => {
                                 const cityData = data;
-                                setSehir(cityData.address.province || "");
+                                setSehir2(cityData.address.province || "");
                               });
                             }}
                             placeholder="Adres girin veya haritadan seçin"
@@ -851,10 +871,10 @@ export default function OzelCekiciModal({ onClose }) {
                       onLocationChange={(lat, lng, address) => {
                         setDeliveryLocation({lat: lat, lng: lng, address: address});
                         setDeliverySearchValue("");
-                        handleMapClick(lat, lng, address, getCity());
+                        handleMapClick(lat, lng, address, getCity2());
                       }}
                       onCityChange={ (city) => {
-                        setSehir(city);
+                        setSehir2(city);
                       }}
                       onCalculateRoute={ () => {}}
                       mapStyles={mapStyles}
@@ -875,8 +895,6 @@ export default function OzelCekiciModal({ onClose }) {
 
               <button
                 type="submit"
-                onClick={() => fiyatHesapla()}
-                disabled={isSubmitting || !pickupLocation || !deliveryLocation || !aracBilgileri.marka || !aracBilgileri.model || !aracBilgileri.yil || !aracBilgileri.plaka || !aracBilgileri.tip || !aracBilgileri.durum}
                 className="w-full py-3 px-6 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Lütfen Bekleyin...' : 'Devam Et'}
