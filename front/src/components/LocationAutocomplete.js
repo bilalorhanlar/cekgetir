@@ -93,7 +93,7 @@ const LocationAutocomplete = ({
     }
   };
 
-  const handleSelect = ({ lat, lng, label }) => {
+  const handleSelect = ({ lat, lng, label, cityData }) => {
     // Önce sonuçları temizle
     setResults([]);
     setLoading(false);
@@ -105,7 +105,7 @@ const LocationAutocomplete = ({
     }
     // En son seçim callback'ini çağır
     if (onSelect) {
-      onSelect({ lat, lng, address: label });
+      onSelect({ lat, lng, address: label, cityData });
     }
   };
 
@@ -136,7 +136,12 @@ const LocationAutocomplete = ({
             return (
               <li
                 key={idx}
-                onClick={() => handleSelect({ lat, lng, label: fullAddress })}
+                onClick={() => handleSelect({ 
+                  lat, 
+                  lng, 
+                  label: fullAddress,
+                  cityData: item 
+                })}
                 className={suggestionItemClassName}
                 style={{ fontSize: '0.875rem' }}
               >

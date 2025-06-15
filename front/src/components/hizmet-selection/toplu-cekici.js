@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { GoogleMap, Marker, useLoadScript, DirectionsRenderer, Polyline } from '@react-google-maps/api'
 import React from 'react'
 import api from '@/utils/axios'
 import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
+import LocationAutocomplete from '../LocationAutocomplete'
 
-const libraries = ['places']
 // Leaflet'i SSR olmadan sadece client'ta render etmek için
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
   ssr: false,
@@ -24,15 +23,6 @@ const mapStyles = {
   height: '300px',
   borderRadius: '0.75rem',
   border: '1px solid rgba(64, 64, 64, 0.4)'
-}
-
-const mapOptions = {
-  disableDefaultUI: true,
-  zoomControl: true,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
-  clickableIcons: false
 }
 
 const normalizeSehirAdi = (sehir) => {
@@ -60,44 +50,6 @@ const normalizeLocation = (loc) => {
     address: loc.address || ''
   };
 };
-
-// Debounce fonksiyonu ekle
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
-// Koordinatları düzgün parse eden yardımcı fonksiyon
-const parseCoordinate = (val) => {
-  if (typeof val === 'string') {
-    return Number(val.replace(',', '.'));
-  }
-  return Number(val);
-};
-
-// Lat/Lng geçerliliğini kontrol eden yardımcı fonksiyon
-const isValidLatLng = (lat, lng) => {
-  const latNum = parseCoordinate(lat);
-  const lngNum = parseCoordinate(lng);
-  return !isNaN(latNum) && !isNaN(lngNum);
-};
-
-// Fallback: delivery otopark koordinatı yoksa pickup otopark koordinatını kullan
-const getDeliveryOtoparkLat = (sehirFiyatlandirma) =>
-  sehirFiyatlandirma.deliveryOtoparkLat ?? sehirFiyatlandirma.otoparkLat;
-const getDeliveryOtoparkLng = (sehirFiyatlandirma) =>
-  sehirFiyatlandirma.deliveryOtoparkLng ?? sehirFiyatlandirma.otoparkLng;
 
 export default function TopluCekiciModal({ onClose }) {
   const [step, setStep] = useState(1)
@@ -142,19 +94,14 @@ export default function TopluCekiciModal({ onClose }) {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [selectedBrand, setSelectedBrand] = useState('')
-  const [selectedModel, setSelectedModel] = useState('')
-  const [selectedSegment, setSelectedSegment] = useState('')
+
   const [modelOptions, setModelOptions] = useState([])
   const [sehirFiyatlandirma, setSehirFiyatlandirma] = useState(null)
   const [deliverySehirFiyatlandirma, setDeliverySehirFiyatlandirma] = useState(null)
-  const [selectedCity, setSelectedCity] = useState('')
-  const [otoparkInfo, setOtoparkInfo] = useState({ adres: '', lat: null, lng: null })
   const citySelectRef = useRef(null)
   const [activeLocation, setActiveLocation] = useState(null)
   const [directions, setDirections] = useState(null)
   const [activeMapPanel, setActiveMapPanel] = useState(null)
-  const [isLoadingTopluCekici, setIsLoadingTopluCekici] = useState(true)
   const [sehirler, setSehirler] = useState([])
   const [kmBasedFees, setKmBasedFees] = useState([])
   const [routes, setRoutes] = useState([])
@@ -162,14 +109,13 @@ export default function TopluCekiciModal({ onClose }) {
   const [sehir, setSehir] = useState(null)
   const [sehir2, setSehir2] = useState(null)
   const [wayPoints, setWayPoints] = useState([])
-  const [wayPointsKm, setWayPointsKm] = useState([])
 
   const getCity = () => {
-    console.log('sehaasdasdasdir', sehir);
+    console.log('sehir1', sehir);
     return sehir;
   }
   const getCity2 = () => {
-    console.log('sehaasdasdasdir2', sehir2);
+    console.log('sehir2', sehir2);
     return sehir2;
   }
 
@@ -200,14 +146,6 @@ export default function TopluCekiciModal({ onClose }) {
   const getRouteInfo = () => {
     return routeInfo;
   }
-  const getWayPoints = () => {
-    return wayPoints;
-  }
-
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-    libraries
-  })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1166,16 +1104,63 @@ export default function TopluCekiciModal({ onClose }) {
                   ) : (
                     <div className="space-y-4">
                       <div className="relative">
-                        <input
+                        <LocationAutocomplete
+                          value={pickupSearchValue}
                           id="pickup-input"
                           type="text"
-                          value={pickupSearchValue}
-                          onChange={handleInputChange}
                           onFocus={() => setActiveLocation('pickup')}
-                          placeholder="Adres veya konum ara..."
-                          className="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500"
+                          onChange={(e) => {
+                            setPickupSearchValue(e.target.value);
+                            setActiveLocation('pickup');
+                          }}
+                          onSelect={(location) => {
+                            console.log('Pickup location selected:', location);
+                            const newLocation = {
+                              lat: location.lat,
+                              lng: location.lng,
+                              address: location.address
+                            };
+                            setPickupLocation(newLocation);
+                            setPickupSearchValue(location.address);
+                            
+                            // Şehir bilgisini set et
+                            if (location.cityData && location.cityData.properties) {
+                              const city = location.cityData.properties.city || "";
+                              setSehir(city);
+                              console.log('Pickup city set:', city);
+                            }
+                            
+                            // Update waypoints if delivery location exists
+                            if (deliveryLocation) {
+                              const newWayPoints = [...wayPoints];
+                              const pickupIndex = newWayPoints.findIndex(wp => wp.name === "pickupLocation");
+                              
+                              if (pickupIndex !== -1) {
+                                newWayPoints[pickupIndex] = {
+                                  lat: Number(location.lat),
+                                  lng: Number(location.lng),
+                                  address: location.address,
+                                  name: "pickupLocation"
+                                };
+                              } else {
+                                newWayPoints.push({
+                                  lat: Number(location.lat),
+                                  lng: Number(location.lng),
+                                  address: location.address,
+                                  name: "pickupLocation"
+                                });
+                              }
+                              
+                              setWayPoints(newWayPoints);
+                            }
+                          }}
+                          placeholder="Adres girin veya haritadan seçin"
+                          isMapSelected={activeMapPanel === 'pickup'}
+                          inputClassName="w-full px-4 py-2.5 bg-[#141414] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 placeholder-[#404040]"
+                          suggestionClassName="absolute top-full left-0 right-0 bg-[#141414] border border-[#404040] rounded-b-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+                          suggestionItemClassName="px-4 py-2 cursor-pointer hover:bg-[#202020] border-b border-[#404040] last:border-b-0 text-white"
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 z-10">
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleCurrentLocation('pickup')}
@@ -1202,7 +1187,7 @@ export default function TopluCekiciModal({ onClose }) {
                           </button>
                         </div>
                       </div>
-                      {isLoaded && activeMapPanel === 'pickup' && (
+                      {activeMapPanel === 'pickup' && (
                         <div style={mapStyles} className="relative mt-2">
                           <LocationPicker
                             isStartPicker={true}
@@ -1267,16 +1252,63 @@ export default function TopluCekiciModal({ onClose }) {
                   ) : (
                     <div className="space-y-4">
                       <div className="relative">
-                        <input
+                        <LocationAutocomplete
+                          value={deliverySearchValue}
                           id="delivery-input"
                           type="text"
-                          value={deliverySearchValue}
-                          onChange={handleInputChange}
                           onFocus={() => setActiveLocation('delivery')}
-                          placeholder="Adres veya konum ara..."
-                          className="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500"
+                          onChange={(e) => {
+                            setDeliverySearchValue(e.target.value);
+                            setActiveLocation('delivery');
+                          }}
+                          onSelect={(location) => {
+                            console.log('Delivery location selected:', location);
+                            const newLocation = {
+                              lat: location.lat,
+                              lng: location.lng,
+                              address: location.address
+                            };
+                            setDeliveryLocation(newLocation);
+                            setDeliverySearchValue(location.address);
+                            
+                            // Şehir bilgisini set et
+                            if (location.cityData && location.cityData.properties) {
+                              const city = location.cityData.properties.city || "";
+                              setSehir2(city);
+                              console.log('Delivery city set:', city);
+                            }
+                            
+                            // Update waypoints if pickup location exists
+                            if (pickupLocation) {
+                              const newWayPoints = [...wayPoints];
+                              const deliveryIndex = newWayPoints.findIndex(wp => wp.name === "deliveryLocation");
+                              
+                              if (deliveryIndex !== -1) {
+                                newWayPoints[deliveryIndex] = {
+                                  lat: Number(location.lat),
+                                  lng: Number(location.lng),
+                                  address: location.address,
+                                  name: "deliveryLocation"
+                                };
+                              } else {
+                                newWayPoints.push({
+                                  lat: Number(location.lat),
+                                  lng: Number(location.lng),
+                                  address: location.address,
+                                  name: "deliveryLocation"
+                                });
+                              }
+                              
+                              setWayPoints(newWayPoints);
+                            }
+                          }}
+                          placeholder="Adres girin veya haritadan seçin"
+                          isMapSelected={activeMapPanel === 'delivery'}
+                          inputClassName="w-full px-4 py-2.5 bg-[#141414] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500 placeholder-[#404040]"
+                          suggestionClassName="absolute top-full left-0 right-0 bg-[#141414] border border-[#404040] rounded-b-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+                          suggestionItemClassName="px-4 py-2 cursor-pointer hover:bg-[#202020] border-b border-[#404040] last:border-b-0 text-white"
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 z-10">
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleCurrentLocation('delivery')}
@@ -1303,7 +1335,7 @@ export default function TopluCekiciModal({ onClose }) {
                           </button>
                         </div>
                       </div>
-                      {isLoaded && activeMapPanel === 'delivery' && (
+                      {activeMapPanel === 'delivery' && (
                         <div style={mapStyles} className="relative mt-2">
                           <LocationPicker
                             isStartPicker={false}
@@ -1530,7 +1562,7 @@ export default function TopluCekiciModal({ onClose }) {
                 </button>
               </div>
 
-              {isLoaded && (
+              {wayPoints.length > 0 && (
                 <div key="map" style={mapStyles} className="relative mt-2">
                   <MapComponent
                     waypoints={wayPoints}

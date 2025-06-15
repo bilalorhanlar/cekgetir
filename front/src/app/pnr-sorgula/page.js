@@ -196,20 +196,20 @@ export default function PnrSorgula() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className=" rounded-lg p-4 flex flex-col">
-                      <span className="text-[#bdbdbd] text-xs mb-1">Banka</span>
-                      <span className="text-white font-medium">QNB Finansbank</span>
+                      <span className="text-[#bdbdbd] text-md mb-1">Banka Adı</span>
+                      <span className="text-white text-sm font-medium">QNB Finansbank</span>
                     </div>
                     <div className=" rounded-lg p-4 flex flex-col">
-                      <span className="text-[#bdbdbd] text-xs mb-1">Hesap Sahibi</span>
-                      <span className="text-white font-medium">Ömer Kaya</span>
+                      <span className="text-[#bdbdbd] text-md mb-1">Hesap Sahibi</span>
+                      <span className="text-white text-sm font-medium">Ömer Kaya</span>
                     </div>
                     <div className="bg-[#141414] rounded-lg p-4 flex flex-col">
-                      <span className="text-[#bdbdbd] text-xs mb-1">IBAN</span>
-                      <span className="text-white font-mono tracking-widest">TR65 0011 1000 0000 0098 6222 45</span>
+                      <span className="text-[#bdbdbd] text-md mb-1">IBAN</span>
+                      <span className="text-white text-sm font-mono tracking-widest">TR65 0011 1000 0000 0098 6222 45</span>
                     </div>
                     <div className=" rounded-lg p-4 flex flex-col">
-                      <span className="text-[#bdbdbd] text-xs mb-1">Açıklama</span>
-                      <span className="text-white font-medium">Talep No: {order.pnrNo}</span>
+                      <span className="text-[#bdbdbd] text-md mb-1">Açıklama</span>
+                      <span className="text-white text-sm font-medium">Talep No: {order.pnrNo}</span>
                     </div>
                   </div>
                 </div>
@@ -217,31 +217,37 @@ export default function PnrSorgula() {
                 <div className="bg-[#202020] rounded-2xl p-6 border border-[#404040] shadow-xl flex flex-col gap-4">
                   <div className="flex items-center gap-2 mb-2">
                     <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    <div className="flex items-center gap-2 justify-between w-full">
                     <span className="text-lg font-bold text-white">Hizmet Bilgileri</span>
                   </div>
+                    </div>
                   <div className="grid grid-cols-1 gap-2">
                     <div>
-                      <div className="text-[#bdbdbd] text-sm mb-1">Hizmet</div>
-                      <div className="text-white font-medium">
+                      <div className="text-[#bdbdbd] text-md mb-1">Hizmet</div>
+                      <div className="text-white text-sm font-medium">
                         {order.serviceType === 'YOL_YARDIM' ? 'Yol Yardım' : order.serviceType === 'OZEL_CEKICI' ? 'Özel Çekici' : order.serviceType === 'TOPLU_CEKICI' ? 'Toplu Çekici' : ''}
                       </div>
                     </div>
                     {order.serviceType === 'YOL_YARDIM' ? (
                       <>
                         <div>
-                          <div className="text-[#bdbdbd] text-sm mb-1">Konum</div>
-                          <div>
-                            <div className="text-white font-medium">{order.breakdownLocation}</div>
+                          <div className="flex mb-2 justify-between items-end">
+                            <div className="text-[#bdbdbd] text-md mb-1">Konum</div>
                             <button 
                               onClick={() => {
                                 window.open(`https://www.google.com/maps/search/?api=1&query=${order.breakdownLocationLat},${order.breakdownLocationLng}`, '_blank')
                               }}
-                              className="text-white bg-yellow-500 px-2 py-1 rounded-md font-medium">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              className="text-white bg-[#404040] hover:bg-yellow-500 hover:bg-yellow-600 px-3 py-1.5 rounded-md font-medium transition-colors inline-flex items-center gap-2 text-sm shadow-sm"
+                              title="Yol Tarifi Al"
+                            >
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                               </svg>
+                              Yol tarifi al
                             </button>
+                          </div>
+                          <div>
+                            <div className="text-white text-sm font-medium">{order.breakdownLocation}</div>
                           </div>
                         </div>
                         {order.breakdownDescription && (
@@ -254,40 +260,43 @@ export default function PnrSorgula() {
                     ) : (
                       <>
                         <div>
-                          <div className="text-[#bdbdbd] text-sm mb-1">Teslim Alınacak</div>
-                          <div>
-                            <div className="text-white font-medium">{order.pickupLocation}</div>
-                            <button 
-                              onClick={() => {
-                                window.open(`https://www.google.com/maps/search/?api=1&query=${order.pickupLocationLat},${order.pickupLocationLng}`, '_blank')
-                              }}
-                              className="text-white bg-yellow-500 hover:bg-yellow-400 px-2 py-1 rounded-md font-medium transition-colors inline-flex items-center gap-1 text-sm"
-                              title="Adresi Görüntüle"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                            </button>
+                          <div className="flex mb-2 justify-between items-end">
+                          <div className="text-[#bdbdbd] text-md mb-1">Teslim Alınacak Konum</div>
+                          <button 
+                            onClick={() => {
+                              window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.pickupLocationLat},${order.pickupLocationLng}`, '_blank')
+                            }}
+                            className="text-white bg-[#404040] hover:bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-md font-medium transition-colors inline-flex items-center gap-2 text-sm shadow-sm"
+                            title="Alınacak Konuma Git"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                            </svg>
+                            Alınacak Konum
+                          </button>
                           </div>
-                          
+                          <div className="flex gap-2 mt-2">
+                            <div className="text-white text-sm font-medium">{order.pickupLocation}</div>
+                          </div>
                         </div>
                         <div>
-                          <div className="text-[#bdbdbd] text-sm mb-1">Bırakılacak</div>
-                          <div>
-                            <div className="text-white font-medium">{order.dropoffLocation}</div>
+                          <div className="flex mb-2 justify-between items-end">
+                            <div className="text-[#bdbdbd] text-md mb-1">Bırakılacak Konum</div>
                             <button 
                               onClick={() => {
-                                window.open(`https://www.google.com/maps/search/?api=1&query=${order.dropoffLocationLat},${order.dropoffLocationLng}`, '_blank')
+                                window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.dropoffLocationLat},${order.dropoffLocationLng}`, '_blank')
                               }}
-                              className="text-white bg-yellow-500 hover:bg-yellow-400 px-2 py-1 rounded-md font-medium transition-colors inline-flex items-center gap-1 text-sm"
-                              title="Adresi Görüntüle"
+                              className="text-white bg-[#404040] hover:bg-purple-500 hover:bg-purple-600 px-3 py-1.5 rounded-md font-medium transition-colors inline-flex items-center gap-2 text-sm shadow-sm"
+                              title="Bırakılacak Konuma Git"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                               </svg>
+                              Bırakılacak Konum
                             </button>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <div className="text-white text-sm font-medium">{order.dropoffLocation}</div>
                           </div>
                         </div>
                       </>
@@ -304,23 +313,23 @@ export default function PnrSorgula() {
                     <div className="space-y-2">
                       {order.bulkVehicles.map((vehicle, index) => (
                         <div key={vehicle.id} className="border-b border-[#404040] pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                          <div className="text-yellow-500 font-medium mb-1">Araç {index + 1}</div>
+                          <div className="text-yellow-500 text-xl font-medium mb-1">Araç {index + 1}</div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <div className="text-[#bdbdbd] text-xs mb-0.5">Marka</div>
-                              <div className="text-white">{vehicle.marka}</div>
+                              <div className="text-[#bdbdbd] text-md mb-0.5">Marka</div>
+                              <div className="text-white text-sm">{vehicle.marka}</div>
                             </div>
                             <div>
-                              <div className="text-[#bdbdbd] text-xs mb-0.5">Model</div>
-                              <div className="text-white">{vehicle.model}</div>
+                              <div className="text-[#bdbdbd] text-md mb-0.5">Model</div>
+                              <div className="text-white text-sm">{vehicle.model}</div>
                             </div>
                             <div>
-                              <div className="text-[#bdbdbd] text-xs mb-0.5">Yıl</div>
-                              <div className="text-white">{vehicle.yil}</div>
+                              <div className="text-[#bdbdbd] text-md mb-0.5">Yıl</div>
+                              <div className="text-white text-sm">{vehicle.yil}</div>
                             </div>
                             <div>
-                              <div className="text-[#bdbdbd] text-xs mb-0.5">Plaka</div>
-                              <div className="text-white font-mono">{vehicle.plaka}</div>
+                              <div className="text-[#bdbdbd] text-md mb-0.5">Plaka</div>
+                              <div className="text-white font-mono text-sm">{vehicle.plaka}</div>
                             </div>
                           </div>
                         </div>
@@ -357,32 +366,32 @@ export default function PnrSorgula() {
                     {order.companyName ? (
                       <>
                         <div className=" rounded-lg p-4 flex flex-col">
-                          <span className="text-[#bdbdbd] text-xs mb-1">Firma Adı</span>
-                          <span className="text-white font-medium">{order.companyName}</span>
+                          <span className="text-[#bdbdbd] text-md mb-1">Firma Adı</span>
+                          <span className="text-white text-sm font-medium">{order.companyName}</span>
                         </div>
                         <div className=" rounded-lg p-4 flex flex-col">
-                          <span className="text-[#bdbdbd] text-xs mb-1">Vergi No</span>
-                          <span className="text-white font-medium">{order.taxNumber}</span>
+                          <span className="text-[#bdbdbd] text-md mb-1">Vergi No</span>
+                          <span className="text-white text-sm font-medium">{order.taxNumber}</span>
                         </div>
                         <div className=" rounded-lg p-4 flex flex-col">
-                          <span className="text-[#bdbdbd] text-xs mb-1">Vergi Dairesi</span>
-                          <span className="text-white font-medium">{order.taxOffice}</span>
+                          <span className="text-[#bdbdbd] text-md mb-1">Vergi Dairesi</span>
+                          <span className="text-white text-sm font-medium">{order.taxOffice}</span>
                         </div>
                       </>
                     ) : (
                       <div className=" rounded-lg p-4 flex flex-col">
-                        <span className="text-[#bdbdbd] text-xs mb-1">Ad Soyad</span>
-                        <span className="text-white font-medium">{order.customerName} {order.customerSurname}</span>
+                        <span className="text-[#bdbdbd] text-md mb-1">Ad Soyad</span>
+                        <span className="text-white text-sm font-medium">{order.customerName} {order.customerSurname}</span>
                       </div>
                     )}
                     <div className=" rounded-lg p-4 flex flex-col">
-                      <span className="text-[#bdbdbd] text-xs mb-1">Telefon</span>
-                      <span className="text-white font-medium">{order.customerPhone}</span>
+                      <span className="text-[#bdbdbd] text-md mb-1">Telefon</span>
+                      <span className="text-white text-sm font-medium">{order.customerPhone}</span>
                     </div>
                     {order.customerEmail && (
                       <div className=" rounded-lg p-4 flex flex-col">
-                        <span className="text-[#bdbdbd] text-xs mb-1">E-posta</span>
-                        <span className="text-white font-medium">{order.customerEmail}</span>
+                        <span className="text-[#bdbdbd] text-md mb-1">E-posta</span>
+                        <span className="text-white text-sm font-medium">{order.customerEmail}</span>
                       </div>
                     )}
                   </div>
