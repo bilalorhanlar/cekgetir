@@ -6,6 +6,10 @@ import api from '@/utils/axios'
 import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
 import LocationAutocomplete from '../LocationAutocomplete'
+import AcikRizaModal from '@/components/sozlesmeler/acikriza'
+import AydinlatmaModal from '@/components/sozlesmeler/aydinlatma'
+import KvkkModal from '@/components/sozlesmeler/kvkk'
+import SorumlulukReddiModal from '@/components/sozlesmeler/sorumlulukreddi'
 
 // Leaflet'i SSR olmadan sadece client'ta render etmek için
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
@@ -109,6 +113,10 @@ export default function TopluCekiciModal({ onClose }) {
   const [sehir, setSehir] = useState(null)
   const [sehir2, setSehir2] = useState(null)
   const [wayPoints, setWayPoints] = useState([])
+  const [isAcikRizaOpen, setIsAcikRizaOpen] = useState(false);
+  const [isAydinlatmaOpen, setIsAydinlatmaOpen] = useState(false);
+  const [isKvkkOpen, setIsKvkkOpen] = useState(false);
+  const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false);
 
   const getCity = () => {
     console.log('sehir1', sehir);
@@ -1803,12 +1811,12 @@ export default function TopluCekiciModal({ onClose }) {
               </div>
 
               <div className="mt-4 text-center">
-                <p className="text-xs text-[#ebebeb]">
+                <p className="text-xs text-[#404040]">
                   Siparişi Onayla butonuna tıkladığınızda{' '}
-                  <a href="/docs/KVKKvegizlilik.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
-                  <a href="/docs/acikrizametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</a>,{' '}
-                  <a href="/docs/aydinlatmametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</a> ve{' '}
-                  <a href="/docs/sorumlulukreddibeyani.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</a> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
+                  <button onClick={() => setIsKvkkOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</button>,{' '}
+                  <button onClick={() => setIsAcikRizaOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</button>,{' '}
+                  <button onClick={() => setIsAydinlatmaOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</button> ve{' '}
+                  <button onClick={() => setIsSorumlulukReddiOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</button> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
                 </p>
               </div>
             </form>
@@ -1863,6 +1871,11 @@ export default function TopluCekiciModal({ onClose }) {
           )}
         </div>
       </div>
+      <AcikRizaModal isOpen={isAcikRizaOpen} onClose={() => setIsAcikRizaOpen(false)} />
+      <AydinlatmaModal isOpen={isAydinlatmaOpen} onClose={() => setIsAydinlatmaOpen(false)} />
+      <KvkkModal isOpen={isKvkkOpen} onClose={() => setIsKvkkOpen(false)} />
+      <SorumlulukReddiModal isOpen={isSorumlulukReddiOpen} onClose={() => setIsSorumlulukReddiOpen(false)} />
     </div>
+    
   )
 } 

@@ -130,25 +130,44 @@ const LocationAutocomplete = ({
 
       {!isMapSelected && results.length > 0 && (
         <ul className={suggestionClassName}>
-          {results.map((item, idx) => {
-            const { fullAddress } = item.properties;
-            const [lng, lat] = item.geometry.coordinates;
-            return (
-              <li
-                key={idx}
-                onClick={() => handleSelect({ 
-                  lat, 
-                  lng, 
-                  label: fullAddress,
-                  cityData: item 
-                })}
-                className={suggestionItemClassName}
-                style={{ fontSize: '0.875rem' }}
-              >
-                <div className="truncate overflow-hidden whitespace-nowrap w-full">{fullAddress}</div>
-              </li>
-            );
-          })}
+          {results
+            .sort((a, b) => {
+              // Tam eşleşenleri öne al
+              const aMatch = inputValue && a.properties.fullAddress.toLowerCase().startsWith(inputValue.toLowerCase());
+              const bMatch = inputValue && b.properties.fullAddress.toLowerCase().startsWith(inputValue.toLowerCase());
+              if (aMatch && !bMatch) return -1;
+              if (!aMatch && bMatch) return 1;
+              return 0;
+            })
+            .map((item, idx) => {
+              const { fullAddress, street, district, city } = item.properties;
+              const [lng, lat] = item.geometry.coordinates;
+              // Ana başlık: street veya fullAddress'in ilk kısmı
+              // Alt satır: ilçe, il, tam adres
+              return (
+                <li
+                  key={idx}
+                  onClick={() => handleSelect({ 
+                    lat, 
+                    lng, 
+                    label: fullAddress,
+                    cityData: item 
+                  })}
+                  className={suggestionItemClassName}
+                  style={{ fontSize: '0.95rem', lineHeight: 1.2 }}
+                >
+                  <div className="font-semibold truncate text-white">
+                    {street || fullAddress.split(',')[0]}
+                  </div>
+                  <div className="text-xs text-[#bdbdbd] truncate">
+                    {[district, city].filter(Boolean).join(', ')}
+                  </div>
+                  <div className="text-xs text-[#666] truncate">
+                    {fullAddress}
+                  </div>
+                </li>
+              );
+            })}
         </ul>
       )}
     </div>

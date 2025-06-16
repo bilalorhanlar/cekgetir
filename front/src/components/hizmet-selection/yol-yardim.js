@@ -8,6 +8,10 @@ import axios from 'axios'
 import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
 import LocationAutocomplete from '@/components/LocationAutocomplete';
+import AcikRizaModal from '@/components/sozlesmeler/acikriza';
+import AydinlatmaModal from '@/components/sozlesmeler/aydinlatma';
+import KvkkModal from '@/components/sozlesmeler/kvkk';
+import SorumlulukReddiModal from '@/components/sozlesmeler/sorumlulukreddi';
 
 // LocationPicker bileşenini dinamik olarak import et
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
@@ -92,6 +96,10 @@ export default function YolYardimModal({ onClose }) {
   const [sehir, setSehir] = useState(null)
   const [isMapSelected, setIsMapSelected] = useState(false)
   const [activeMapPanel, setActiveMapPanel] = useState(null)
+  const [isAcikRizaOpen, setIsAcikRizaOpen] = useState(false);
+  const [isAydinlatmaOpen, setIsAydinlatmaOpen] = useState(false);
+  const [isKvkkOpen, setIsKvkkOpen] = useState(false);
+  const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false);
   
   // Şehir adını normalize eden fonksiyon
   function normalizeSehirAdi(sehir) {
@@ -170,8 +178,9 @@ export default function YolYardimModal({ onClose }) {
     // Segment çarpanı uygulaması
     const segmentTotal = baseTotal * segmentMultiplier;
 
-    // Gece ücreti kontrolü
-    const finalPrice = isNightTime ? segmentTotal * nightPrice : segmentTotal;
+    const kdv = segmentTotal * 0.2;
+
+    const finalPrice = (isNightTime ? segmentTotal * nightPrice : segmentTotal) + kdv;
 
     // Sadece fiyat değiştiğinde log at
     if (price !== Math.round(finalPrice)) {
@@ -185,6 +194,7 @@ export default function YolYardimModal({ onClose }) {
         baseTotal,
         segmentTotal,
         isNightTime,
+        kdv,
         finalPrice
       });
     }
@@ -1123,10 +1133,10 @@ export default function YolYardimModal({ onClose }) {
               <div className="mt-4 text-center">
                 <p className="text-xs text-[#404040]">
                   Siparişi Onayla butonuna tıkladığınızda{' '}
-                  <a href="/docs/KVKKvegizlilik.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</a>,{' '}
-                  <a href="/docs/acikrizametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</a>,{' '}
-                  <a href="/docs/aydinlatmametni.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</a> ve{' '}
-                  <a href="/docs/sorumlulukreddibeyani.pdf" target="_blank" className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</a> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
+                  <button onClick={() => setIsKvkkOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</button>,{' '}
+                  <button onClick={() => setIsAcikRizaOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</button>,{' '}
+                  <button onClick={() => setIsAydinlatmaOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</button> ve{' '}
+                  <button onClick={() => setIsSorumlulukReddiOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</button> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
                 </p>
               </div>
             </form>
@@ -1245,6 +1255,10 @@ export default function YolYardimModal({ onClose }) {
           )}
         </div>
       </div>
+      <AcikRizaModal isOpen={isAcikRizaOpen} onClose={() => setIsAcikRizaOpen(false)} />
+      <AydinlatmaModal isOpen={isAydinlatmaOpen} onClose={() => setIsAydinlatmaOpen(false)} />
+      <KvkkModal isOpen={isKvkkOpen} onClose={() => setIsKvkkOpen(false)} />
+      <SorumlulukReddiModal isOpen={isSorumlulukReddiOpen} onClose={() => setIsSorumlulukReddiOpen(false)} />
     </div>
   )
 }

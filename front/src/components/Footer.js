@@ -5,8 +5,18 @@ import { FaInstagram, FaXTwitter, FaLinkedin, FaYoutube } from 'react-icons/fa6'
 // Logo olarak resim kullanacaksan:
 import Image from 'next/image'
 import Link from 'next/link'
+import AcikRizaModal from './sozlesmeler/acikriza'
+import AydinlatmaModal from './sozlesmeler/aydinlatma'
+import KvkkModal from './sozlesmeler/kvkk'
+import SorumlulukReddiModal from './sozlesmeler/sorumlulukreddi'
+import { useState } from 'react'
 
 export default function Footer() {
+  const [isAcikRizaOpen, setIsAcikRizaOpen] = useState(false)
+  const [isAydinlatmaOpen, setIsAydinlatmaOpen] = useState(false)
+  const [isKvkkOpen, setIsKvkkOpen] = useState(false)
+  const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false)
+
   return (
     <footer className="bg-[#202020] text-white">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -109,9 +119,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/hakkimizda" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <Link href="/blog" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
-                  Hakkımızda
+                  Blog
                 </Link>
               </li>
               <li>
@@ -128,7 +138,7 @@ export default function Footer() {
             <h3 className="text-lg sm:text-xl font-semibold mb-4 text-yellow-400">Hizmetlerimiz</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/#sehirler-arasi" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <Link href="/#toplu-cekici" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Şehirler Arası Taşıma
                 </Link>
@@ -168,11 +178,12 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-4 space-x-8  text-xs text-gray-400 md:-mt-8 text-center">
-            <a href="/docs/KVKKvegizlilik.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">KVKK ve Gizlilik</a>
-            <a href="/docs/acikrizametni.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">Açık Rıza Metni</a>
-            <a href="/docs/aydinlatmametni.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">Aydınlatma Metni</a>
-            <a href="/docs/sorumlulukreddibeyani.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">Sorumluluk Reddi Beyanı</a>
-          </div>
+          <a href="/docs/KVKKvegizlilik.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 underline transition-colors">KVKK ve Gizlilik</a>
+          <button onClick={() => setIsAcikRizaOpen(true)} className="hover:text-yellow-400 underline transition-colors">Açık Rıza Metni</button>
+          <button onClick={() => setIsAydinlatmaOpen(true)} className="hover:text-yellow-400 underline transition-colors">Aydınlatma Metni</button>
+          <button onClick={() => setIsKvkkOpen(true)} className="hover:text-yellow-400 underline transition-colors">KVKK Politikası</button>
+          <button onClick={() => setIsSorumlulukReddiOpen(true)} className="hover:text-yellow-400 underline transition-colors">Sorumluluk Reddi</button>
+        </div>
 
         {/* Alt Footer */}
         <div className="mt-12 pt-8 border-t border-gray-700">
@@ -212,6 +223,23 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      <AcikRizaModal 
+        isOpen={isAcikRizaOpen} 
+        onClose={() => setIsAcikRizaOpen(false)} 
+      />
+      <AydinlatmaModal 
+        isOpen={isAydinlatmaOpen} 
+        onClose={() => setIsAydinlatmaOpen(false)} 
+      />
+      <KvkkModal 
+        isOpen={isKvkkOpen} 
+        onClose={() => setIsKvkkOpen(false)} 
+      />
+      <SorumlulukReddiModal 
+        isOpen={isSorumlulukReddiOpen} 
+        onClose={() => setIsSorumlulukReddiOpen(false)} 
+      />
     </footer>
   )
 }
