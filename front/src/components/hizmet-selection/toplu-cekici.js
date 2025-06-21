@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { GoogleMap, Marker, useLoadScript, DirectionsRenderer, Polyline } from '@react-google-maps/api'
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api'
 import React from 'react'
 import api from '@/utils/axios'
 import { toast } from 'react-hot-toast'
@@ -163,6 +163,7 @@ export default function TopluCekiciModal({ onClose }) {
   const [sehir2, setSehir2] = useState(null)
   const [wayPoints, setWayPoints] = useState([])
   const [wayPointsKm, setWayPointsKm] = useState([])
+  const [detectedBridges, setDetectedBridges] = useState([])
 
   const getCity = () => {
     console.log('sehaasdasdasdir', sehir);
@@ -185,7 +186,7 @@ export default function TopluCekiciModal({ onClose }) {
     
   }
 
-  const setRouteInfoHandle = (distance, duration, wayPointsKm) => {
+  const setRouteInfoHandle = (distance, duration, wayPointsKm, detectedBridges) => {
     let routeInfo = {}
     routeInfo.distance = distance;
     routeInfo.duration = duration;
@@ -194,7 +195,9 @@ export default function TopluCekiciModal({ onClose }) {
       routeInfo.wayPointsKm.push(wayPointsKm[i])
     }
     setRouteInfo(routeInfo);
+    setDetectedBridges(detectedBridges || []);
     console.log('routeInfodd', routeInfo, getRouteInfo())
+    console.log('detectedBridges', detectedBridges)
   }
 
   const getRouteInfo = () => {
@@ -434,20 +437,8 @@ export default function TopluCekiciModal({ onClose }) {
 
   const calculateTotalPrice = async (input, showDebug = false) => {
     input.routeInfo = getRouteInfo();
-    console.log('input.routeInfo.wayPointsKm', input.routeInfo);
 
     try {
-      console.log('💰 calculateTotalPrice çağrıldı');
-      console.log('Alınacak Konum:', input.pickupLocation);
-      console.log('Alınacak Otopark:', input.pickupOtopark);
-      console.log('Alınacak Şehir Fiyatlandırması:', input.sehirFiyatlandirma);
-      console.log('Teslim Edilecek Konum:', input.deliveryLocation);
-      console.log('Teslim Edilecek Otopark:', input.deliveryOtopark);
-      console.log('Teslim Edilecek Şehir Fiyatlandırması:', input.deliverySehirFiyatlandirma);
-      console.log('Genel Fiyatlandırma:', input.fiyatlandirma);
-      console.log('KM Bazlı Ücretler:', input.kmBasedFees);
-      console.log('Araçlar:', input.araclar);
-      
       if (showDebug) {
         console.log('--- DEBUG GİRDİLERİ ---');
         console.log('Alınacak Konum:', input.pickupLocation);
@@ -459,6 +450,7 @@ export default function TopluCekiciModal({ onClose }) {
         console.log('Genel Fiyatlandırma:', input.fiyatlandirma);
         console.log('KM Bazlı Ücretler:', input.kmBasedFees);
         console.log('Araçlar:', input.araclar);
+        console.log('Tespit Edilen Köprüler:', detectedBridges);
         console.log('-------------------');
       }
 
@@ -469,7 +461,6 @@ export default function TopluCekiciModal({ onClose }) {
       }
       
       let totalPrice = 0;
-      let routes = [];
       let index = 0;
       // 1. Aşama: Konum -> Otopark (Alınacak şehir)
       console.log('input.routeInfo.wayPointsKm', input.routeInfo.wayPointsKm);
@@ -528,7 +519,9 @@ export default function TopluCekiciModal({ onClose }) {
         console.log('--------------------------------')
         index++;
       }
-      let tempPrice = totalPrice; // 10000
+      const baseRoutePrice = totalPrice;
+      totalPrice = 0; // Her aracı ayrı ayrı toplayacağız
+      
       // 4. Aşama: Araç bazlı hesaplama
       for (const arac of input.araclar) {
         if (showDebug) {
@@ -538,34 +531,46 @@ export default function TopluCekiciModal({ onClose }) {
           console.log('- Segment:', arac.segment);
           console.log('- Durum:', arac.durum);
         }
+      
         const segmentObj = vehicleData.segmentler.find(seg => String(seg.id) === String(arac.segment));
         const segmentMultiplier = segmentObj ? Number(segmentObj.price) : 1;
         const statusObj = vehicleData.durumlar.find(st => String(st.id) === String(arac.durum));
         const statusMultiplier = statusObj ? Number(statusObj.price) : 0;
+      
+        const aracPrice = (baseRoutePrice * segmentMultiplier) + statusMultiplier;
+      
         if (showDebug) {
           console.log('- Segment Çarpanı:', segmentMultiplier.toFixed(2));
           console.log('- Durum Ücreti:', statusMultiplier.toFixed(2), 'TL');
-        }
-        const aracPrice = (tempPrice * ((segmentMultiplier) - 1)) + (statusMultiplier); //1.2 
-        if (showDebug) {
           console.log('- Araç Toplam Fiyatı:', aracPrice.toFixed(2), 'TL');
         }
+      
         totalPrice += aracPrice;
+      
         console.log('aracPrice', aracPrice)
         console.log('totalPrice', totalPrice)
         console.log('--------------------------------')
       }
-
+      
       // 5. Aşama: KDV Hesaplama
       const kdvOrani = 0.20; // %20 KDV
       const kdvTutari = totalPrice * kdvOrani;
       totalPrice += kdvTutari;
 
+      // 6. Aşama: Köprü Ücreti Hesaplama
+      const bridgeFee = 200; // Her köprü için 200 TL
+      const totalBridgeFee = detectedBridges.length * bridgeFee;
+      totalPrice += totalBridgeFee;
+
       if (showDebug) {
         console.log('\n5️⃣ KDV Hesaplama:');
         console.log('- KDV Oranı:', (kdvOrani * 100).toFixed(0) + '%');
         console.log('- KDV Tutarı:', kdvTutari.toFixed(2), 'TL');
-        console.log('\n💰 Final Fiyat (KDV Dahil):', totalPrice.toFixed(2), 'TL');
+        console.log('\n6️⃣ Köprü Ücreti:');
+        console.log('- Tespit Edilen Köprüler:', detectedBridges);
+        console.log('- Köprü Sayısı:', detectedBridges.length);
+        console.log('- Toplam Köprü Ücreti:', totalBridgeFee.toFixed(2), 'TL');
+        console.log('\n💰 Final Fiyat (KDV ve Köprü Dahil):', totalPrice.toFixed(2), 'TL');
       }
 
       return { totalPrice: Math.round(totalPrice) };
@@ -700,6 +705,29 @@ export default function TopluCekiciModal({ onClose }) {
     }
     if (deliveryLocation) {
       detectCityAndSetPricing(deliveryLocation, false);
+    }
+    
+    // Aynı şehir kontrolü - her iki konum da seçildiğinde
+    if (pickupLocation && deliveryLocation) {
+      const pickupCity = getCity();
+      const deliveryCity = getCity2();
+      
+      if (pickupCity && deliveryCity && pickupCity === deliveryCity) {
+        // Inputları sıfırla
+        setPickupLocation(null);
+        setDeliveryLocation(null);
+        setPickupSearchValue('');
+        setDeliverySearchValue('');
+        setSelectedPickupCity('');
+        setSelectedDeliveryCity('');
+        setSehir(null);
+        setSehir2(null);
+        setSehirFiyatlandirma(null);
+        setDeliverySehirFiyatlandirma(null);
+        
+        // Uyarı göster
+        toast.error('Lütfen farklı 2 il giriniz');
+      }
     }
   }, [pickupLocation, deliveryLocation, fiyatlandirma]);
 
@@ -846,6 +874,30 @@ export default function TopluCekiciModal({ onClose }) {
     e.preventDefault();
     
     if (step === 1) {
+      // Aynı şehir kontrolü
+      if (pickupLocation && deliveryLocation) {
+        const pickupCity = getCity();
+        const deliveryCity = getCity2();
+        
+        if (pickupCity && deliveryCity && pickupCity === deliveryCity) {
+          // Inputları sıfırla
+          setPickupLocation(null);
+          setDeliveryLocation(null);
+          setPickupSearchValue('');
+          setDeliverySearchValue('');
+          setSelectedPickupCity('');
+          setSelectedDeliveryCity('');
+          setSehir(null);
+          setSehir2(null);
+          setSehirFiyatlandirma(null);
+          setDeliverySehirFiyatlandirma(null);
+          
+          // Uyarı göster
+          toast.error('Lütfen farklı 2 il giriniz');
+          return;
+        }
+      }
+      
       // Konum kontrolleri
       if (pickupOtopark && !selectedPickupCity) {
         toast.error('Lütfen alınacak şehri seçin');
@@ -1027,6 +1079,9 @@ export default function TopluCekiciModal({ onClose }) {
   };
 
   const FiyatDetaylari = ({ routeInfo, toplamFiyat }) => {
+    const bridgeFee = 200; // Her köprü için 200 TL
+    const totalBridgeFee = detectedBridges.length * bridgeFee;
+    
     return (
       <div className="space-y-4">
         <div className="bg-[#202020] rounded-lg p-3">
@@ -1519,7 +1574,8 @@ export default function TopluCekiciModal({ onClose }) {
                       fiyatlandirma, // Fiyatlandırma
                       sehirFiyatlandirma, // Şehir fiyatlandırma
                       deliverySehirFiyatlandirma, // Teslim şehir fiyatlandırma
-                      kmBasedFees // Km bazlı ücretler
+                      kmBasedFees, // Km bazlı ücretler
+                      detectedBridges // Tespit edilen köprüler
                     }, true);
                     setToplamFiyat(result.totalPrice);
                     setRoutes(result.routes);
@@ -1536,9 +1592,10 @@ export default function TopluCekiciModal({ onClose }) {
                     waypoints={wayPoints}
                     mapStyles={mapStyles}
                     shouldCalculate={true}
-                    onValuesChange={(distance, duration, wayPointsKm) => {
+                    onValuesChange={(distance, duration, wayPointsKm, detectedBridges) => {
                       console.log('3232wayPointsKm', wayPointsKm);
-                      setRouteInfoHandle(distance, duration, wayPointsKm)
+                      console.log('detectedBridges', detectedBridges);
+                      setRouteInfoHandle(distance, duration, wayPointsKm, detectedBridges)
                     }}          
                   />
 

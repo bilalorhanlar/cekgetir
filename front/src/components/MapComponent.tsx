@@ -16,7 +16,7 @@ interface MapComponentProps {
   }[];
   
   shouldCalculate: boolean;
-  onValuesChange: (distance: number, duration: number, wayPointsKm: number[] ) => void;
+  onValuesChange: (distance: number, duration: number, wayPointsKm: number[], detectedBridges?: string[] ) => void;
   mapStyles?: {
     width: string;
     height: string;
@@ -70,10 +70,6 @@ interface CustomLayer extends L.Layer {
   _bridgeMarker?: boolean;
 }
 
-// Köprü marker tipi
-interface BridgeMarker extends L.Marker {
-  _bridgeMarker: boolean;
-}
 
 // Nokta tipi (çizgi kesişimleri için)
 interface Point {
@@ -521,7 +517,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       }
       
       // Parent component'e toplam değerleri bildir
-      onValuesChange(Math.round(totalDistance / 1000), Math.round(totalDuration / 60), wayPointsKm2);
+      onValuesChange(Math.round(totalDistance / 1000), Math.round(totalDuration / 60), wayPointsKm2, Array.from(allBridges));
       
       // Tüm köprüleri güncelle
       const bridgeList = Array.from(allBridges);

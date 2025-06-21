@@ -101,6 +101,7 @@ export default function OzelCekiciModal({ onClose }) {
   const [isAydinlatmaOpen, setIsAydinlatmaOpen] = useState(false);
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
   const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false);
+  const [detectedBridges, setDetectedBridges] = useState([]);
 
   // MapComponent için memoized location objeler
   const memoizedStartLocation = useMemo(() => 
@@ -114,8 +115,9 @@ export default function OzelCekiciModal({ onClose }) {
   )
 
   // MapComponent için memoized callback
-  const handleValuesChange = useCallback((distance, duration) => {
+  const handleValuesChange = useCallback((distance, duration, detectedBridges) => {
     setRouteInfo({ distance, duration })
+    setDetectedBridges(detectedBridges || []);
   }, [])
 
   const { isLoaded, loadError } = useLoadScript({
@@ -241,14 +243,18 @@ export default function OzelCekiciModal({ onClose }) {
     const isDeliveryInSile = deliveryLocation?.address?.toLowerCase().includes('şile') || deliveryLocation?.address?.toLowerCase().includes('sile');
     const sileExtraFee = (isPickupInSile || isDeliveryInSile) ? 3000 : 0;
     
-    // Toplam fiyat hesaplama (durum ücreti ve Şile ücreti toplama olarak ekleniyor)
-    const totalPrice = ((basePrice + distanceMultiplier + statusPrice + sileExtraFee + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
+    // Köprü ücreti hesaplama
+    const bridgeFee = 200; // Her köprü için 200 TL
+    const totalBridgeFee = detectedBridges.length * bridgeFee;
+    
+    // Toplam fiyat hesaplama (durum ücreti, Şile ücreti ve köprü ücreti toplama olarak ekleniyor)
+    const totalPrice = ((basePrice + distanceMultiplier + statusPrice + sileExtraFee + totalBridgeFee + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
     
     // KDV hesaplama (%20)
     const kdv = totalPrice * 0.20;
     const finalPrice = totalPrice + kdv;
     setPrice(Math.round(finalPrice));
-  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee]);
+  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee, detectedBridges]);
 
 
   const handleMapClick = (lat, lng, address, city) => {
@@ -431,7 +437,7 @@ export default function OzelCekiciModal({ onClose }) {
       console.log("fiyatHesapla" , price)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routeInfo]);
+  }, [routeInfo, detectedBridges]);
 
   const renderAracBilgileri = () => (
     <div className="space-y-4">
@@ -845,7 +851,9 @@ export default function OzelCekiciModal({ onClose }) {
                             const segmentMultiplier = segmentObj ? Number(segmentObj.price) : 1;
                             const statusObj = pricingData?.statuses?.find(st => String(st.id) === String(aracBilgileri.durum));
                             const statusPrice = statusObj ? Number(statusObj.price) : 0;
-                            const totalPrice = ((basePrice + distanceMultiplier + statusPrice + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
+                            const bridgeFee = 200;
+                            const totalBridgeFee = detectedBridges.length * bridgeFee;
+                            const totalPrice = ((basePrice + distanceMultiplier + statusPrice + totalBridgeFee + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
                             const kdv = totalPrice * 0.20;
                             const finalPrice = totalPrice + kdv;
 
@@ -859,6 +867,8 @@ export default function OzelCekiciModal({ onClose }) {
                               'Km': routeInfo?.distance,
                               'Mesafe Ücreti': distanceMultiplier.toLocaleString('tr-TR') + ' TL',
                               'Durum Ücreti': statusPrice.toLocaleString('tr-TR') + ' TL',
+                              'Köprü Ücreti': totalBridgeFee.toLocaleString('tr-TR') + ' TL',
+                              'Tespit Edilen Köprüler': detectedBridges,
                               'Segment Çarpanı': segmentMultiplier + 'x',
                               'Gece Tarifesi': isNightTime ? (nightMultiplier + 'x') : 'Yok',
                               'Ara Toplam': totalPrice.toLocaleString('tr-TR') + ' TL',

@@ -100,6 +100,7 @@ export default function YolYardimModal({ onClose }) {
   const [isAydinlatmaOpen, setIsAydinlatmaOpen] = useState(false);
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
   const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false);
+  const [detectedBridges, setDetectedBridges] = useState([]);
   
   // Şehir adını normalize eden fonksiyon
   function normalizeSehirAdi(sehir) {
@@ -130,12 +131,13 @@ export default function YolYardimModal({ onClose }) {
   )
 
   // MapComponent için memoized callback
-  const handleValuesChange = useCallback((distance, duration) => {
+  const handleValuesChange = useCallback((distance, duration, detectedBridges) => {
     setRouteInfo(prev => ({
       ...prev,
       distance,
       duration
     }))
+    setDetectedBridges(detectedBridges || []);
   }, [])
 
   const { isLoaded, loadError } = useLoadScript({
@@ -172,8 +174,12 @@ export default function YolYardimModal({ onClose }) {
     // Arıza ücreti
     const arizaFiyat = fiyatlandirma?.arizaTipleri?.[selectedAriza.id]?.price || 0;
 
-    // Ara toplam hesaplama (arıza ücreti toplama olarak ekleniyor)
-    const baseTotal = basePrice + (distance * basePricePerKm) + arizaFiyat;
+    // Köprü ücreti hesaplama
+    const bridgeFee = 200; // Her köprü için 200 TL
+    const totalBridgeFee = detectedBridges.length * bridgeFee;
+
+    // Ara toplam hesaplama (arıza ücreti ve köprü ücreti toplama olarak ekleniyor)
+    const baseTotal = basePrice + (distance * basePricePerKm) + arizaFiyat + totalBridgeFee;
 
     // Segment çarpanı uygulaması
     const segmentTotal = baseTotal * segmentMultiplier;
@@ -191,6 +197,8 @@ export default function YolYardimModal({ onClose }) {
         nightPrice,
         segmentMultiplier,
         arizaFiyat,
+        totalBridgeFee,
+        detectedBridges,
         baseTotal,
         segmentTotal,
         isNightTime,
@@ -201,7 +209,7 @@ export default function YolYardimModal({ onClose }) {
 
     setPrice(Math.round(finalPrice));
     return Math.round(finalPrice);
-  }, [fiyatlandirma, location, aracBilgileri.tip, selectedAriza, routeInfo, isNightTime, price]);
+  }, [fiyatlandirma, location, aracBilgileri.tip, selectedAriza, routeInfo, isNightTime, price, detectedBridges]);
 
   // Fiyat hesaplamayı useEffect ile tetikle
   useEffect(() => {
@@ -212,7 +220,7 @@ export default function YolYardimModal({ onClose }) {
         setPrice(newPrice);
       }
     }
-  }, [location, aracBilgileri.tip, selectedAriza, routeInfo, fiyatHesapla, price]);
+  }, [location, aracBilgileri.tip, selectedAriza, routeInfo, fiyatHesapla, price, detectedBridges]);
 
   // Fiyat detaylarını göster
   const renderPriceDetails = () => {
