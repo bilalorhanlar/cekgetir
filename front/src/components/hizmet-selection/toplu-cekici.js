@@ -1307,6 +1307,19 @@ export default function TopluCekiciModal({ onClose }) {
                                     const cityData = data;
                                     const cityName = cityData.address.province || "";
                                     setSehir(cityName);
+                                    setSelectedPickupCity(cityName); // Bu satırı ekledim
+                                    
+                                    // Aynı şehir kontrolü
+                                    if (cityName && cityName === selectedDeliveryCity) {
+                                      toast.error('Lütfen farklı 2 il giriniz');
+                                      setPickupLocation(null);
+                                      setPickupSearchValue('');
+                                      setSelectedPickupCity('');
+                                      setSehir(null);
+                                      setSehirFiyatlandirma(null);
+                                      return;
+                                    }
+                                    
                                     // Şehir fiyatlandırmasını güncelle
                                     if (cityName) {
                                       const normalizedSehir = normalizeSehirAdi(cityName);
@@ -1471,6 +1484,19 @@ export default function TopluCekiciModal({ onClose }) {
                                     const cityData = data;
                                     const cityName = cityData.address.province || "";
                                     setSehir2(cityName);
+                                    setSelectedDeliveryCity(cityName); // Bu satırı ekledim
+                                    
+                                    // Aynı şehir kontrolü
+                                    if (cityName && cityName === selectedPickupCity) {
+                                      toast.error('Lütfen farklı 2 il giriniz');
+                                      setDeliveryLocation(null);
+                                      setDeliverySearchValue('');
+                                      setSelectedDeliveryCity('');
+                                      setSehir2(null);
+                                      setDeliverySehirFiyatlandirma(null);
+                                      return;
+                                    }
+                                    
                                     // Şehir fiyatlandırmasını güncelle
                                     if (cityName) {
                                       const normalizedSehir = normalizeSehirAdi(cityName);
