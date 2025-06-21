@@ -354,7 +354,19 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Rota hesaplama fonksiyonu
   const addWaypoints = useCallback(async () => {
-    if (!pickupLocation || !deliveryLocation || !fiyatlandirma?.sehirler || !sehir || !sehir2) {
+    console.log('addWaypoints called with:', {
+      pickupLocation,
+      deliveryLocation,
+      pickupOtopark,
+      deliveryOtopark,
+      sehir,
+      sehir2,
+      sehirFiyatlandirma,
+      deliverySehirFiyatlandirma
+    });
+
+    if (!pickupLocation || !deliveryLocation || !fiyatlandirma?.sehirler) {
+      console.log('Missing required data for waypoints');
       return;
     }
 
@@ -362,7 +374,7 @@ export default function TopluCekiciModal({ onClose }) {
       const newWayPoints = [];
       
       // 1. Konum -> Otopark rotası (Alınacak konum)
-      if (!pickupOtopark && pickupLocation && sehirFiyatlandirma) {
+      if (!pickupOtopark && pickupLocation) {
         newWayPoints.push({
           lat: Number(pickupLocation.lat),
           lng: Number(pickupLocation.lng),
@@ -371,8 +383,8 @@ export default function TopluCekiciModal({ onClose }) {
         });
       }
 
-      // 2. Otopark -> Otopark rotası (Toplu çekici)
-      if (sehirFiyatlandirma && deliverySehirFiyatlandirma) {
+      // 2. Otopark -> Otopark rotası (Toplu Çekici)
+      if (sehir && sehir2) {
         // Alınacak şehir otoparkı
         const pickupSehirFiyatlandirma = fiyatlandirma.sehirler.find(s => 
           normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizeSehirAdi(sehir).toLowerCase()
@@ -403,13 +415,20 @@ export default function TopluCekiciModal({ onClose }) {
       }
 
       // 3. Otopark -> Konum rotası (Teslim edilecek konum)
-      if (!deliveryOtopark && deliveryLocation && deliverySehirFiyatlandirma) {
+      if (!deliveryOtopark && deliveryLocation) {
         newWayPoints.push({
           lat: Number(deliveryLocation.lat),
           lng: Number(deliveryLocation.lng),
           address: deliveryLocation.address,
           name: "deliveryLocation"
         });
+      }
+
+      // En az 2 waypoint olmalı
+      if (newWayPoints.length < 2) {
+        console.log('Not enough waypoints created:', newWayPoints.length);
+        setWayPoints([]);
+        return;
       }
 
       // State'i güncelle
@@ -419,15 +438,27 @@ export default function TopluCekiciModal({ onClose }) {
     } catch (error) {
       console.error('Waypoints oluşturma hatası:', error);
       toast.error('Rota oluşturulurken bir hata oluştu.');
+      setWayPoints([]);
     }
   }, [pickupLocation, deliveryLocation, pickupOtopark, deliveryOtopark, sehirFiyatlandirma, deliverySehirFiyatlandirma, fiyatlandirma, sehir, sehir2]);
 
   // Konumlar değiştiğinde waypoints'i güncelle
   useEffect(() => {
-    if (pickupLocation && deliveryLocation && sehirFiyatlandirma && deliverySehirFiyatlandirma && fiyatlandirma?.sehirler?.length > 0) {
+    console.log('useEffect triggered for waypoints:', {
+      pickupLocation: !!pickupLocation,
+      deliveryLocation: !!deliveryLocation,
+      sehir: !!sehir,
+      sehir2: !!sehir2,
+      fiyatlandirma: !!fiyatlandirma?.sehirler
+    });
+    
+    if (pickupLocation && deliveryLocation && fiyatlandirma?.sehirler?.length > 0) {
       addWaypoints();
+    } else {
+      // Gerekli veriler yoksa waypoints'i temizle
+      setWayPoints([]);
     }
-  }, [pickupLocation, deliveryLocation, sehirFiyatlandirma, deliverySehirFiyatlandirma, fiyatlandirma, pickupOtopark, deliveryOtopark, addWaypoints]);
+  }, [pickupLocation, deliveryLocation, sehir, sehir2, fiyatlandirma, pickupOtopark, deliveryOtopark, addWaypoints]);
 
   const getKmBasedPrice = (km, kmBasedFees) => {
     // Backend'den gelen KM fiyatlarına göre hesaplama
@@ -1804,7 +1835,7 @@ export default function TopluCekiciModal({ onClose }) {
                 </button>
               </div>
 
-              {isLoaded && (
+              {isLoaded && wayPoints && wayPoints.length >= 2 ? (
                 <div key="map" style={mapStyles} className="relative mt-2">
                   <MapComponent
                     waypoints={wayPoints}
@@ -1816,7 +1847,16 @@ export default function TopluCekiciModal({ onClose }) {
                       setRouteInfoHandle(distance, duration, wayPointsKm, detectedBridges, bridgeFees)
                     }}          
                   />
-
+                </div>
+              ) : isLoaded && (
+                <div className="bg-[#141414] rounded-lg p-4 border border-[#404040] mt-2">
+                  <div className="text-center text-[#404040]">
+                    <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3" />
+                    </svg>
+                    <p className="text-sm">Rota bilgileri yükleniyor...</p>
+                    <p className="text-xs mt-1">Konumlar seçildikten sonra harita görünecektir</p>
+                  </div>
                 </div>
               )}
 
