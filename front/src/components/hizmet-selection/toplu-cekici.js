@@ -354,19 +354,23 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Rota hesaplama fonksiyonu
   const addWaypoints = useCallback(async () => {
-    console.log('addWaypoints called with:', {
-      pickupLocation,
-      deliveryLocation,
+    console.log('🔍 addWaypoints called with:', {
+      pickupLocation: pickupLocation ? { lat: pickupLocation.lat, lng: pickupLocation.lng, address: pickupLocation.address } : null,
+      deliveryLocation: deliveryLocation ? { lat: deliveryLocation.lat, lng: deliveryLocation.lng, address: deliveryLocation.address } : null,
       pickupOtopark,
       deliveryOtopark,
       sehir,
       sehir2,
-      sehirFiyatlandirma,
-      deliverySehirFiyatlandirma
+      sehirFiyatlandirma: sehirFiyatlandirma ? sehirFiyatlandirma.sehirAdi : null,
+      deliverySehirFiyatlandirma: deliverySehirFiyatlandirma ? deliverySehirFiyatlandirma.sehirAdi : null,
+      fiyatlandirmaSehirler: fiyatlandirma?.sehirler?.length || 0
     });
 
     if (!pickupLocation || !deliveryLocation || !fiyatlandirma?.sehirler) {
-      console.log('Missing required data for waypoints');
+      console.log('❌ Missing required data for waypoints');
+      console.log('- pickupLocation:', !!pickupLocation);
+      console.log('- deliveryLocation:', !!deliveryLocation);
+      console.log('- fiyatlandirma.sehirler:', !!fiyatlandirma?.sehirler);
       return;
     }
 
@@ -375,68 +379,87 @@ export default function TopluCekiciModal({ onClose }) {
       
       // 1. Konum -> Otopark rotası (Alınacak konum)
       if (!pickupOtopark && pickupLocation) {
+        console.log('✅ Adding pickup location waypoint');
         newWayPoints.push({
           lat: Number(pickupLocation.lat),
           lng: Number(pickupLocation.lng),
           address: pickupLocation.address,
           name: "pickupLocation"
         });
+      } else if (pickupOtopark) {
+        console.log('ℹ️ Pickup is from otopark, skipping pickup location waypoint');
       }
 
       // 2. Otopark -> Otopark rotası (Toplu Çekici)
       if (sehir && sehir2) {
+        console.log('🔍 Looking for pickup city:', sehir);
         // Alınacak şehir otoparkı
         const pickupSehirFiyatlandirma = fiyatlandirma.sehirler.find(s => 
           normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizeSehirAdi(sehir).toLowerCase()
         );
         
         if (pickupSehirFiyatlandirma) {
+          console.log('✅ Adding pickup otopark waypoint:', pickupSehirFiyatlandirma.otoparkAdres);
           newWayPoints.push({
             lat: Number(pickupSehirFiyatlandirma.otoparkLat),
             lng: Number(pickupSehirFiyatlandirma.otoparkLng),
             address: pickupSehirFiyatlandirma.otoparkAdres,
             name: "pickupOtoparkLocation"
           });
+        } else {
+          console.log('❌ Pickup city not found in fiyatlandirma:', sehir);
         }
 
+        console.log('🔍 Looking for delivery city:', sehir2);
         // Teslim edilecek şehir otoparkı
         const deliverySehirFiyatlandirma = fiyatlandirma.sehirler.find(s => 
           normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizeSehirAdi(sehir2).toLowerCase()
         );
         
         if (deliverySehirFiyatlandirma) {
+          console.log('✅ Adding delivery otopark waypoint:', deliverySehirFiyatlandirma.otoparkAdres);
           newWayPoints.push({
             lat: Number(deliverySehirFiyatlandirma.otoparkLat),
             lng: Number(deliverySehirFiyatlandirma.otoparkLng),
             address: deliverySehirFiyatlandirma.otoparkAdres,
             name: "deliveryOtoparkLocation"
           });
+        } else {
+          console.log('❌ Delivery city not found in fiyatlandirma:', sehir2);
         }
+      } else {
+        console.log('ℹ️ Missing city information:', { sehir, sehir2 });
       }
 
       // 3. Otopark -> Konum rotası (Teslim edilecek konum)
       if (!deliveryOtopark && deliveryLocation) {
+        console.log('✅ Adding delivery location waypoint');
         newWayPoints.push({
           lat: Number(deliveryLocation.lat),
           lng: Number(deliveryLocation.lng),
           address: deliveryLocation.address,
           name: "deliveryLocation"
         });
+      } else if (deliveryOtopark) {
+        console.log('ℹ️ Delivery is to otopark, skipping delivery location waypoint');
       }
+
+      console.log('📊 Total waypoints created:', newWayPoints.length);
+      console.log('📍 Waypoints:', newWayPoints.map(wp => ({ name: wp.name, lat: wp.lat, lng: wp.lng })));
 
       // En az 2 waypoint olmalı
       if (newWayPoints.length < 2) {
-        console.log('Not enough waypoints created:', newWayPoints.length);
+        console.log('❌ Not enough waypoints created:', newWayPoints.length);
         setWayPoints([]);
         return;
       }
 
       // State'i güncelle
       setWayPoints(newWayPoints);
-      console.log('Waypoints updated:', newWayPoints);
+      console.log('✅ Waypoints updated successfully');
 
     } catch (error) {
-      console.error('Waypoints oluşturma hatası:', error);
+      console.error('❌ Waypoints oluşturma hatası:', error);
       toast.error('Rota oluşturulurken bir hata oluştu.');
       setWayPoints([]);
     }
@@ -444,17 +467,24 @@ export default function TopluCekiciModal({ onClose }) {
 
   // Konumlar değiştiğinde waypoints'i güncelle
   useEffect(() => {
-    console.log('useEffect triggered for waypoints:', {
-      pickupLocation: !!pickupLocation,
-      deliveryLocation: !!deliveryLocation,
-      sehir: !!sehir,
-      sehir2: !!sehir2,
-      fiyatlandirma: !!fiyatlandirma?.sehirler
+    console.log('🔄 useEffect triggered for waypoints:', {
+      pickupLocation: pickupLocation ? { lat: pickupLocation.lat, lng: pickupLocation.lng, address: pickupLocation.address } : null,
+      deliveryLocation: deliveryLocation ? { lat: deliveryLocation.lat, lng: deliveryLocation.lng, address: deliveryLocation.address } : null,
+      sehir,
+      sehir2,
+      fiyatlandirmaSehirler: fiyatlandirma?.sehirler?.length || 0,
+      pickupOtopark,
+      deliveryOtopark
     });
     
     if (pickupLocation && deliveryLocation && fiyatlandirma?.sehirler?.length > 0) {
+      console.log('✅ All required data available, calling addWaypoints');
       addWaypoints();
     } else {
+      console.log('❌ Missing required data, clearing waypoints');
+      console.log('- pickupLocation:', !!pickupLocation);
+      console.log('- deliveryLocation:', !!deliveryLocation);
+      console.log('- fiyatlandirma.sehirler.length:', fiyatlandirma?.sehirler?.length || 0);
       // Gerekli veriler yoksa waypoints'i temizle
       setWayPoints([]);
     }
@@ -1793,7 +1823,7 @@ export default function TopluCekiciModal({ onClose }) {
                 <h3 className="text-lg font-semibold text-white mb-4">Rota Bilgileri</h3>
                 <div className="space-y-4">
                   <div className="bg-[#202020] rounded-lg p-3">
-                    <div className="text-[#ebebeb] text-sm mb-1">Alınacak Konum</div>
+                    <div className="text-[#ebebeb] text-sm mb-1">Nereden</div>
                     <div className="text-white font-medium text-sm" title={pickupSearchValue}>
                       {pickupSearchValue}
                     </div>
@@ -1856,6 +1886,11 @@ export default function TopluCekiciModal({ onClose }) {
                     </svg>
                     <p className="text-sm">Rota bilgileri yükleniyor...</p>
                     <p className="text-xs mt-1">Konumlar seçildikten sonra harita görünecektir</p>
+                    {wayPoints && wayPoints.length > 0 && (
+                      <p className="text-xs mt-1 text-yellow-500">
+                        Waypoints sayısı: {wayPoints.length} (En az 2 gerekli)
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

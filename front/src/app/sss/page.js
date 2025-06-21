@@ -13,50 +13,6 @@ export const metadata = {
   },
 }
 
-// Static FAQ verileri
-const staticFaqs = [
-  {
-    id: 1,
-    question: "Çekgetir hangi hizmetleri sunuyor?",
-    answer: "Çekgetir olarak şehirler arası araç taşıma, çekici hizmeti ve yol yardım hizmetleri sunuyoruz. Akü takviyesi, lastik değişimi, yakıt ikmali gibi acil durumlarda da yanınızdayız."
-  },
-  {
-    id: 2,
-    question: "Hangi şehirlerde hizmet veriyorsunuz?",
-    answer: "Türkiye genelinde tüm şehirlerde hizmet vermekteyiz. İstanbul, Ankara, İzmir ve diğer tüm illerde anlaşmalı iş ortaklarımız bulunmaktadır."
-  },
-  {
-    id: 3,
-    question: "7/24 hizmet veriyor musunuz?",
-    answer: "Evet, 7 gün 24 saat kesintisiz hizmet vermekteyiz. Acil durumlarınızda her zaman bize ulaşabilirsiniz."
-  },
-  {
-    id: 4,
-    question: "Fiyat nasıl hesaplanıyor?",
-    answer: "Fiyatlar mesafe, araç tipi, hizmet türü ve aciliyet durumuna göre değişmektedir. Size en uygun fiyat teklifini sunuyoruz."
-  },
-  {
-    id: 5,
-    question: "Ödeme nasıl yapılıyor?",
-    answer: "Ödeme işlemi hizmet tamamlandıktan sonra nakit veya kredi kartı ile yapılabilmektedir. Şehirler arası taşıma hizmetlerinde ön ödeme de kabul ediyoruz."
-  },
-  {
-    id: 6,
-    question: "Araç taşıma süresi ne kadar?",
-    answer: "Şehirler arası araç taşıma süresi mesafeye göre değişmektedir. Genellikle 1-3 gün içerisinde teslimat yapılmaktadır."
-  },
-  {
-    id: 7,
-    question: "Sigorta kapsamı var mı?",
-    answer: "Evet, tüm hizmetlerimiz sigorta kapsamındadır. Araçlarınız güvenle taşınmaktadır."
-  },
-  {
-    id: 8,
-    question: "Hangi araç tiplerini taşıyorsunuz?",
-    answer: "Binek araçlar, ticari araçlar, motosikletler ve özel araçlar dahil olmak üzere tüm araç tiplerini taşıyoruz."
-  }
-]
-
 export default function SSSPage() {
   return (
     <>
@@ -89,7 +45,7 @@ export default function SSSPage() {
         {/* FAQ Section */}
         <section className="py-12 sm:py-16 md:py-20 px-5 sm:px-8 lg:px-10 -mt-24 sm:-mt-48 md:-mt-96 relative z-10">
           <div className="max-w-4xl mx-auto">
-            <SSSClient faqs={staticFaqs} />
+            <SSSClient />
           </div>
         </section>
 
