@@ -13,6 +13,7 @@ export default function OrderDetailPage({ params }) {
   const [error, setError] = useState(null)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [updatingPaymentStatus, setUpdatingPaymentStatus] = useState(false)
+  const [deletingOrder, setDeletingOrder] = useState(false)
   const [carSegments, setCarSegments] = useState([])
   const [carStatuses, setCarStatuses] = useState([])
   const orderId = use(params).id
@@ -118,6 +119,23 @@ export default function OrderDetailPage({ params }) {
       alert('Ödeme durumu güncellenirken bir hata oluştu')
     } finally {
       setUpdatingPaymentStatus(false)
+    }
+  }
+
+  const deleteOrder = async () => {
+    if (!confirm('Bu siparişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+      return
+    }
+
+    try {
+      setDeletingOrder(true)
+      await api.delete(`api/orders/${orderId}`)
+      router.push('/admin/panel/orders')
+    } catch (error) {
+      console.error('Sipariş silinirken hata:', error)
+      alert('Sipariş silinirken bir hata oluştu')
+    } finally {
+      setDeletingOrder(false)
     }
   }
 
@@ -295,15 +313,35 @@ export default function OrderDetailPage({ params }) {
               <h1 className="text-2xl md:text-3xl font-bold text-white">Sipariş Detayı</h1>
               <p className="text-gray-400 mt-1">Talep No: {order.pnrNo}</p>
             </div>
-            <button
-              onClick={() => router.push('/admin/panel/orders')}
-              className="w-full md:w-auto px-4 py-2 bg-[#202020] text-white rounded-lg hover:bg-[#2a2a2a] transition-all font-medium flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Siparişlere Dön
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <button
+                onClick={() => router.push('/admin/panel/orders')}
+                className="w-full sm:w-auto px-4 py-2 bg-[#202020] text-white rounded-lg hover:bg-[#2a2a2a] transition-all font-medium flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Siparişlere Dön
+              </button>
+              <button
+                onClick={deleteOrder}
+                disabled={deletingOrder}
+                className="w-full sm:w-auto px-4 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium flex items-center justify-center gap-2 relative"
+              >
+                {deletingOrder ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Siparişi Sil
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">

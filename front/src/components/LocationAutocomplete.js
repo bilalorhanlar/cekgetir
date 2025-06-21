@@ -44,28 +44,35 @@ const LocationAutocomplete = ({
       })
         .then(res => res.json())
         .then(data => {
-          const formattedResults = data.map(item => ({
-            properties: {
-              // Sokak adı (yoksa mahalle)
-              street: item.address.road || item.address.pedestrian || item.address.footway || 
-                     item.address.neighbourhood || item.address.suburb || '',
-              // İlçe
-              district: item.address.county || item.address.city_district || item.address.district || '',
-              // İl
-              city: item.address.state || item.address.province || '',
-              // Tam adres (gösterim için)
-              fullAddress: [
-                item.address.road || item.address.pedestrian || item.address.footway || 
-                item.address.neighbourhood || item.address.suburb || '',
-                item.address.county || item.address.city_district || item.address.district || '',
-                item.address.state || item.address.province || ''
-              ].filter(Boolean).join(', ')
-            },
-            geometry: {
-              coordinates: [parseFloat(item.lon), parseFloat(item.lat)]
-            }
-          }));
-          setResults(formattedResults);
+          const formattedResults = data.map(item => {
+            const fullAddress = item.display_name || '';
+            const addressParts = fullAddress.split(', ');
+
+            // Adresin ilk ve en anlamlı kısmını başlık olarak alalım
+            const mainPart = addressParts[0] || '';
+            // Geri kalan kısımları alt başlık yapalım
+            const subPart = addressParts.slice(1).join(', ');
+
+            return {
+              properties: {
+                main: mainPart,
+                sub: subPart,
+                fullAddress: fullAddress,
+                district: item.address.county || item.address.city_district || item.address.district || '',
+                city: item.address.state || item.address.province || '',
+              },
+              geometry: {
+                coordinates: [parseFloat(item.lon), parseFloat(item.lat)]
+              }
+            };
+          });
+
+          // Tekrar eden sonuçları filtrele
+          const uniqueResults = formattedResults.filter((v, i, a) => 
+            a.findIndex(t => t.properties.fullAddress === v.properties.fullAddress) === i
+          );
+
+          setResults(uniqueResults);
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -140,10 +147,10 @@ const LocationAutocomplete = ({
               return 0;
             })
             .map((item, idx) => {
-              const { fullAddress, street, district, city } = item.properties;
+              const { fullAddress, main, sub } = item.properties;
               const [lng, lat] = item.geometry.coordinates;
-              // Ana başlık: street veya fullAddress'in ilk kısmı
-              // Alt satır: ilçe, il, tam adres
+              // Ana başlık: Adresin ilk kısmı
+              // Alt satır: Adresin geri kalanı
               return (
                 <li
                   key={idx}
@@ -157,13 +164,10 @@ const LocationAutocomplete = ({
                   style={{ fontSize: '0.95rem', lineHeight: 1.2 }}
                 >
                   <div className="font-semibold truncate text-white">
-                    {street || fullAddress.split(',')[0]}
+                    {main}
                   </div>
                   <div className="text-xs text-[#bdbdbd] truncate">
-                    {[district, city].filter(Boolean).join(', ')}
-                  </div>
-                  <div className="text-xs text-[#666] truncate">
-                    {fullAddress}
+                    {sub}
                   </div>
                 </li>
               );

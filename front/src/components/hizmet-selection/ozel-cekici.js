@@ -102,6 +102,7 @@ export default function OzelCekiciModal({ onClose }) {
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
   const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false);
   const [detectedBridges, setDetectedBridges] = useState([]);
+  const [bridgeFees, setBridgeFees] = useState(0);
 
   // MapComponent için memoized location objeler
   const memoizedStartLocation = useMemo(() => 
@@ -115,9 +116,10 @@ export default function OzelCekiciModal({ onClose }) {
   )
 
   // MapComponent için memoized callback
-  const handleValuesChange = useCallback((distance, duration, detectedBridges) => {
+  const handleValuesChange = useCallback((distance, duration, detectedBridges, bridgeFees) => {
     setRouteInfo({ distance, duration })
     setDetectedBridges(detectedBridges || []);
+    setBridgeFees(bridgeFees || 0);
   }, [])
 
   const { isLoaded, loadError } = useLoadScript({
@@ -207,10 +209,24 @@ export default function OzelCekiciModal({ onClose }) {
     } catch (error) {
       console.error('Şehir fiyatlandırması getirilemedi:', error)
     }
+    
+    // Debug: Log all required values
+    console.log('fiyatHesapla debug:', {
+      pickupLocation: !!pickupLocation,
+      deliveryLocation: !!deliveryLocation,
+      aracTip: aracBilgileri.tip,
+      aracDurum: aracBilgileri.durum,
+      sehir: sehir,
+      sehirFiyatlandirmaLocal: sehirFiyatlandirmaLocal,
+      routeInfo: routeInfo,
+      pricingData: !!pricingData
+    });
+    
     // Gerekli kontroller
     if (!pickupLocation || !deliveryLocation || !aracBilgileri.tip || !aracBilgileri.durum) {
+      console.log('fiyatHesapla: Missing required data, returning 0');
       setPrice(0);
-      return;
+      return 0;
     }
 
     // Şehir adı normalize edilmiş şekilde alınmalı!
@@ -232,29 +248,62 @@ export default function OzelCekiciModal({ onClose }) {
     
     // Araç tipine göre segment katsayısı (diziden bul)
     const segmentObj = pricingData?.segments?.find(seg => String(seg.id) === String(aracBilgileri.tip));
-    const segmentMultiplier = segmentObj ? Number(segmentObj.price) : 1;
+    const segmentMultiplier = segmentObj ? Number(segmentObj.price) || 1 : 1;
     
     // Araç durumuna göre durum ücreti (diziden bul)
     const statusObj = pricingData?.statuses?.find(st => String(st.id) === String(aracBilgileri.durum));
-    const statusPrice = statusObj ? Number(statusObj.price) : 0;
+    const statusPrice = statusObj ? Number(statusObj.price) || 0 : 0;
 
     // Şile kontrolü ve ekstra ücret
     const isPickupInSile = pickupLocation?.address?.toLowerCase().includes('şile') || pickupLocation?.address?.toLowerCase().includes('sile');
     const isDeliveryInSile = deliveryLocation?.address?.toLowerCase().includes('şile') || deliveryLocation?.address?.toLowerCase().includes('sile');
     const sileExtraFee = (isPickupInSile || isDeliveryInSile) ? 3000 : 0;
     
-    // Köprü ücreti hesaplama
-    const bridgeFee = 200; // Her köprü için 200 TL
-    const totalBridgeFee = detectedBridges.length * bridgeFee;
+    // Köprü ücreti - MapComponent'ten gelen bridgeFees kullanılıyor
+    const totalBridgeFee = Number(bridgeFees) || 0;
+    
+    // Extra fee kontrolü
+    const extraFeeValue = Number(extraFee) || 0;
+    
+    // Debug: Log calculation components
+    console.log('fiyatHesapla calculation components:', {
+      basePrice,
+      distanceMultiplier,
+      segmentMultiplier,
+      statusPrice,
+      sileExtraFee,
+      totalBridgeFee,
+      extraFee: extraFeeValue,
+      nightMultiplier
+    });
     
     // Toplam fiyat hesaplama (durum ücreti, Şile ücreti ve köprü ücreti toplama olarak ekleniyor)
-    const totalPrice = ((basePrice + distanceMultiplier + statusPrice + sileExtraFee + totalBridgeFee + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
+    const totalPrice = ((basePrice + distanceMultiplier + statusPrice + sileExtraFee + totalBridgeFee + extraFeeValue) * segmentMultiplier) * nightMultiplier;
     
     // KDV hesaplama (%20)
     const kdv = totalPrice * 0.20;
     const finalPrice = totalPrice + kdv;
-    setPrice(Math.round(finalPrice));
-  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee, detectedBridges]);
+    let calculatedPrice = Math.round(finalPrice);
+    
+    // Safety check: if calculation results in NaN, use a fallback
+    if (isNaN(calculatedPrice) || !isFinite(calculatedPrice)) {
+      console.warn('fiyatHesapla: Calculation resulted in NaN, using fallback calculation');
+      // Fallback: simple calculation with safe values
+      const fallbackPrice = ((basePrice + (distanceMultiplier || 0) + statusPrice + sileExtraFee) * segmentMultiplier) * nightMultiplier;
+      const fallbackKdv = fallbackPrice * 0.20;
+      calculatedPrice = Math.round(fallbackPrice + fallbackKdv);
+    }
+    
+    console.log('fiyatHesapla final calculation:', {
+      totalPrice,
+      kdv,
+      finalPrice,
+      calculatedPrice
+    });
+    
+    setPrice(calculatedPrice);
+    return calculatedPrice;
+  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee, bridgeFees]);
 
 
   const handleMapClick = (lat, lng, address, city) => {
@@ -314,19 +363,21 @@ export default function OzelCekiciModal({ onClose }) {
         }
 
         console.log("fiyatHesapla")
-        await fiyatHesapla();
-        console.log("fiyatHesapla sonrası", price)
+        const calculatedPrice = await fiyatHesapla();
+        console.log("fiyatHesapla sonrası", calculatedPrice)
 
         setStep(2);
       } else if (step === 2) {
         if (!price || price === 0) {
           // Fiyat hesaplamasını bekle!
           console.log("fiyatHesapla")
-          await fiyatHesapla();
-          console.log("fiyatHesapla sonrası", price)
+          const calculatedPrice = await fiyatHesapla();
+          console.log("fiyatHesapla sonrası", calculatedPrice)
 
-          toast.error('Lütfen fiyat hesaplamasını bekleyin');
-          return;
+          if (!calculatedPrice || calculatedPrice === 0) {
+            toast.error('Lütfen fiyat hesaplamasını bekleyin');
+            return;
+          }
         }
         setStep(3);
       } else if (step === 3) {
@@ -433,8 +484,11 @@ export default function OzelCekiciModal({ onClose }) {
       routeInfo &&
       sehir
     ) {
-      fiyatHesapla();
-      console.log("fiyatHesapla" , price)
+      fiyatHesapla().then(calculatedPrice => {
+        console.log("fiyatHesapla", calculatedPrice)
+      }).catch(error => {
+        console.error("fiyatHesapla error:", error);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeInfo, detectedBridges]);
@@ -585,7 +639,7 @@ export default function OzelCekiciModal({ onClose }) {
                               const newLocation = { lat, lng, address: address || pickupSearchValue };
                               setPickupLocation(newLocation);
                               setPickupSearchValue(address || pickupSearchValue);
-                              handleMapClick(lat, lng, address || pickupSearchValue, getCity());
+                              handleMapClick(lat, lng, address, getCity());
                               setIsPickupMapSelected(true); // autocomplete kapansın
                               const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
                               city.then(res => res.json()).then(data => {
@@ -851,8 +905,7 @@ export default function OzelCekiciModal({ onClose }) {
                             const segmentMultiplier = segmentObj ? Number(segmentObj.price) : 1;
                             const statusObj = pricingData?.statuses?.find(st => String(st.id) === String(aracBilgileri.durum));
                             const statusPrice = statusObj ? Number(statusObj.price) : 0;
-                            const bridgeFee = 200;
-                            const totalBridgeFee = detectedBridges.length * bridgeFee;
+                            const totalBridgeFee = Number(bridgeFees) || 0;
                             const totalPrice = ((basePrice + distanceMultiplier + statusPrice + totalBridgeFee + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
                             const kdv = totalPrice * 0.20;
                             const finalPrice = totalPrice + kdv;
@@ -872,8 +925,9 @@ export default function OzelCekiciModal({ onClose }) {
                               'Segment Çarpanı': segmentMultiplier + 'x',
                               'Gece Tarifesi': isNightTime ? (nightMultiplier + 'x') : 'Yok',
                               'Ara Toplam': totalPrice.toLocaleString('tr-TR') + ' TL',
-                              'KDV (%20)': kdv.toLocaleString('tr-TR') + ' TL',
-                              'Genel Toplam': Math.round(finalPrice).toLocaleString('tr-TR') + ' TL'
+                              'KDV (%20)': (totalPrice * 0.20).toLocaleString('tr-TR') + ' TL',
+                              'Genel Toplam': Math.round(totalPrice).toLocaleString('tr-TR') + ' TL',
+                              'kdv dahil final fiyat': finalPrice.toLocaleString('tr-TR') + ' TL'
                             });
                           }} className="text-xs text-[#404040] mt-3">Fiyatlara KDV dahildir</button>
                     </div>

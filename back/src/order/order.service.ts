@@ -205,6 +205,13 @@ export class OrderService {
 
   async remove(id: string): Promise<void> {
     const order = await this.findOne(id);
+    
+    // Önce ilişkili bulkVehicles kayıtlarını sil
+    if (order.bulkVehicles && order.bulkVehicles.length > 0) {
+      await this.bulkVehicleRepository.delete({ orderId: id });
+    }
+    
+    // Sonra ana siparişi sil
     await this.orderRepository.delete(id);
   }
 

@@ -16,7 +16,7 @@ interface MapComponentProps {
   }[];
   
   shouldCalculate: boolean;
-  onValuesChange: (distance: number, duration: number, wayPointsKm: number[], detectedBridges?: string[] ) => void;
+  onValuesChange: (distance: number, duration: number, wayPointsKm: number[], detectedBridges?: string[], bridgeFees?: number ) => void;
   mapStyles?: {
     width: string;
     height: string;
@@ -34,7 +34,8 @@ const BRIDGES = [
       south: 41.0430, 
       east: 29.0420,
       west: 29.0320
-    }
+    },
+    fee: 0 // Standart ücret
   },
   { 
     name: "Fatih Sultan Mehmet Köprüsü", 
@@ -43,7 +44,8 @@ const BRIDGES = [
       south: 41.0890, 
       east: 29.0610,
       west: 29.0530
-    }
+    },
+    fee: 200 // FSM Köprüsü için 200 TL ücret
   },
   { 
     name: "Yavuz Sultan Selim Köprüsü", 
@@ -52,7 +54,8 @@ const BRIDGES = [
       south: 41.1850, 
       east: 29.1300,
       west: 29.1100
-    }
+    },
+    fee: 0 // Standart ücret
   },
   { 
     name: "Avrasya Tüneli", 
@@ -61,7 +64,18 @@ const BRIDGES = [
       south: 40.9990, 
       east: 29.0000,
       west: 28.9700
-    }
+    },
+    fee: 0 // Standart ücret
+  },
+  { 
+    name: "Osmangazi Köprüsü", 
+    bounds: {
+      north: 40.7600, 
+      south: 40.7500, 
+      east: 29.5200,
+      west: 29.5100
+    },
+    fee: 1500 // Osmangazi Köprüsü için 1500 TL ücret
   }
 ];
 
@@ -229,7 +243,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     
     // Köprü tespit edilemediyse, boğaz geçişi olan rotalar için uyarı göster
     if (bridges.length === 0) {
-      console.warn("⚠️ Rota üzerinde köprü tespit edilemedi!");
+      //console.warn("⚠️ Rota üzerinde köprü tespit edilemedi!");
       
       // Rota İstanbul'un iki yakası arasında mı kontrol et
       const isEuropeanSide = (lng: number) => lng < 29.00; // Yaklaşık olarak boğazın batısı
@@ -280,23 +294,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
           lng: (bridge.bounds.east + bridge.bounds.west) / 2
         };
         
-        // Köprü alanını dikdörtgen olarak göster
-        const bounds = [
-          [bridge.bounds.south, bridge.bounds.west],
-          [bridge.bounds.north, bridge.bounds.east]
-        ];
-        
-        const rectangle = L.rectangle(bounds as L.LatLngBoundsExpression, {
-          color: "#ff3366",
-          weight: 2,
-          opacity: 0.7,
-          fill: true,
-          fillColor: "#ff3366",
-          fillOpacity: 0.3
-        }).addTo(mapRef.current);
-        
-        rectangle.bindPopup(`<b>${bridge.name}</b>`);
-        (rectangle as CustomLayer)._bridgeMarker = true;
+        // Köprü alanını dikdörtgen olarak göstermeyi kaldır
         
         // Köprü ikonunu göster
         const bridgeIcon = L.divIcon({
@@ -344,6 +342,23 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     return isEuropeanSide(point1.lng) === isEuropeanSide(point2.lng);
   };
 
+  // Bir noktanın İstanbul sınırları içinde olup olmadığını kontrol et
+  const isWithinIstanbul = (point: { lat: number; lng: number }): boolean => {
+    // Geniş bir İstanbul sınırlayıcı kutusu
+    const istanbulBounds = {
+      north: 41.5,
+      south: 40.8,
+      east: 29.9,
+      west: 28.0,
+    };
+    return (
+      point.lat <= istanbulBounds.north &&
+      point.lat >= istanbulBounds.south &&
+      point.lng <= istanbulBounds.east &&
+      point.lng >= istanbulBounds.west
+    );
+  };
+
   const calculateMultiSegmentRoute = async (coordinates: typeof activeCoordinates) => {
     if (!mapRef.current) {
       console.error("❌ Harita referansı bulunamadı!");
@@ -383,7 +398,8 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         const marker = L.marker([coord.lat, coord.lng], { icon: markerIcon }).addTo(mapRef.current);
         marker.bindPopup(`<b>${coord.name || `Durak ${index + 1}`}</b>`);
         
-        if (index === 0) marker.openPopup();
+        // Popup'ları otomatik açma - sadece tıklayınca açılsın
+        // if (index === 0) marker.openPopup();
       }
     });
     
@@ -400,13 +416,8 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       const start = coordinates[i];
       const end = coordinates[i + 1];
       
-      // Eğer noktalar aynı yakadaysa direkt bağla
-      if (isOnSameSide(start, end)) {
-        segments.push([
-          [start.lng, start.lat],
-          [end.lng, end.lat]
-        ]);
-      } else {
+      // Sadece İstanbul içi ve iki yaka arası geçişlerde FSM'yi zorunlu kıl
+      if (isWithinIstanbul(start) && isWithinIstanbul(end) && !isOnSameSide(start, end)) {
         // Farklı yakadaysa FSM Köprüsü üzerinden geçir
         segments.push([
           [start.lng, start.lat],
@@ -414,6 +425,12 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         ]);
         segments.push([
           [bridgeCenter.lng, bridgeCenter.lat],
+          [end.lng, end.lat]
+        ]);
+      } else {
+        // Diğer tüm durumlar için direkt bağla
+        segments.push([
+          [start.lng, start.lat],
           [end.lng, end.lat]
         ]);
       }
@@ -463,13 +480,17 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         const segmentBridges = detectBridgesOnRoute(segmentData);
         
         // Eğer 1., 3. köprü veya Avrasya tespit edilirse, rotayı FSM'den geçir
+        // Bu mantık sadece İstanbul içi rotalar için geçerli olmalı
+        const startPoint = { lat: segments[i][0][1], lng: segments[i][0][0] };
+        const endPoint = { lat: segments[i][segments[i].length - 1][1], lng: segments[i][segments[i].length - 1][0] };
+
         const hasUnwantedBridge = segmentBridges.some(bridge => 
           bridge.includes("Boğaziçi") || 
           bridge.includes("Yavuz Sultan Selim") || 
           bridge.includes("Avrasya")
         );
         
-        if (hasUnwantedBridge) {
+        if (isWithinIstanbul(startPoint) && isWithinIstanbul(endPoint) && hasUnwantedBridge) {
           // Mevcut segmenti temizle
           allRouteData.pop();
           wayPointsKm2.pop();
@@ -517,7 +538,12 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       }
       
       // Parent component'e toplam değerleri bildir
-      onValuesChange(Math.round(totalDistance / 1000), Math.round(totalDuration / 60), wayPointsKm2, Array.from(allBridges));
+      const totalBridgeFees = Array.from(allBridges).reduce((total, bridgeName) => {
+        const bridge = BRIDGES.find(b => b.name === bridgeName);
+        return total + (bridge?.fee || 0);
+      }, 0);
+      
+      onValuesChange(Math.round(totalDistance / 1000), Math.round(totalDuration / 60), wayPointsKm2, Array.from(allBridges), totalBridgeFees);
       
       // Tüm köprüleri güncelle
       const bridgeList = Array.from(allBridges);

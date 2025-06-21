@@ -11,6 +11,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [deletingOrder, setDeletingOrder] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [viewMode, setViewMode] = useState('grid')
@@ -88,6 +89,23 @@ export default function OrdersPage() {
       alert('Durum güncellenirken bir hata oluştu')
     } finally {
       setUpdatingStatus(false)
+    }
+  }
+
+  const deleteOrder = async (orderId) => {
+    if (!confirm('Bu siparişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+      return
+    }
+
+    try {
+      setDeletingOrder(orderId)
+      await api.delete(`api/orders/${orderId}`)
+      await fetchOrders()
+    } catch (error) {
+      console.error('Sipariş silinirken hata:', error)
+      alert('Sipariş silinirken bir hata oluştu')
+    } finally {
+      setDeletingOrder(null)
     }
   }
 
@@ -329,19 +347,17 @@ export default function OrdersPage() {
                     >
                       Detay
                     </button>
-                    {order.status === 'PENDING' && (
-                      <button 
-                        className="flex-1 px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium relative"
-                        onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
-                        disabled={updatingStatus}
-                      >
-                        {updatingStatus ? (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                          </div>
-                        ) : 'İptal'}
-                      </button>
-                    )}
+                    <button 
+                      className="flex-1 px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium relative"
+                      onClick={() => deleteOrder(order.id)}
+                      disabled={deletingOrder === order.id}
+                    >
+                      {deletingOrder === order.id ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      ) : 'Sil'}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -422,19 +438,17 @@ export default function OrdersPage() {
                             >
                               Detay
                             </button>
-                            {order.status === 'PENDING' && (
-                              <button 
-                                className="flex-1 md:flex-none px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium relative"
-                                onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
-                                disabled={updatingStatus}
-                              >
-                                {updatingStatus ? (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                                  </div>
-                                ) : 'İptal'}
-                              </button>
-                            )}
+                            <button 
+                              className="flex-1 md:flex-none px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium relative"
+                              onClick={() => deleteOrder(order.id)}
+                              disabled={deletingOrder === order.id}
+                            >
+                              {deletingOrder === order.id ? (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                              ) : 'Sil'}
+                            </button>
                           </div>
                         </td>
                       </tr>
