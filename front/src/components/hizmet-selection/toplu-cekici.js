@@ -872,44 +872,96 @@ export default function TopluCekiciModal({ onClose }) {
     try {
       const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' });
       
+      // Önce konum servislerinin mevcut olup olmadığını kontrol et
+      if (!navigator.geolocation) {
+        toast.error('Tarayıcınız konum servislerini desteklemiyor.', { id: 'location' });
+        return;
+      }
+
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           resolve,
-          reject,
+          (error) => {
+            console.error('Geolocation error:', error);
+            let errorMessage = 'Konum alınamadı.';
+            
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = 'Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum iznini etkinleştirin.';
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = 'Konum bilgisi mevcut değil. Lütfen internet bağlantınızı kontrol edin.';
+                break;
+              case error.TIMEOUT:
+                errorMessage = 'Konum alma zaman aşımına uğradı. Lütfen tekrar deneyin.';
+                break;
+              default:
+                errorMessage = 'Konum alınamadı. Lütfen manuel olarak girin.';
+            }
+            reject(new Error(errorMessage));
+          },
           {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
+            enableHighAccuracy: false, // Daha hızlı sonuç için false yapıyoruz
+            timeout: 15000, // Timeout süresini artırıyoruz
+            maximumAge: 60000 // 1 dakika önceki konumu kabul ediyoruz
           }
         );
       });
 
       const { latitude, longitude } = position.coords;
-      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+      
+      // OpenCage API yerine Nominatim kullanıyoruz (daha güvenilir)
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=tr`);
       const data = await response.json();
-      const address = data.results[0].formatted;
- 
+      
+      if (!data || !data.address) {
+        throw new Error('Adres bilgisi alınamadı');
+      }
+      
+      const address = data.display_name;
+      const cityName = data.address.province || data.address.state || data.address.city || "";
 
       if (target === 'pickup') {
-        setSehir(data.results[0].components.state);
-        const sehir = data.results[0].components.state;        
-        const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: sehir });
+        setSehir(cityName);
+        setSelectedPickupCity(cityName);
+        const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: cityName });
         setPickupSearchValue(address);
         setPickupLocation(newLocation);
-  
+        
+        // Şehir fiyatlandırmasını güncelle
+        if (cityName && fiyatlandirma?.sehirler) {
+          const normalizedSehir = normalizeSehirAdi(cityName);
+          const sehirFiyat = fiyatlandirma.sehirler.find(s => 
+            normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
+          );
+          if (sehirFiyat) {
+            setSehirFiyatlandirma(sehirFiyat);
+          }
+        }
       } else {
-        setSehir2(data.results[0].components.state);
-        const sehir = data.results[0].components.state;        
-        const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: sehir });
+        setSehir2(cityName);
+        setSelectedDeliveryCity(cityName);
+        const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: cityName });
         setDeliveryLocation(newLocation);
         setDeliverySearchValue(address);
-      }
-      setActiveMapPanel(null);
         
+        // Şehir fiyatlandırmasını güncelle
+        if (cityName && fiyatlandirma?.sehirler) {
+          const normalizedSehir = normalizeSehirAdi(cityName);
+          const sehirFiyat = fiyatlandirma.sehirler.find(s => 
+            normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
+          );
+          if (sehirFiyat) {
+            setDeliverySehirFiyatlandirma(sehirFiyat);
+          }
+        }
+      }
+      
+      setActiveMapPanel(null);
       toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
     } catch (error) {
       console.error('Konum alınamadı:', error);
-      toast.error('Konum alınamadı. Lütfen manuel olarak girin.');
+      toast.error(error.message || 'Konum alınamadı. Lütfen manuel olarak girin.');
     }
   };
 
@@ -1010,6 +1062,35 @@ export default function TopluCekiciModal({ onClose }) {
     e.preventDefault();
     
     if (step === 1) {
+      // Şehir tespiti kontrolü
+      let pickupCityDetected = false;
+      let deliveryCityDetected = false;
+      
+      // Alınacak konum için şehir tespiti kontrolü
+      if (pickupOtopark) {
+        pickupCityDetected = !!selectedPickupCity;
+      } else if (pickupLocation) {
+        pickupCityDetected = !!sehir;
+      }
+      
+      // Teslim edilecek konum için şehir tespiti kontrolü
+      if (deliveryOtopark) {
+        deliveryCityDetected = !!selectedDeliveryCity;
+      } else if (deliveryLocation) {
+        deliveryCityDetected = !!sehir2;
+      }
+      
+      // Şehir tespiti başarısız olan konumlar için uyarı
+      if (!pickupCityDetected) {
+        toast.error('Alınacak konum için şehir tespit edilemedi. Lütfen konumu tekrar seçin.');
+        return;
+      }
+      
+      if (!deliveryCityDetected) {
+        toast.error('Teslim edilecek konum için şehir tespit edilemedi. Lütfen konumu tekrar seçin.');
+        return;
+      }
+      
       // Aynı şehir kontrolü
       if (pickupLocation && deliveryLocation) {
         const pickupCity = getCity();
@@ -1373,10 +1454,10 @@ export default function TopluCekiciModal({ onClose }) {
                                   setPickupLocation(newLocation);
                                   setPickupSearchValue(address || pickupSearchValue);
                                   // Sadece pickup için şehir tespiti yap
-                                  const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                                  const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=tr`);
                                   city.then(res => res.json()).then(data => {
                                     const cityData = data;
-                                    const cityName = cityData.address.province || cityData.address.state || "";
+                                    const cityName = cityData.address?.province || cityData.address?.state || cityData.address?.city || "";
                                     console.log('🔍 Pickup autocomplete - detected city:', cityName);
                                     console.log('🔍 Pickup autocomplete - full address data:', cityData.address);
                                     
@@ -1396,14 +1477,19 @@ export default function TopluCekiciModal({ onClose }) {
                                       }
                                       
                                       // Şehir fiyatlandırmasını güncelle
-                                      const normalizedSehir = normalizeSehirAdi(cityName);
-                                      const sehirFiyat = fiyatlandirma.sehirler.find(s => 
-                                        normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
-                                      );
-                                      if (sehirFiyat) {
-                                        setSehirFiyatlandirma(sehirFiyat);
+                                      if (fiyatlandirma?.sehirler) {
+                                        const normalizedSehir = normalizeSehirAdi(cityName);
+                                        const sehirFiyat = fiyatlandirma.sehirler.find(s => 
+                                          normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
+                                        );
+                                        if (sehirFiyat) {
+                                          setSehirFiyatlandirma(sehirFiyat);
+                                          console.log('✅ Pickup şehir fiyatlandırması set edildi:', sehirFiyat.sehirAdi);
+                                        }
                                       }
                                     }
+                                  }).catch(error => {
+                                    console.error('❌ Pickup city detection error:', error);
                                   });
                                   setIsPickupMapSelected(true); // autocomplete kapansın
                                 }}
@@ -1419,29 +1505,48 @@ export default function TopluCekiciModal({ onClose }) {
                                   onClick={async () => {
                                     try {
                                       const position = await new Promise((resolve, reject) => {
-                                        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                                        navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                                          enableHighAccuracy: false, 
+                                          timeout: 15000, 
+                                          maximumAge: 60000 
+                                        });
                                       });
                                       const { latitude, longitude } = position.coords;
-                                      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
+                                      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=tr`);
                                       const data = await response.json();
-                                      const address = data.results[0].formatted;
-                                      let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
-                                      setSehir(sehir);
+                                      const address = data.display_name;
+                                      let sehir = data.address?.province || data.address?.state || data.address?.city || "";
+                                      setSehir2(sehir);
+                                      setSelectedDeliveryCity(sehir);
                                       const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
-                                      setPickupLocation(newLocation);
-                                      setPickupSearchValue(address);
-                                      setIsPickupMapSelected(true);
+                                      setDeliveryLocation(newLocation);
+                                      setDeliverySearchValue(address);
+                                      setIsDeliveryMapSelected(true);
+                                      
+                                      // Aynı şehir kontrolü
+                                      if (sehir === selectedPickupCity) {
+                                        toast.error('Lütfen farklı 2 il giriniz');
+                                        setDeliveryLocation(null);
+                                        setDeliverySearchValue('');
+                                        setSelectedDeliveryCity('');
+                                        setSehir2(null);
+                                        setDeliverySehirFiyatlandirma(null);
+                                        return;
+                                      }
+                                      
                                       // Şehir fiyatlandırmasını güncelle
-                                      if (sehir) {
+                                      if (sehir && fiyatlandirma?.sehirler) {
+                                        const normalizedSehir = normalizeSehirAdi(sehir);
                                         const sehirFiyat = fiyatlandirma.sehirler.find(s => 
-                                          normalizeSehirAdi(s.sehirAdi).toLowerCase() === sehir.toLowerCase()
+                                          normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
                                         );
                                         if (sehirFiyat) {
-                                          setSehirFiyatlandirma(sehirFiyat);
+                                          setDeliverySehirFiyatlandirma(sehirFiyat);
                                         }
                                       }
                                       toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
                                     } catch (error) {
+                                      console.error('Konum alma hatası:', error);
                                       toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
                                     }
                                   }}
@@ -1475,11 +1580,49 @@ export default function TopluCekiciModal({ onClose }) {
                         <div style={mapStyles} className="relative mt-2">
                           <LocationPicker
                             isStartPicker={true}
-                            onLocationChange={(lat, lng, address) => {
+                            onLocationChange={async (lat, lng, address) => {
                               setActiveLocation('pickup');
                               setPickupLocation({lat: lat, lng: lng, address: address});
                               setPickupSearchValue(address);
-                              handleMapClick(lat, lng, address, sehir, 'pickup');
+                              
+                              // Şehir tespiti yap
+                              try {
+                                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=tr`);
+                                const data = await response.json();
+                                const cityName = data.address?.province || data.address?.state || data.address?.city || "";
+                                
+                                if (cityName) {
+                                  setSehir(cityName);
+                                  setSelectedPickupCity(cityName);
+                                  
+                                  // Aynı şehir kontrolü
+                                  if (cityName === selectedDeliveryCity) {
+                                    toast.error('Lütfen farklı 2 il giriniz');
+                                    setPickupLocation(null);
+                                    setPickupSearchValue('');
+                                    setSelectedPickupCity('');
+                                    setSehir(null);
+                                    setSehirFiyatlandirma(null);
+                                    setActiveMapPanel(null);
+                                    return;
+                                  }
+                                  
+                                  // Şehir fiyatlandırmasını güncelle
+                                  if (fiyatlandirma?.sehirler) {
+                                    const normalizedSehir = normalizeSehirAdi(cityName);
+                                    const sehirFiyat = fiyatlandirma.sehirler.find(s => 
+                                      normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
+                                    );
+                                    if (sehirFiyat) {
+                                      setSehirFiyatlandirma(sehirFiyat);
+                                      console.log('✅ Pickup şehir fiyatlandırması set edildi:', sehirFiyat.sehirAdi);
+                                    }
+                                  }
+                                }
+                              } catch (error) {
+                                console.error('Şehir tespiti hatası:', error);
+                              }
+                              
                               setIsPickupMapSelected(true);
                               setActiveMapPanel(null);
                             }}
@@ -1663,11 +1806,49 @@ export default function TopluCekiciModal({ onClose }) {
                         <div style={mapStyles} className="relative mt-2">
                           <LocationPicker
                             isStartPicker={false}
-                            onLocationChange={(lat, lng, address) => {
+                            onLocationChange={async (lat, lng, address) => {
                               setActiveLocation('delivery');
                               setDeliveryLocation({lat: lat, lng: lng, address: address});
                               setDeliverySearchValue(address);
-                              handleMapClick(lat, lng, address, getCity2(), 'delivery');
+                              
+                              // Şehir tespiti yap
+                              try {
+                                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=tr`);
+                                const data = await response.json();
+                                const cityName = data.address?.province || data.address?.state || data.address?.city || "";
+                                
+                                if (cityName) {
+                                  setSehir2(cityName);
+                                  setSelectedDeliveryCity(cityName);
+                                  
+                                  // Aynı şehir kontrolü
+                                  if (cityName === selectedPickupCity) {
+                                    toast.error('Lütfen farklı 2 il giriniz');
+                                    setDeliveryLocation(null);
+                                    setDeliverySearchValue('');
+                                    setSelectedDeliveryCity('');
+                                    setSehir2(null);
+                                    setDeliverySehirFiyatlandirma(null);
+                                    setActiveMapPanel(null);
+                                    return;
+                                  }
+                                  
+                                  // Şehir fiyatlandırmasını güncelle
+                                  if (fiyatlandirma?.sehirler) {
+                                    const normalizedSehir = normalizeSehirAdi(cityName);
+                                    const sehirFiyat = fiyatlandirma.sehirler.find(s => 
+                                      normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
+                                    );
+                                    if (sehirFiyat) {
+                                      setDeliverySehirFiyatlandirma(sehirFiyat);
+                                      console.log('✅ Delivery şehir fiyatlandırması set edildi:', sehirFiyat.sehirAdi);
+                                    }
+                                  }
+                                }
+                              } catch (error) {
+                                console.error('Şehir tespiti hatası:', error);
+                              }
+                              
                               setIsDeliveryMapSelected(true);
                               setActiveMapPanel(null);
                             }}
