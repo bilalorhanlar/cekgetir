@@ -8,9 +8,9 @@ import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
 import LocationAutocomplete from '@/components/LocationAutocomplete';
 import KvkkModal from '@/components/sozlesmeler/kvkk';
-import AcikRizaModal from '@/components/sozlesmeler/acik-rizametni';
-import AydinlatmaModal from '@/components/sozlesmeler/aydinlatma-metni';
-import SorumlulukReddiModal from '@/components/sozlesmeler/sorumluluk-reddi';
+import AcikRizaModal from '@/components/sozlesmeler/acikriza';
+import AydinlatmaModal from '@/components/sozlesmeler/aydinlatma';
+import SorumlulukReddiModal from '@/components/sozlesmeler/sorumlulukreddi';
 
 const libraries = ['places']
 // Leaflet'i SSR olmadan sadece client'ta render etmek için
