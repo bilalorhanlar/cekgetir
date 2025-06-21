@@ -402,7 +402,18 @@ export default function YolYardimModal({ onClose }) {
 
   // İstanbul sınırları kontrolü
   const isWithinIstanbul = (lat, lng) => {
-    return lat >= 40.8 && lat <= 41.5 && lng >= 28.4 && lng <= 29.5;
+    // İstanbul'un yaklaşık sınırları
+    const istanbulBounds = {
+      north: 41.5,  // Kuzey sınırı
+      south: 40.8,  // Güney sınırı
+      east: 29.5,   // Doğu sınırı
+      west: 28.4    // Batı sınırı
+    };
+    
+    return lat >= istanbulBounds.south && 
+           lat <= istanbulBounds.north && 
+           lng >= istanbulBounds.west && 
+           lng <= istanbulBounds.east;
   };
 
   // Konumdan adres reverse geocode için
@@ -412,6 +423,10 @@ export default function YolYardimModal({ onClose }) {
     // İstanbul sınırları kontrolü
     if (!isWithinIstanbul(lat, lng)) {
       toast.error('Yol yardım hizmeti sadece İstanbul içinde geçerlidir.');
+      setLocation(null);
+      setSearchValue('');
+      setIsMapSelected(false);
+      setSehir(null);
       return '';
     }
 
@@ -419,6 +434,23 @@ export default function YolYardimModal({ onClose }) {
     return new Promise((resolve) => {
       geocoder.geocode({ location: { lat, lng } }, (results, status) => {
         if (status === 'OK' && results[0]) {
+          // Adresin İstanbul'da olup olmadığını kontrol et
+          const addressComponents = results[0].address_components;
+          const isIstanbul = addressComponents.some(component => 
+            component.types.includes('administrative_area_level_1') && 
+            component.long_name.toLowerCase().includes('istanbul')
+          );
+
+          if (!isIstanbul) {
+            toast.error('Yol yardım hizmeti sadece İstanbul içinde geçerlidir.');
+            setLocation(null);
+            setSearchValue('');
+            setIsMapSelected(false);
+            setSehir(null);
+            resolve('');
+            return;
+          }
+
           resolve(results[0].formatted_address)
         } else {
           resolve('')
@@ -428,6 +460,16 @@ export default function YolYardimModal({ onClose }) {
   }
 
   const handleMapClick = async (lat, lng, address, sehir) => {
+    // İstanbul sınırları kontrolü
+    if (!isWithinIstanbul(lat, lng)) {
+      toast.error('Yol yardım hizmeti sadece İstanbul içinde geçerlidir.');
+      setLocation(null);
+      setSearchValue('');
+      setIsMapSelected(false);
+      setSehir(null);
+      return;
+    }
+
     setLocation({ lat, lng, address });
     setSearchValue(address);
     setIsMapSelected(true);
@@ -436,7 +478,6 @@ export default function YolYardimModal({ onClose }) {
   };
 
   const handleCurrentLocation = async () => {
-
     try {
       const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' });
       
@@ -457,23 +498,36 @@ export default function YolYardimModal({ onClose }) {
       // İstanbul sınırları kontrolü
       if (!isWithinIstanbul(latitude, longitude)) {
         toast.error('Yol yardım hizmeti sadece İstanbul içinde geçerlidir.', { id: 'location' });
+        setLocation(null);
+        setSearchValue('');
+        setIsMapSelected(false);
+        setSehir(null);
         return;
       }
+
       const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
       const data = await response.json();
-      const address = data.results[0].formatted;
+      
+      // Adresin İstanbul'da olup olmadığını kontrol et
+      const addressComponents = data.results[0].components;
+      const isIstanbul = addressComponents.province?.toLowerCase().includes('istanbul') || 
+                        addressComponents.state?.toLowerCase().includes('istanbul');
 
-      // Basit bir adres formatı oluştur
-      const newLocation = { lat: latitude, lng: longitude, address : address };
+      if (!isIstanbul) {
+        toast.error('Yol yardım hizmeti sadece İstanbul içinde geçerlidir.', { id: 'location' });
+        setLocation(null);
+        setSearchValue('');
+        setIsMapSelected(false);
+        setSehir(null);
+        return;
+      }
+
+      const address = data.results[0].formatted;
+      const newLocation = { lat: latitude, lng: longitude, address: address };
       
       setLocation(newLocation);
       setSearchValue(address);
       setShowMap(null);
-      
-      // Konum seçildikten sonra fiyat hesaplama
-      // if (aracBilgileri.tip && selectedAriza) {
-      //   // calculateRoute(newLocation);
-      // }
       
       toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
     } catch (error) {
@@ -493,6 +547,10 @@ export default function YolYardimModal({ onClose }) {
       }
       
       toast.error(errorMessage, { id: 'location' });
+      setLocation(null);
+      setSearchValue('');
+      setIsMapSelected(false);
+      setSehir(null);
     }
   };
 

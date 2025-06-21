@@ -235,9 +235,14 @@ export default function OzelCekiciModal({ onClose }) {
     // Araç durumuna göre durum ücreti (diziden bul)
     const statusObj = pricingData?.statuses?.find(st => String(st.id) === String(aracBilgileri.durum));
     const statusPrice = statusObj ? Number(statusObj.price) : 0;
+
+    // Şile kontrolü ve ekstra ücret
+    const isPickupInSile = pickupLocation?.address?.toLowerCase().includes('şile') || pickupLocation?.address?.toLowerCase().includes('sile');
+    const isDeliveryInSile = deliveryLocation?.address?.toLowerCase().includes('şile') || deliveryLocation?.address?.toLowerCase().includes('sile');
+    const sileExtraFee = (isPickupInSile || isDeliveryInSile) ? 3000 : 0;
     
-    // Toplam fiyat hesaplama (durum ücreti toplama olarak ekleniyor)
-    const totalPrice = ((basePrice + distanceMultiplier + statusPrice + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
+    // Toplam fiyat hesaplama (durum ücreti ve Şile ücreti toplama olarak ekleniyor)
+    const totalPrice = ((basePrice + distanceMultiplier + statusPrice + sileExtraFee + (extraFee || 0)) * segmentMultiplier) * nightMultiplier;
     
     // KDV hesaplama (%20)
     const kdv = totalPrice * 0.20;

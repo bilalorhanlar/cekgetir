@@ -342,11 +342,13 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     return "Avrasya Tüneli veya Marmaray";
   };
   
-  // Çoklu segment rota hesaplama fonksiyonu
+  // İki noktanın aynı yakada olup olmadığını kontrol et
+  const isOnSameSide = (point1: { lat: number; lng: number }, point2: { lat: number; lng: number }): boolean => {
+    const isEuropeanSide = (lng: number) => lng < 29.00; // Yaklaşık olarak boğazın batısı
+    return isEuropeanSide(point1.lng) === isEuropeanSide(point2.lng);
+  };
+
   const calculateMultiSegmentRoute = async (coordinates: typeof activeCoordinates) => {
-    //console.log("🚗 Çoklu segment rota hesaplanıyor...");
-    //console.log("📍 Koordinatlar:", coordinates);
-    
     if (!mapRef.current) {
       console.error("❌ Harita referansı bulunamadı!");
       return;
@@ -354,19 +356,16 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
     
     // Önceki rotayı temizle
     if (route) {
-      //console.log("🔄 Önceki rota temizleniyor...");
       mapRef.current.removeLayer(route);
     }
     
     // Önceki kontrolü kaldır
     if (controlRef.current) {
-      //console.log("🔄 Önceki köprü bilgisi kontrolü kaldırılıyor...");
       mapRef.current.removeControl(controlRef.current);
       controlRef.current = null;
     }
 
     // Tüm markerleri temizle (köprü markerleri hariç)
-    //console.log("📍 Markerler temizleniyor ve yenileri ekleniyor...");
     mapRef.current.eachLayer((layer) => {
       if (layer instanceof L.Marker) {
         const markerLayer = layer as CustomLayer;
@@ -392,32 +391,51 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       }
     });
     
-    // Segmentleri oluştur (A->B, B->C, C->D...)
+    // FSM Köprüsü koordinatları
+    const fsmBridge = BRIDGES[1]; // Fatih Sultan Mehmet Köprüsü
+    const bridgeCenter = {
+      lat: (fsmBridge.bounds.north + fsmBridge.bounds.south) / 2,
+      lng: (fsmBridge.bounds.east + fsmBridge.bounds.west) / 2
+    };
+    
+    // Segmentleri oluştur
     const segments = [];
     for (let i = 0; i < coordinates.length - 1; i++) {
-      segments.push([
-        [coordinates[i].lng, coordinates[i].lat],
-        [coordinates[i + 1].lng, coordinates[i + 1].lat]
-      ]);
+      const start = coordinates[i];
+      const end = coordinates[i + 1];
+      
+      // Eğer noktalar aynı yakadaysa direkt bağla
+      if (isOnSameSide(start, end)) {
+        segments.push([
+          [start.lng, start.lat],
+          [end.lng, end.lat]
+        ]);
+      } else {
+        // Farklı yakadaysa FSM Köprüsü üzerinden geçir
+        segments.push([
+          [start.lng, start.lat],
+          [bridgeCenter.lng, bridgeCenter.lat]
+        ]);
+        segments.push([
+          [bridgeCenter.lng, bridgeCenter.lat],
+          [end.lng, end.lat]
+        ]);
+      }
     }
-    
-    //console.log(`🔄 ${segments.length} segment için rota hesaplanacak...`);
     
     let totalDistance = 0;
     let totalDuration = 0;
     const allRouteData = [];
     const allBridges = new Set<string>();
-    let wayPointsKm2 = [];
+    let wayPointsKm2: number[] = [];
+    
     try {
       // Her segment için rota hesapla
       for (let i = 0; i < segments.length; i++) {
-        //console.log(`🌐 Segment ${i + 1}/${segments.length} için API isteği gönderiliyor...`);
-        
         const routeRequest = {
           coordinates: segments[i],
           format: "geojson",
         };
-        //console.log("routeRequest", routeRequest)
         
         const response = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
           method: "POST",
@@ -433,29 +451,74 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         }
         
         const segmentData = await response.json();
-        //console.log(`📄 Segment ${i + 1} verisi alındı:`, segmentData);
         
         // Segment bilgilerini topla
         const segmentDistance = segmentData.features[0].properties.segments[0].distance;
         const segmentDuration = segmentData.features[0].properties.segments[0].duration;
         
         const segmentKm = Math.round(segmentDistance / 1000);
-        //console.log(`📍 Segment ${i + 1} mesafesi: ${segmentKm}km`);
         wayPointsKm2.push(segmentKm);
         
         totalDistance += segmentDistance;
         totalDuration += segmentDuration;
         allRouteData.push(segmentData);
         
-        //console.log(`📊 Segment ${i + 1}: ${segmentKm}km, ${Math.round(segmentDuration / 60)}dk`);
-        
         // Bu segment için köprüleri tespit et
         const segmentBridges = detectBridgesOnRoute(segmentData);
-        segmentBridges.forEach(bridge => allBridges.add(bridge));
+        
+        // Eğer 1., 3. köprü veya Avrasya tespit edilirse, rotayı FSM'den geçir
+        const hasUnwantedBridge = segmentBridges.some(bridge => 
+          bridge.includes("Boğaziçi") || 
+          bridge.includes("Yavuz Sultan Selim") || 
+          bridge.includes("Avrasya")
+        );
+        
+        if (hasUnwantedBridge) {
+          // Mevcut segmenti temizle
+          allRouteData.pop();
+          wayPointsKm2.pop();
+          totalDistance -= segmentDistance;
+          totalDuration -= segmentDuration;
+          
+          // FSM üzerinden yeni rota hesapla
+          const fsmRouteRequest = {
+            coordinates: [
+              [segments[i][0][0], segments[i][0][1]],
+              [bridgeCenter.lng, bridgeCenter.lat],
+              [segments[i][1][0], segments[i][1][1]]
+            ],
+            format: "geojson",
+          };
+          
+          const fsmResponse = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
+            method: "POST",
+            headers: {
+              Authorization: "5b3ce3597851110001cf62484f7095854058404ead4a446b369ac2bc",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(fsmRouteRequest),
+          });
+          
+          if (!fsmResponse.ok) {
+            throw new Error(`FSM Rota için API hatası: ${fsmResponse.status}`);
+          }
+          
+          const fsmData = await fsmResponse.json();
+          allRouteData.push(fsmData);
+          
+          const fsmDistance = fsmData.features[0].properties.segments.reduce((acc: number, seg: any) => acc + seg.distance, 0);
+          const fsmDuration = fsmData.features[0].properties.segments.reduce((acc: number, seg: any) => acc + seg.duration, 0);
+          
+          wayPointsKm2.push(Math.round(fsmDistance / 1000));
+          totalDistance += fsmDistance;
+          totalDuration += fsmDuration;
+          
+          // FSM'yi köprü listesine ekle
+          allBridges.add("Fatih Sultan Mehmet Köprüsü");
+        } else {
+          segmentBridges.forEach(bridge => allBridges.add(bridge));
+        }
       }
-      
-      //console.log(`📊 Toplam: ${Math.round(totalDistance / 1000)}km, ${Math.round(totalDuration / 60)}dk`);
-      //console.log('📍 Tüm segment mesafeleri:', wayPointsKm2);
       
       // Parent component'e toplam değerleri bildir
       onValuesChange(Math.round(totalDistance / 1000), Math.round(totalDuration / 60), wayPointsKm2);
@@ -465,13 +528,12 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       setDetectedBridges(bridgeList);
       
       // Tüm segment rotalarını haritaya ekle
-      //console.log("🗺️ Tüm segmentler haritaya ekleniyor...");
       const combinedRoute = L.layerGroup();
       
-      allRouteData.forEach((segmentData, index) => {
+      allRouteData.forEach((segmentData) => {
         const segmentRoute = L.geoJSON(segmentData, {
           style: {
-            color: `hsl(${(index * 60) % 360}, 70%, 50%)`, // Her segment farklı renk
+            color: "#2563eb", // Tek renk - mavi
             weight: 6,
             opacity: 0.8,
             lineJoin: "round",
@@ -479,9 +541,9 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
           },
           onEachFeature: (feature, layer) => {
             if (feature.properties && feature.properties.segments) {
-              const segmentDistance = Math.round(feature.properties.segments[0].distance / 1000);
-              const segmentDuration = Math.round(feature.properties.segments[0].duration / 60);
-              layer.bindPopup(`<b>Segment ${index + 1}</b><br/>Mesafe: ${segmentDistance}km<br/>Süre: ${segmentDuration}dk`);
+              const totalDistance = Math.round(feature.properties.segments.reduce((acc: number, seg: any) => acc + seg.distance, 0) / 1000);
+              const totalDuration = Math.round(feature.properties.segments.reduce((acc: number, seg: any) => acc + seg.duration, 0) / 60);
+              layer.bindPopup(`<b>Toplam Mesafe:</b> ${totalDistance}km<br/><b>Toplam Süre:</b> ${totalDuration}dk`);
             }
           }
         });
@@ -491,14 +553,10 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       combinedRoute.addTo(mapRef.current);
       setRoute(combinedRoute);
       
-      //console.log("✅ Tüm segmentler başarıyla haritaya eklendi.");
-
       // Tüm rotayı haritada göstermek için sınırlara yakınlaştır
       const allPoints = coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
       const bounds = L.latLngBounds(allPoints);
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
-      //console.log("🔍 Harita görünümü ayarlandı.");
-
       
     } catch (error) {
       console.error("❌ Rota hesaplanırken bir hata oluştu:", error);
