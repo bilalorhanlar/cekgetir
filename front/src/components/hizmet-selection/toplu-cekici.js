@@ -188,14 +188,59 @@ export default function TopluCekiciModal({ onClose }) {
 
   const setSelectedCityPickup = (selected) => {
     console.log('selected', selected);
-    setSelectedPickupCity(selected.target.value);
-    setSehir(selected.target.value);
+    const selectedCity = selected.target.value;
+    
+    // Check if the same city is selected for both pickup and delivery
+    if (selectedCity && selectedCity === selectedDeliveryCity) {
+      // Reset all inputs
+      setSelectedPickupCity('');
+      setSelectedDeliveryCity('');
+      setSehir(null);
+      setSehir2(null);
+      setSehirFiyatlandirma(null);
+      setDeliverySehirFiyatlandirma(null);
+      setPickupLocation(null);
+      setDeliveryLocation(null);
+      setPickupSearchValue('');
+      setDeliverySearchValue('');
+      setPickupOtopark(false);
+      setDeliveryOtopark(false);
+      
+      // Show error message
+      toast.error('Lütfen farklı 2 il giriniz');
+      return;
+    }
+    
+    setSelectedPickupCity(selectedCity);
+    setSehir(selectedCity);
   }
 
   const setSelectedCityDelivery = (selected) => {
-    setSelectedDeliveryCity(selected.target.value);
-    setSehir2(selected.target.value);
+    const selectedCity = selected.target.value;
     
+    // Check if the same city is selected for both pickup and delivery
+    if (selectedCity && selectedCity === selectedPickupCity) {
+      // Reset all inputs
+      setSelectedPickupCity('');
+      setSelectedDeliveryCity('');
+      setSehir(null);
+      setSehir2(null);
+      setSehirFiyatlandirma(null);
+      setDeliverySehirFiyatlandirma(null);
+      setPickupLocation(null);
+      setDeliveryLocation(null);
+      setPickupSearchValue('');
+      setDeliverySearchValue('');
+      setPickupOtopark(false);
+      setDeliveryOtopark(false);
+      
+      // Show error message
+      toast.error('Lütfen farklı 2 il giriniz');
+      return;
+    }
+    
+    setSelectedDeliveryCity(selectedCity);
+    setSehir2(selectedCity);
   }
 
   const setRouteInfoHandle = (distance, duration, wayPointsKm, detectedBridges, bridgeFees) => {
