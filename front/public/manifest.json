@@ -1,0 +1,30 @@
+{
+  "name": "Çekgetir - Şehirler Arası Araç Taşıma ve Yol Yardım",
+  "short_name": "Çekgetir",
+  "description": "7/24 yol yardım, çekici hizmeti ve şehirler arası araç taşıma hizmetleri",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#fbbf24",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["automotive", "transportation", "utilities"],
+  "lang": "tr",
+  "dir": "ltr"
+} 

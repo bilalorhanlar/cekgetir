@@ -14,6 +14,7 @@ const nextConfig = {
   },
   images: {
     domains: ['cekgetir.up.railway.app'],
+    formats: ['image/webp', 'image/avif'],
   },
   async headers() {
     return [
@@ -23,6 +24,40 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: "frame-src 'self' https://www.google.com/ https://*.googleapis.com/ https://*.google.com/ https://*.gstatic.com/;"
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          }
+        ]
+      },
+      {
+        source: '/sitemap.xml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/xml'
+          }
+        ]
+      },
+      {
+        source: '/robots.txt',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/plain'
           }
         ]
       }
@@ -40,6 +75,11 @@ const nextConfig = {
       },
     ]
   },
+  // SEO için gerekli ayarlar
+  trailingSlash: false,
+  generateEtags: true,
+  compress: true,
+  poweredByHeader: false,
 }
 
 module.exports = nextConfig

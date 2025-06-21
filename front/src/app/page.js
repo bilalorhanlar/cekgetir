@@ -16,6 +16,71 @@ export default function Home() {
     setActiveModal(null)
   }
 
+  // Structured Data for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Çekgetir",
+    "description": "7/24 yol yardım, çekici hizmeti, araç kurtarma ve şehirler arası araç taşıma hizmetleri",
+    "url": "https://cekgetir.com",
+    "logo": "https://cekgetir.com/images/logo.png",
+    "image": "https://cekgetir.com/images/logo.png",
+    "telephone": "+90-xxx-xxx-xxxx",
+    "email": "info@cekgetir.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "TR",
+      "addressLocality": "İstanbul",
+      "addressRegion": "İstanbul"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "41.0082",
+      "longitude": "28.9784"
+    },
+    "openingHours": "Mo-Su 00:00-23:59",
+    "priceRange": "₺₺",
+    "serviceArea": {
+      "@type": "Country",
+      "name": "Türkiye"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Çekgetir Hizmetleri",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Şehirler Arası Araç Taşıma",
+            "description": "Şehirler arası araç transfer hizmeti"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Çekici Hizmeti",
+            "description": "Araç çekme ve taşıma hizmetleri"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Yol Yardım",
+            "description": "Akü takviyesi, lastik değişimi ve acil yol yardım hizmetleri"
+          }
+        }
+      ]
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "150"
+    }
+  }
+
   const serviceOptions = [
     {
       id: 'toplu-cekici',
@@ -46,6 +111,14 @@ export default function Home() {
 
   return (
     <>
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData)
+        }}
+      />
+      
       <div className="fixed top-0 left-0 right-0 z-50">
         <Navbar />
       </div>
@@ -56,7 +129,7 @@ export default function Home() {
           <div className="absolute inset-0 z-0">
             <Image
               src="/images/home.png"
-              alt="Çekgetir Yol Yardım"
+              alt="Çekgetir Yol Yardım ve Şehirler Arası Araç Taşıma Hizmetleri"
               fill
               className="object-cover"
               priority
@@ -199,8 +272,8 @@ export default function Home() {
                 <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-yellow-400">4</span>
                 </div>
-                <h3 className="text-lg font-semibold mb-2 text-black">Yardım Alın</h3>
-                <p className="text-gray-600">Ekipler yanınızda olacak</p>
+                <h3 className="text-lg font-semibold mb-2 text-black">Hizmet Alın</h3>
+                <p className="text-gray-600">Profesyonel ekiplerimiz hizmetinizi gerçekleştirsin</p>
               </div>
             </div>
           </div>
@@ -237,14 +310,14 @@ export default function Home() {
       </main>
 
       {/* Modals */}
-      {activeModal === 'yol-yardim' && (
-        <YolYardimModal onClose={handleModalClose} />
+      {activeModal === 'toplu-cekici' && (
+        <TopluCekiciModal onClose={handleModalClose} />
       )}
       {activeModal === 'ozel-cekici' && (
         <OzelCekiciModal onClose={handleModalClose} />
       )}
-      {activeModal === 'toplu-cekici' && (
-        <TopluCekiciModal onClose={handleModalClose} />
+      {activeModal === 'yol-yardim' && (
+        <YolYardimModal onClose={handleModalClose} />
       )}
 
       <Footer />

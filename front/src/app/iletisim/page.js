@@ -6,6 +6,17 @@ import Footer from '@/components/Footer'
 import Image from 'next/image'
 import api from '@/utils/axios'
 import { toast } from 'react-hot-toast'
+import { Metadata } from 'next'
+
+export const metadata = {
+  title: 'İletişim',
+  description: 'Çekgetir ile iletişime geçin. 7/24 yol yardım, çekici hizmeti ve şehirler arası araç taşıma için bize ulaşın.',
+  keywords: 'çekgetir iletişim, yol yardım telefon, çekici hizmeti iletişim, araç kurtarma telefon',
+  openGraph: {
+    title: 'İletişim | Çekgetir',
+    description: 'Çekgetir ile iletişime geçin. 7/24 yol yardım, çekici hizmeti ve şehirler arası araç taşıma için bize ulaşın.',
+  },
+}
 
 export default function Contact() {
   const [formData, setFormData] = useState({

@@ -5,8 +5,19 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
 import api from '@/utils/axios'
+import { Metadata } from 'next'
 
-export default function FAQ() {
+export const metadata = {
+  title: 'Sık Sorulan Sorular',
+  description: 'Çekgetir hakkında sık sorulan sorular. Yol yardım, çekici hizmeti ve şehirler arası araç taşıma hakkında merak edilenler.',
+  keywords: 'çekgetir sss, yol yardım soruları, çekici hizmeti sık sorulan sorular, araç taşıma sss',
+  openGraph: {
+    title: 'Sık Sorulan Sorular | Çekgetir',
+    description: 'Çekgetir hakkında sık sorulan sorular. Yol yardım, çekici hizmeti ve şehirler arası araç taşıma hakkında merak edilenler.',
+  },
+}
+
+export default function SSSPage() {
   const [openIndex, setOpenIndex] = useState(null)
   const [faqs, setFaqs] = useState([])
   const [loading, setLoading] = useState(true)

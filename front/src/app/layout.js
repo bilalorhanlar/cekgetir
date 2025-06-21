@@ -9,8 +9,11 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   metadataBase: new URL('https://cekgetir.com'),
-  title: 'Çekgetir | Şehirler arası taşıma ve yol yardım hizmetleri.',
-  description: 'Çekgetir ile 7/24 yol yardım, çekici hizmeti, araç kurtarma, lastik değişimi ve şehirler arası araç taşıma hizmetleri. İstanbul ve tüm Türkiye\'de güvenilir çözüm ortağınız.',
+  title: {
+    default: 'Çekgetir | Şehirler Arası Araç Taşıma ve Yol Yardım Hizmetleri',
+    template: '%s | Çekgetir'
+  },
+  description: 'Çekgetir ile 7/24 yol yardım, çekici hizmeti, araç kurtarma, lastik değişimi ve şehirler arası araç taşıma hizmetleri. İstanbul ve tüm Türkiye\'de güvenilir çözüm ortağınız. Anında fiyat teklifi alın!',
   keywords: [
     'yol yardım', 
     'yol acil yardım', 
@@ -31,10 +34,27 @@ export const metadata = {
     'şehirler arası araç taşıma',
     'güvenilir çekici',
     'profesyonel yol yardım',
-    'araç kurtarma şirketi'
+    'araç kurtarma şirketi',
+    'toplu çekici',
+    'araç transfer',
+    'oto taşıma',
+    'çekici fiyat',
+    'yol yardım fiyat',
+    'acil çekici istanbul',
+    'araç kurtarma istanbul',
+    'çekici hizmeti istanbul',
+    'yol yardım istanbul'
   ].join(', '),
+  authors: [{ name: 'Çekgetir Ekibi' }],
+  creator: 'Çekgetir',
+  publisher: 'Çekgetir',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
-    title: 'Çekgetir | Şehirler arası taşıma ve yol yardım hizmetleri.',
+    title: 'Çekgetir | Şehirler Arası Araç Taşıma ve Yol Yardım Hizmetleri',
     description: 'Çekgetir ile 7/24 yol yardım, çekici hizmeti, araç kurtarma, lastik değişimi ve şehirler arası araç taşıma hizmetleri. İstanbul ve tüm Türkiye\'de güvenilir çözüm ortağınız.',
     url: 'https://cekgetir.com',
     siteName: 'Çekgetir',
@@ -51,9 +71,10 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Çekgetir | Şehirler arası taşıma ve yol yardım hizmetleri.',
+    title: 'Çekgetir | Şehirler Arası Araç Taşıma ve Yol Yardım Hizmetleri',
     description: 'Çekgetir ile 7/24 yol yardım, çekici hizmeti, araç kurtarma, lastik değişimi ve şehirler arası araç taşıma hizmetleri. İstanbul ve tüm Türkiye\'de güvenilir çözüm ortağınız.',
     images: ['/images/logo.png'],
+    creator: '@cekgetir',
   },
   robots: {
     index: true,
@@ -67,17 +88,18 @@ export const metadata = {
     },
   },
   verification: {
-    google: 'google-site-verification-code', // Google Search Console doğrulama kodu
+    google: 'YOUR_GOOGLE_SEARCH_CONSOLE_CODE', // Google Search Console doğrulama kodunu buraya ekleyin
+    yandex: 'YOUR_YANDEX_CODE', // Yandex doğrulama kodu (opsiyonel)
   },
   alternates: {
     canonical: 'https://cekgetir.com',
   },
-  authors: [{ name: 'Çekgetir Ekibi' }],
   category: 'Otomotiv Hizmetleri',
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({ children }) {
@@ -91,6 +113,16 @@ export default function RootLayout({ children }) {
                 new Event('submit', { cancelable: true })
               );
             }
+          `
+        }} />
+        {/* Google Analytics veya Google Tag Manager kodu buraya eklenebilir */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_GA_ID"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'YOUR_GA_ID');
           `
         }} />
       </head>
