@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Blog ve Haberler',
@@ -17,6 +18,7 @@ export default function BlogPage() {
       id: 1,
       title: "Yolda Kalan Araçlar İçin Acil Durum Rehberi",
       excerpt: "Aracınız yolda kaldığında yapmanız gerekenler ve dikkat etmeniz gereken güvenlik önlemleri hakkında detaylı bilgi.",
+      slug: "yolda-kalan-araclar-icin-acil-durum-rehberi",
       category: "Güvenlik",
       date: "2024-12-19",
       readTime: "5 dk"
@@ -25,6 +27,7 @@ export default function BlogPage() {
       id: 2,
       title: "Şehirler Arası Araç Taşıma Sürecinde Dikkat Edilmesi Gerekenler",
       excerpt: "Aracınızı şehirler arası taşıtırken bilmeniz gereken önemli noktalar ve süreç hakkında bilgilendirme.",
+      slug: "sehirler-arasi-arac-tasima-surecinde-dikkat-edilmesi-gerekenler",
       category: "Araç Taşıma",
       date: "2024-12-18",
       readTime: "7 dk"
@@ -33,6 +36,7 @@ export default function BlogPage() {
       id: 3,
       title: "Kış Aylarında Araç Bakımı ve Yol Güvenliği",
       excerpt: "Kış aylarında araç bakımı, lastik kontrolü ve güvenli sürüş için önemli ipuçları.",
+      slug: "kis-aylarinda-arac-bakimi-ve-yol-guvenligi",
       category: "Bakım",
       date: "2024-12-17",
       readTime: "6 dk"
@@ -41,6 +45,7 @@ export default function BlogPage() {
       id: 4,
       title: "Çekici Hizmeti Alırken Dikkat Edilmesi Gerekenler",
       excerpt: "Güvenilir çekici hizmeti seçerken dikkat etmeniz gereken kriterler ve yasal haklarınız.",
+      slug: "cekici-hizmeti-alirken-dikkat-edilmesi-gerekenler",
       category: "Çekici Hizmeti",
       date: "2024-12-16",
       readTime: "4 dk"
@@ -49,6 +54,7 @@ export default function BlogPage() {
       id: 5,
       title: "Araç Aküsü Bakımı ve Akü Takviye Hizmeti",
       excerpt: "Araç aküsü bakımı, ömrünü uzatma yöntemleri ve acil durumlarda akü takviye hizmeti hakkında bilgiler.",
+      slug: "arac-akusu-bakimi-ve-aku-takviye-hizmeti",
       category: "Bakım",
       date: "2024-12-15",
       readTime: "5 dk"
@@ -57,6 +63,7 @@ export default function BlogPage() {
       id: 6,
       title: "Lastik Değişimi ve Lastik Bakımı Rehberi",
       excerpt: "Doğru lastik seçimi, lastik bakımı ve acil durumlarda lastik değişimi hakkında detaylı rehber.",
+      slug: "lastik-degisimi-ve-lastik-bakimi-rehberi",
       category: "Bakım",
       date: "2024-12-14",
       readTime: "8 dk"
@@ -68,10 +75,11 @@ export default function BlogPage() {
       <Navbar />
       <main className="min-h-screen bg-gray-50">
         {/* Hero Section */}
-        <section className="relative py-16 bg-gradient-to-b from-yellow-400 to-yellow-500">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">Blog ve Haberler</h1>
-            <p className="text-xl text-black/80 max-w-2xl mx-auto">
+        <section className="relative py-24 sm:py-32 bg-black/80">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative max-w-6xl mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Blog ve Haberler</h1>
+            <p className="text-xl text-white/90 max-w-3xl mx-auto">
               Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler ve güncel haberler.
             </p>
           </div>
@@ -82,33 +90,35 @@ export default function BlogPage() {
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {blogPosts.map((post) => (
-                <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        {post.category}
-                      </span>
-                      <span className="text-gray-500 text-sm">{post.readTime}</span>
+                <Link key={post.id} href={`/blog/${post.slug}`} className="block">
+                  <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
+                    <div className="p-6 flex-grow flex flex-col">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                          {post.category}
+                        </span>
+                        <span className="text-gray-500 text-sm">{post.readTime}</span>
+                      </div>
+                      
+                      <h2 className="text-xl font-semibold text-black mb-3 line-clamp-2">
+                        {post.title}
+                      </h2>
+                      
+                      <p className="text-gray-600 mb-4 line-clamp-3 flex-grow">
+                        {post.excerpt}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mt-auto">
+                        <time className="text-sm text-gray-500">
+                          {new Date(post.date).toLocaleDateString('tr-TR')}
+                        </time>
+                        <div className="text-yellow-600 hover:text-yellow-700 font-medium text-sm">
+                          Devamını Oku →
+                        </div>
+                      </div>
                     </div>
-                    
-                    <h2 className="text-xl font-semibold text-black mb-3 line-clamp-2">
-                      {post.title}
-                    </h2>
-                    
-                    <p className="text-gray-600 mb-4 line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <time className="text-sm text-gray-500">
-                        {new Date(post.date).toLocaleDateString('tr-TR')}
-                      </time>
-                      <button className="text-yellow-600 hover:text-yellow-700 font-medium text-sm">
-                        Devamını Oku →
-                      </button>
-                    </div>
-                  </div>
-                </article>
+                  </article>
+                </Link>
               ))}
             </div>
             

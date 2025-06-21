@@ -480,7 +480,7 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         const segmentBridges = detectBridgesOnRoute(segmentData);
         
         // Eğer 1., 3. köprü veya Avrasya tespit edilirse, rotayı FSM'den geçir
-        // Bu mantık sadece İstanbul içi rotalar için geçerli olmalı
+        // Bu mantık sadece İstanbul içi ve farklı yakalardaki rotalar için geçerli olmalı
         const startPoint = { lat: segments[i][0][1], lng: segments[i][0][0] };
         const endPoint = { lat: segments[i][segments[i].length - 1][1], lng: segments[i][segments[i].length - 1][0] };
 
@@ -490,7 +490,8 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
           bridge.includes("Avrasya")
         );
         
-        if (isWithinIstanbul(startPoint) && isWithinIstanbul(endPoint) && hasUnwantedBridge) {
+        // Sadece İstanbul içi, farklı yakalarda VE istenmeyen köprü tespit edilirse FSM'yi zorla
+        if (isWithinIstanbul(startPoint) && isWithinIstanbul(endPoint) && !isOnSameSide(startPoint, endPoint) && hasUnwantedBridge) {
           // Mevcut segmenti temizle
           allRouteData.pop();
           wayPointsKm2.pop();

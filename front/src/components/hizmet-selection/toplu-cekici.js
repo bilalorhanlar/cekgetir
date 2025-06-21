@@ -1216,7 +1216,7 @@ export default function TopluCekiciModal({ onClose }) {
                         className="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500"
                       >
                         <option value="">Şehir Seçin</option>
-                        {sehirler.map((sehir) => (
+                        {sehirler.sort((a, b) => a.sehirAdi.localeCompare(b.sehirAdi, 'tr-TR')).map((sehir) => (
                           <option key={`pickup-${sehir.id}`} value={sehir.sehirAdi}>
                             {sehir.sehirAdi}
                           </option>
@@ -1380,7 +1380,7 @@ export default function TopluCekiciModal({ onClose }) {
                         className="w-full py-2.5 px-4 bg-[#202020] text-white rounded-lg border border-[#404040] focus:outline-none focus:border-yellow-500"
                       >
                         <option value="">Şehir Seçin</option>
-                        {sehirler.map((sehir) => (
+                        {sehirler.sort((a, b) => a.sehirAdi.localeCompare(b.sehirAdi, 'tr-TR')).map((sehir) => (
                           <option key={`delivery-${sehir.id}`} value={sehir.sehirAdi}>
                             {sehir.sehirAdi}
                           </option>

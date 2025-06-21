@@ -13,10 +13,11 @@ export function middleware(request) {
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'geolocation=*')
 
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com/recaptcha/ https://www.gstatic.com/ https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://api.openrouteservice.org",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com/recaptcha/ https://www.gstatic.com/ https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://api.openrouteservice.org https://www.googletagmanager.com",
     "style-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://*.googleapis.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://api.openrouteservice.org",
     "img-src 'self' data: blob: https://www.google.com/recaptcha/ https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com https://maps.googleapis.com https://*.tile.openstreetmap.org https://cdnjs.cloudflare.com https://api.openrouteservice.org",
     "font-src 'self' https://*.gstatic.com https://fonts.googleapis.com https://cdnjs.cloudflare.com",

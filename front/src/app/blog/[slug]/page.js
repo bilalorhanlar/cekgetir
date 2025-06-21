@@ -205,8 +205,8 @@ export default function BlogDetailPage({ params }) {
         {/* Hero Section */}
         <section className="relative py-16 bg-gradient-to-b from-yellow-400 to-yellow-500">
           <div className="max-w-4xl mx-auto px-4">
-            <div className="text-center mb-8">
-              <span className="bg-yellow-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+            <div className="text-center mb-8 pt-16">
+              <span className="bg-yellow-600 text-white px-3  py-1 rounded-full text-sm font-medium">
                 {post.category}
               </span>
             </div>
@@ -225,7 +225,7 @@ export default function BlogDetailPage({ params }) {
 
         {/* Featured Image */}
         <section className="py-8">
-          <div className="max-w-4xl mx-auto px-4">
+          <div className="max-w-4xl mx-auto px-4 pt-10">
             <div className="relative h-64 md:h-96 rounded-lg overflow-hidden shadow-lg">
               <Image
                 src={post.image}

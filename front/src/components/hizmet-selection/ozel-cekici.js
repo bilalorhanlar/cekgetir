@@ -34,6 +34,11 @@ const mapStyles = {
 
 // Şehir adını normalize eden fonksiyon
 function normalizeSehirAdi(sehir) {
+  // Null veya undefined kontrolü
+  if (!sehir) {
+    return '';
+  }
+  
   return sehir
     .replace("I", 'i')
     .replace("İ", 'i')
@@ -89,6 +94,7 @@ export default function OzelCekiciModal({ onClose }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [sehirFiyatlandirma, setSehirFiyatlandirma] = useState(null)
+  const [sehirler, setSehirler] = useState([]);
   const mapRef = useRef(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const autocompleteService = useRef(null)
@@ -137,12 +143,14 @@ export default function OzelCekiciModal({ onClose }) {
           { data: ozelCekiciData },
           { data: segmentsData },
           { data: statusesData },
-          { data: vehicleInfoData }
+          { data: vehicleInfoData },
+          { data: sehirlerData }
         ] = await Promise.all([
           api.get('/api/variables/ozel-cekici'),
           api.get('/api/variables/car-segments?type=ozel-cekici'),
           api.get('/api/variables/car-statuses?type=ozel-cekici'),
-          axios.get('/data/arac-info.json')
+          axios.get('/data/arac-info.json'),
+          api.get('/api/variables/ozel-cekici/sehirler')
         ]);
 
         setPricingData({
@@ -166,6 +174,7 @@ export default function OzelCekiciModal({ onClose }) {
           years: vehicleInfoData.yillar
         });
 
+        setSehirler(sehirlerData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -194,21 +203,21 @@ export default function OzelCekiciModal({ onClose }) {
 
   // Fiyat hesaplama fonksiyonu
   const fiyatHesapla = useCallback( async () => {
-    let sehirFiyatlandirmaLocal = null;
-    try {
-    // Şehir fiyatlandırmasını getir
+    // Şehir bilgisi yoksa fiyatlandırma yapılamaz
     const normalizedSehir = normalizeSehirAdi(sehir);
-    const response = await api.get(`/api/variables/ozel-cekici/sehirler`)
-    for (const sehirObj of response.data) {
-      if (normalizeSehirAdi(sehirObj.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()) {
-        setSehirFiyatlandirmaHandler(sehirObj)
-        sehirFiyatlandirmaLocal = sehirObj;
-        break
-      }
+    if (!normalizedSehir || normalizedSehir.trim() === '') {
+      console.log('fiyatHesapla: No city information available, cannot calculate pricing');
+      setPrice(0);
+      return 0;
     }
-    } catch (error) {
-      console.error('Şehir fiyatlandırması getirilemedi:', error)
+
+    const sehirFiyatlandirmaLocal = sehirler.find(s => normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase());
+    if (!sehirFiyatlandirmaLocal) {
+      toast.error(`Üzgünüz, ${sehir} için henüz hizmet veremiyoruz.`);
+      setPrice(0);
+      return 0;
     }
+    setSehirFiyatlandirma(sehirFiyatlandirmaLocal);
     
     // Debug: Log all required values
     console.log('fiyatHesapla debug:', {
@@ -303,7 +312,7 @@ export default function OzelCekiciModal({ onClose }) {
     
     setPrice(calculatedPrice);
     return calculatedPrice;
-  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee, bridgeFees]);
+  }, [pickupLocation, deliveryLocation, aracBilgileri, routeInfo, pricingData, sehir, extraFee, bridgeFees, sehirler]);
 
 
   const handleMapClick = (lat, lng, address, city) => {
@@ -482,7 +491,9 @@ export default function OzelCekiciModal({ onClose }) {
       aracBilgileri.tip &&
       aracBilgileri.durum &&
       routeInfo &&
-      sehir
+      sehir &&
+      sehirler.length > 0 &&
+      pricingData
     ) {
       fiyatHesapla().then(calculatedPrice => {
         console.log("fiyatHesapla", calculatedPrice)
@@ -491,7 +502,17 @@ export default function OzelCekiciModal({ onClose }) {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routeInfo, detectedBridges]);
+  }, [
+    pickupLocation,
+    deliveryLocation,
+    aracBilgileri.tip,
+    aracBilgileri.durum,
+    routeInfo,
+    sehir,
+    sehirler,
+    pricingData,
+    fiyatHesapla
+  ]);
 
   const renderAracBilgileri = () => (
     <div className="space-y-4">
@@ -635,17 +656,22 @@ export default function OzelCekiciModal({ onClose }) {
                               setIsPickupMapSelected(false); // elle yazınca map seçimi devre dışı
                             }}
                             onInputChange={() => setIsPickupMapSelected(false)}
-                            onSelect={({ lat, lng, address }) => {
-                              const newLocation = { lat, lng, address: address || pickupSearchValue };
-                              setPickupLocation(newLocation);
-                              setPickupSearchValue(address || pickupSearchValue);
-                              handleMapClick(lat, lng, address, getCity());
-                              setIsPickupMapSelected(true); // autocomplete kapansın
-                              const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-                              city.then(res => res.json()).then(data => {
-                                const cityData = data;
-                                setSehir(cityData.address.province || "");
-                              });
+                            onSelect={async ({ lat, lng, address }) => {
+                              const locationAddress = address || pickupSearchValue;
+                              setIsPickupMapSelected(true);
+                              setPickupSearchValue(locationAddress);
+                              try {
+                                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                                const data = await response.json();
+                                const city = normalizeSehirAdi(data.address.province || data.address.state || '');
+                                setPickupLocation({ lat, lng, address: locationAddress });
+                                setSehir(city);
+                              } catch (error) {
+                                console.error("Error fetching city:", error);
+                                toast.error("Şehir bilgisi alınamadı.");
+                                setPickupLocation({ lat, lng, address: locationAddress });
+                                setSehir("");
+                              }
                             }}
                             placeholder="Adres girin veya haritadan seçin"
                             isMapSelected={isPickupMapSelected}
@@ -666,7 +692,7 @@ export default function OzelCekiciModal({ onClose }) {
                                   const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
                                   const data = await response.json();
                                   const address = data.results[0].formatted;
-                                  let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
+                                  let sehir = normalizeSehirAdi(data.results[0].components?.province) || normalizeSehirAdi(data.results[0].components?.state) || '';
                                   setSehir(sehir);
                                   const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
                                   setPickupLocation(newLocation);
@@ -721,17 +747,22 @@ export default function OzelCekiciModal({ onClose }) {
                               setIsDeliveryMapSelected(false); // elle yazınca map seçimi devre dışı
                             }}
                             onInputChange={() => setIsDeliveryMapSelected(false)}
-                            onSelect={({ lat, lng, address }) => {
-                              const newLocation = { lat, lng, address: address || deliverySearchValue };
-                              setDeliveryLocation(newLocation);
-                              setDeliverySearchValue(address || deliverySearchValue);
-                              handleMapClick(lat, lng, address || deliverySearchValue, getCity2());
-                              setIsDeliveryMapSelected(true); // autocomplete kapansın
-                              const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-                              city.then(res => res.json()).then(data => {
-                                const cityData = data;
-                                setSehir2(cityData.address.province || "");
-                              });
+                            onSelect={async ({ lat, lng, address }) => {
+                              const locationAddress = address || deliverySearchValue;
+                              setIsDeliveryMapSelected(true);
+                              setDeliverySearchValue(locationAddress);
+                              try {
+                                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                                const data = await response.json();
+                                const city = normalizeSehirAdi(data.address.province || data.address.state || '');
+                                setDeliveryLocation({ lat, lng, address: locationAddress });
+                                setSehir2(city);
+                              } catch (error) {
+                                console.error("Error fetching city:", error);
+                                toast.error("Şehir bilgisi alınamadı.");
+                                setDeliveryLocation({ lat, lng, address: locationAddress });
+                                setSehir2("");
+                              }
                             }}
                             placeholder="Adres girin veya haritadan seçin"
                             isMapSelected={isDeliveryMapSelected}
@@ -752,7 +783,7 @@ export default function OzelCekiciModal({ onClose }) {
                                   const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
                                   const data = await response.json();
                                   const address = data.results[0].formatted;
-                                  let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
+                                  let sehir = normalizeSehirAdi(data.results[0].components?.province) || normalizeSehirAdi(data.results[0].components?.state) || '';
                                   setSehir2(sehir);
                                   const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
                                   setDeliveryLocation(newLocation);
@@ -760,7 +791,7 @@ export default function OzelCekiciModal({ onClose }) {
                                   setIsDeliveryMapSelected(true); // konumdan seçildi
                                   toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
                                 } catch (error) {
-                                  setIsMapSelected(false);
+                                  setIsDeliveryMapSelected(false);
                                   toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
                                 }
                               }}
@@ -798,9 +829,8 @@ export default function OzelCekiciModal({ onClose }) {
                       onLocationChange={(lat, lng, address) => {
                         setPickupLocation({lat: lat, lng: lng, address: address});
                         setPickupSearchValue(address);
-                        handleMapClick(lat, lng, address, getCity());
-                        setIsPickupMapSelected(true); // mapten seçildi
-                        setActiveMapPanel(null); // Seçim sonrası paneli kapat
+                        setIsPickupMapSelected(true);
+                        setActiveMapPanel(null);
                       }}
                       onCityChange={ (city) => {
                         setSehir(city);
@@ -817,9 +847,8 @@ export default function OzelCekiciModal({ onClose }) {
                       onLocationChange={(lat, lng, address) => {
                         setDeliveryLocation({lat: lat, lng: lng, address: address});
                         setDeliverySearchValue(address);
-                        handleMapClick(lat, lng, address, getCity2());
-                        setIsDeliveryMapSelected(true); // mapten seçildi
-                        setActiveMapPanel(null); // Seçim sonrası paneli kapat
+                        setIsDeliveryMapSelected(true);
+                        setActiveMapPanel(null);
                       }}
                       onCityChange={ (city) => {
                         setSehir2(city);

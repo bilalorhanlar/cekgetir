@@ -42,14 +42,14 @@ export default function Contact() {
           </div>
         </section>
         
-        {/* İletişim Bilgileri ve Form */}
+        {/* İletişim Bilgileri, Form ve Harita */}
         <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 -mt-24 sm:-mt-48 md:-mt-64 relative z-10">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12">
             {/* İletişim Bilgileri */}
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-10 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-black">İletişim Bilgileri</h2>
               
-              <div className="space-y-8 sm:space-y-14">
+              <div className="space-y-6 sm:space-y-8">
                 <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400 rounded-full flex items-center justify-center">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,9 +114,27 @@ export default function Contact() {
             </div>
 
             {/* İletişim Formu */}
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-10 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-black">Bize Ulaşın</h2>
               <ContactForm />
+            </div>
+
+            {/* Harita */}
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-black">Konumumuz</h2>
+              <div className="relative h-80 sm:h-96 rounded-lg overflow-hidden">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3010.2755833651237!2d29.18340558!3d40.98071179!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDU4JzUwLjYiTiAyOcKwMTEnMDAuNCJF!5e0!3m2!1str!2str!4v1234567890123"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Çekgetir Konum"
+                  className="rounded-lg"
+                ></iframe>
+              </div>
             </div>
           </div>
         </section>
