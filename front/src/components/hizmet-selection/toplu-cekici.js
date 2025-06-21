@@ -42,14 +42,15 @@ const mapOptions = {
 
 const normalizeSehirAdi = (sehir) => {
   return sehir
-     .toLocaleLowerCase('tr-TR')
-    .replace(/ı/g, 'i')
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ö/g, 'o')
-    .replace(/ç/g, 'c')
-    .replace(/İ/g, 'i');
+    .toLocaleLowerCase('tr-TR')
+    .replace("I", 'i')
+    .replace("İ", 'i')
+    .replace("ı", 'i')
+    .replace("ğ", 'g')
+    .replace("ü", 'u')
+    .replace("ş", 's')
+    .replace("ö", 'o')
+    .replace("ç", 'c')
 }
 
 const isValidCoordinate = (value) => {
@@ -489,6 +490,15 @@ export default function TopluCekiciModal({ onClose }) {
       setWayPoints([]);
     }
   }, [pickupLocation, deliveryLocation, sehir, sehir2, fiyatlandirma, pickupOtopark, deliveryOtopark, addWaypoints]);
+
+  // Şehir değerleri değiştiğinde waypoints'i güncelle
+  useEffect(() => {
+    console.log('🏙️ City values changed:', { sehir, sehir2 });
+    if (pickupLocation && deliveryLocation && sehir && sehir2 && fiyatlandirma?.sehirler?.length > 0) {
+      console.log('✅ Cities detected, updating waypoints');
+      addWaypoints();
+    }
+  }, [sehir, sehir2, pickupLocation, deliveryLocation, fiyatlandirma, addWaypoints]);
 
   const getKmBasedPrice = (km, kmBasedFees) => {
     // Backend'den gelen KM fiyatlarına göre hesaplama
@@ -1366,23 +1376,26 @@ export default function TopluCekiciModal({ onClose }) {
                                   const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
                                   city.then(res => res.json()).then(data => {
                                     const cityData = data;
-                                    const cityName = cityData.address.province || "";
-                                    setSehir(cityName);
-                                    setSelectedPickupCity(cityName); // Bu satırı ekledim
+                                    const cityName = cityData.address.province || cityData.address.state || "";
+                                    console.log('🔍 Pickup autocomplete - detected city:', cityName);
+                                    console.log('🔍 Pickup autocomplete - full address data:', cityData.address);
                                     
-                                    // Aynı şehir kontrolü
-                                    if (cityName && cityName === selectedDeliveryCity) {
-                                      toast.error('Lütfen farklı 2 il giriniz');
-                                      setPickupLocation(null);
-                                      setPickupSearchValue('');
-                                      setSelectedPickupCity('');
-                                      setSehir(null);
-                                      setSehirFiyatlandirma(null);
-                                      return;
-                                    }
-                                    
-                                    // Şehir fiyatlandırmasını güncelle
                                     if (cityName) {
+                                      setSehir(cityName);
+                                      setSelectedPickupCity(cityName);
+                                      
+                                      // Aynı şehir kontrolü
+                                      if (cityName === selectedDeliveryCity) {
+                                        toast.error('Lütfen farklı 2 il giriniz');
+                                        setPickupLocation(null);
+                                        setPickupSearchValue('');
+                                        setSelectedPickupCity('');
+                                        setSehir(null);
+                                        setSehirFiyatlandirma(null);
+                                        return;
+                                      }
+                                      
+                                      // Şehir fiyatlandırmasını güncelle
                                       const normalizedSehir = normalizeSehirAdi(cityName);
                                       const sehirFiyat = fiyatlandirma.sehirler.find(s => 
                                         normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
@@ -1543,31 +1556,42 @@ export default function TopluCekiciModal({ onClose }) {
                                   const city = fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
                                   city.then(res => res.json()).then(data => {
                                     const cityData = data;
-                                    const cityName = cityData.address.province || "";
-                                    setSehir2(cityName);
-                                    setSelectedDeliveryCity(cityName); // Bu satırı ekledim
+                                    const cityName = cityData.address.province || cityData.address.state || "";
+                                    console.log('🔍 Delivery autocomplete - detected city:', cityName);
+                                    console.log('🔍 Delivery autocomplete - full address data:', cityData.address);
                                     
-                                    // Aynı şehir kontrolü
-                                    if (cityName && cityName === selectedPickupCity) {
-                                      toast.error('Lütfen farklı 2 il giriniz');
-                                      setDeliveryLocation(null);
-                                      setDeliverySearchValue('');
-                                      setSelectedDeliveryCity('');
-                                      setSehir2(null);
-                                      setDeliverySehirFiyatlandirma(null);
-                                      return;
-                                    }
-                                    
-                                    // Şehir fiyatlandırmasını güncelle
                                     if (cityName) {
+                                      setSehir2(cityName);
+                                      setSelectedDeliveryCity(cityName);
+                                      
+                                      // Aynı şehir kontrolü
+                                      if (cityName === selectedPickupCity) {
+                                        toast.error('Lütfen farklı 2 il giriniz');
+                                        setDeliveryLocation(null);
+                                        setDeliverySearchValue('');
+                                        setSelectedDeliveryCity('');
+                                        setSehir2(null);
+                                        setDeliverySehirFiyatlandirma(null);
+                                        return;
+                                      }
+                                      
+                                      // Şehir fiyatlandırmasını güncelle
                                       const normalizedSehir = normalizeSehirAdi(cityName);
                                       const sehirFiyat = fiyatlandirma.sehirler.find(s => 
                                         normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
                                       );
                                       if (sehirFiyat) {
                                         setDeliverySehirFiyatlandirma(sehirFiyat);
+                                        console.log('✅ Delivery şehir fiyatlandırması set edildi:', sehirFiyat.sehirAdi);
+                                      } else {
+                                        console.log('❌ Delivery şehir fiyatlandırması bulunamadı:', cityName);
+                                        console.log('Mevcut şehirler:', fiyatlandirma.sehirler.map(s => s.sehirAdi));
                                       }
+                                    } else {
+                                      console.log('❌ Delivery city name not found in address data');
                                     }
+                                  }).catch(error => {
+                                    console.error('❌ Delivery city detection error:', error);
                                   });
                                   setIsDeliveryMapSelected(true); // autocomplete kapansın
                                 }}
