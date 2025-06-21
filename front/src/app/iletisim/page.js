@@ -1,12 +1,7 @@
-'use client'
-
-import { useState } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
-import api from '@/utils/axios'
-import { toast } from 'react-hot-toast'
-import { Metadata } from 'next'
+import ContactForm from './contact-form'
 
 export const metadata = {
   title: 'İletişim',
@@ -19,46 +14,6 @@ export const metadata = {
 }
 
 export default function Contact() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    service: 'genel',
-    message: ''
-  })
-
-  const [loading, setLoading] = useState(false)
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      await api.post('/api/contact', formData)
-      toast.success('Mesajınız başarıyla gönderildi!')
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        service: 'genel',
-        message: ''
-      })
-    } catch (error) {
-      console.error('Error sending message:', error)
-      toast.error('Mesaj gönderilirken bir hata oluştu. Lütfen tekrar deneyin.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <>
       <Navbar />
@@ -68,7 +23,7 @@ export default function Contact() {
           <div className="absolute inset-0 z-0">
             <Image
               src="/images/sari.jpeg"
-              alt="Çekgetir SSS"
+              alt="Çekgetir İletişim"
               fill
               className="object-cover transform scale-105"
               priority
@@ -86,8 +41,9 @@ export default function Contact() {
             </div>
           </div>
         </section>
+        
         {/* İletişim Bilgileri ve Form */}
-        <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 -mt-24 sm:-mt-48 md:-mt-64 relative z-10  ">
+        <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 -mt-24 sm:-mt-48 md:-mt-64 relative z-10">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
             {/* İletişim Bilgileri */}
             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-10 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
@@ -165,118 +121,7 @@ export default function Contact() {
             {/* İletişim Formu */}
             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-10 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
               <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-black">Bize Ulaşın</h2>
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Ad Soyad
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500 text-sm sm:text-base text-gray-900"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    E-posta
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500 text-sm sm:text-base text-gray-900"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Telefon
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500 text-sm sm:text-base text-gray-900"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-1">
-                    Hizmet Türü
-                  </label>
-                  <select
-                    id="service"
-                    name="service"
-                    value={formData.service}
-                    onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500 text-sm sm:text-base text-gray-900"
-                  >
-                    <option value="is-ortakligi">İş Ortaklığı</option>
-                    <option value="genel">Genel Bilgi</option>
-                    <option value="genel">Şikayet</option>
-                    <option value="genel">Öneri</option>
-                    <option value="genel">İstek</option>
-                    <option value="genel">Toplu Çekici Hizmeti</option>
-                    <option value="cekici">Çekici Hizmeti</option>
-                    <option value="lastik">Yol Yardım Hizmeti</option>
-                    <option value="kurtarma">Araç Kurtarma Hizmeti</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Mesajınız
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows="4"
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500 text-sm sm:text-base text-gray-900"
-                    required
-                  ></textarea>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full bg-yellow-400 text-black py-2 sm:py-3 px-4 sm:px-6 rounded-md font-semibold transition-colors text-sm sm:text-base ${
-                    loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-500'
-                  }`}
-                >
-                  {loading ? 'Gönderiliyor...' : 'Gönder'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </section>
-
-        {/* Harita */}
-        <section className="py-8 sm:py-12 md:py-16 px-4 sm:px-6 bg-gray-50">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-black">Konum</h2>
-            <div className="w-full h-[300px] sm:h-[400px] rounded-lg overflow-hidden shadow-lg">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3011.201123456789!2d29.1271!3d40.9782!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac7d8d8d8d8d8%3A0x8d8d8d8d8d8d8d8d!2sFerhatpa%C5%9Fa%2C%20Anadolu%20Cd.%20No%3A74%2C%2034888%20Ata%C5%9Fehir%2F%C4%B0stanbul!5e0!3m2!1str!2str!4v1234567890!5m2!1str!2str"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
+              <ContactForm />
             </div>
           </div>
         </section>
@@ -284,4 +129,4 @@ export default function Contact() {
       <Footer />
     </>
   )
-} 
+}

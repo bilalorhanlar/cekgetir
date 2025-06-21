@@ -1,11 +1,7 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
-import api from '@/utils/axios'
-import { Metadata } from 'next'
+import SSSClient from './sss-client'
 
 export const metadata = {
   title: 'Sık Sorulan Sorular',
@@ -17,28 +13,51 @@ export const metadata = {
   },
 }
 
+// Static FAQ verileri
+const staticFaqs = [
+  {
+    id: 1,
+    question: "Çekgetir hangi hizmetleri sunuyor?",
+    answer: "Çekgetir olarak şehirler arası araç taşıma, çekici hizmeti ve yol yardım hizmetleri sunuyoruz. Akü takviyesi, lastik değişimi, yakıt ikmali gibi acil durumlarda da yanınızdayız."
+  },
+  {
+    id: 2,
+    question: "Hangi şehirlerde hizmet veriyorsunuz?",
+    answer: "Türkiye genelinde tüm şehirlerde hizmet vermekteyiz. İstanbul, Ankara, İzmir ve diğer tüm illerde anlaşmalı iş ortaklarımız bulunmaktadır."
+  },
+  {
+    id: 3,
+    question: "7/24 hizmet veriyor musunuz?",
+    answer: "Evet, 7 gün 24 saat kesintisiz hizmet vermekteyiz. Acil durumlarınızda her zaman bize ulaşabilirsiniz."
+  },
+  {
+    id: 4,
+    question: "Fiyat nasıl hesaplanıyor?",
+    answer: "Fiyatlar mesafe, araç tipi, hizmet türü ve aciliyet durumuna göre değişmektedir. Size en uygun fiyat teklifini sunuyoruz."
+  },
+  {
+    id: 5,
+    question: "Ödeme nasıl yapılıyor?",
+    answer: "Ödeme işlemi hizmet tamamlandıktan sonra nakit veya kredi kartı ile yapılabilmektedir. Şehirler arası taşıma hizmetlerinde ön ödeme de kabul ediyoruz."
+  },
+  {
+    id: 6,
+    question: "Araç taşıma süresi ne kadar?",
+    answer: "Şehirler arası araç taşıma süresi mesafeye göre değişmektedir. Genellikle 1-3 gün içerisinde teslimat yapılmaktadır."
+  },
+  {
+    id: 7,
+    question: "Sigorta kapsamı var mı?",
+    answer: "Evet, tüm hizmetlerimiz sigorta kapsamındadır. Araçlarınız güvenle taşınmaktadır."
+  },
+  {
+    id: 8,
+    question: "Hangi araç tiplerini taşıyorsunuz?",
+    answer: "Binek araçlar, ticari araçlar, motosikletler ve özel araçlar dahil olmak üzere tüm araç tiplerini taşıyoruz."
+  }
+]
+
 export default function SSSPage() {
-  const [openIndex, setOpenIndex] = useState(null)
-  const [faqs, setFaqs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    const fetchFaqs = async () => {
-      try {
-        const response = await api.get('/api/faq')
-        setFaqs(response.data)
-      } catch (err) {
-        setError('SSS verileri yüklenirken bir hata oluştu')
-        console.error('SSS yükleme hatası:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchFaqs()
-  }, [])
-
   return (
     <>
       <Navbar />
@@ -70,45 +89,7 @@ export default function SSSPage() {
         {/* FAQ Section */}
         <section className="py-12 sm:py-16 md:py-20 px-5 sm:px-8 lg:px-10 -mt-24 sm:-mt-48 md:-mt-96 relative z-10">
           <div className="max-w-4xl mx-auto">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-yellow-400 border-t-transparent mx-auto"></div>
-                <p className="mt-4 text-gray-600 text-lg">Yükleniyor...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <p className="text-red-500 text-lg">{error}</p>
-              </div>
-            ) : (
-              <div className="space-y-4 sm:space-y-6">
-                {faqs.map((faq) => (
-                  <div 
-                    key={faq.id} 
-                    className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
-                  >
-                    <button
-                      className="w-full px-6 sm:px-8 py-4 sm:py-5 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
-                      onClick={() => setOpenIndex(openIndex === faq.id ? null : faq.id)}
-                    >
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800 pr-4">{faq.question}</h3>
-                      <svg
-                        className={`w-6 h-6 flex-shrink-0 transform transition-transform duration-300 ${openIndex === faq.id ? 'rotate-180' : ''} text-yellow-500`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {openIndex === faq.id && (
-                      <div className="px-6 sm:px-8 py-4 sm:py-5 bg-gray-50 border-t border-gray-100">
-                        <p className="text-gray-700 text-base sm:text-lg leading-relaxed">{faq.answer}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <SSSClient faqs={staticFaqs} />
           </div>
         </section>
 
@@ -149,4 +130,4 @@ export default function SSSPage() {
       <Footer />
     </>
   )
-} 
+}

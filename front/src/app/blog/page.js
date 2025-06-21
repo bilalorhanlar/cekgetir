@@ -1,5 +1,3 @@
-import { Metadata } from 'next'
-
 export const metadata = {
   title: 'Blog ve Haberler',
   description: 'Çekgetir blog ve haberler. Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler.',
