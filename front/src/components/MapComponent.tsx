@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { toast } from "react-hot-toast";
 
 interface MapComponentProps {
   // Mevcut tek rota modu (backward compatibility için)
@@ -453,14 +454,15 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
         const response = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
           method: "POST",
           headers: {
-            Authorization: "5b3ce3597851110001cf62484f7095854058404ead4a446b369ac2bc",
+            Authorization: process.env.NEXT_PUBLIC_OPENROUTE_API_KEY || "5b3ce3597851110001cf62484f7095854058404ead4a446b369ac2bc",
             "Content-Type": "application/json",
           },
           body: JSON.stringify(routeRequest),
         });
         
         if (!response.ok) {
-          throw new Error(`Segment ${i + 1} için API hatası: ${response.status}`);
+          console.error(`❌ OpenRouteService API Hatası - Segment ${i + 1}:`, response.status, response.statusText);
+          throw new Error(`Segment ${i + 1} için API hatası: ${response.status} - ${response.statusText}`);
         }
         
         const segmentData = await response.json();
@@ -511,14 +513,15 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
           const fsmResponse = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
             method: "POST",
             headers: {
-              Authorization: "5b3ce3597851110001cf62484f7095854058404ead4a446b369ac2bc",
+              Authorization: process.env.NEXT_PUBLIC_OPENROUTE_API_KEY || "5b3ce3597851110001cf62484f7095854058404ead4a446b369ac2bc",
               "Content-Type": "application/json",
             },
             body: JSON.stringify(fsmRouteRequest),
           });
           
           if (!fsmResponse.ok) {
-            throw new Error(`FSM Rota için API hatası: ${fsmResponse.status}`);
+            console.error(`❌ FSM Rota API Hatası:`, fsmResponse.status, fsmResponse.statusText);
+            throw new Error(`FSM Rota için API hatası: ${fsmResponse.status} - ${fsmResponse.statusText}`);
           }
           
           const fsmData = await fsmResponse.json();
@@ -581,9 +584,52 @@ const MapComponent = ({ startLocation, endLocation, waypoints, shouldCalculate, 
       const bounds = L.latLngBounds(allPoints);
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Rota hesaplanırken bir hata oluştu:", error);
-      alert("Rota hesaplanırken bir hata oluştu. Lütfen koordinatları kontrol edin.");
+      
+      // API hatası durumunda fallback hesaplama yap
+      if (error.message && error.message.includes('API hatası')) {
+        console.warn("⚠️ API hatası nedeniyle fallback hesaplama kullanılıyor...");
+        
+        // Basit mesafe hesaplama (Haversine formula)
+        const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371; // Dünya'nın yarıçapı (km)
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          return R * c;
+        };
+        
+        // Toplam mesafe hesapla
+        let totalDistance = 0;
+        const wayPointsKm2: number[] = [];
+        
+        for (let i = 0; i < coordinates.length - 1; i++) {
+          const start = coordinates[i];
+          const end = coordinates[i + 1];
+          const distance = calculateHaversineDistance(start.lat, start.lng, end.lat, end.lng);
+          totalDistance += distance;
+          wayPointsKm2.push(Math.round(distance));
+        }
+        
+        // Tahmini süre (ortalama 60 km/saat hızla)
+        const estimatedDuration = Math.round(totalDistance * 60 / 60); // dakika cinsinden
+        
+        // Fallback değerleri bildir
+        onValuesChange(Math.round(totalDistance), estimatedDuration, wayPointsKm2, [], 0);
+        
+        // Kullanıcıya uyarı göster
+        toast.error('Rota hesaplama servisi geçici olarak kullanılamıyor. Tahmini mesafe gösteriliyor.');
+        
+        return;
+      }
+      
+      // Diğer hatalar için genel mesaj
+      toast.error('Rota hesaplanırken bir hata oluştu. Lütfen koordinatları kontrol edin.');
     }
   };
   
