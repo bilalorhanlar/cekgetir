@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminNavbar from '@/components/adminNavbar'
 import api from '@/utils/axios'
+import { toast } from 'react-hot-toast'
 
 export default function OrdersPage() {
   const router = useRouter()
@@ -16,6 +17,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [viewMode, setViewMode] = useState('grid')
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' })
+  const [deleteConfirmations, setDeleteConfirmations] = useState({})
   
 
   useEffect(() => {
@@ -93,17 +95,57 @@ export default function OrdersPage() {
   }
 
   const deleteOrder = async (orderId) => {
-    if (!confirm('Bu siparişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-      return
+    const currentConfirmation = deleteConfirmations[orderId] || 0;
+    
+    if (currentConfirmation === 0) {
+      // İlk tıklama - "Emin misin?" sorusu
+      setDeleteConfirmations(prev => ({ ...prev, [orderId]: 1 }));
+      // 5 saniye sonra confirmation'ı sıfırla
+      setTimeout(() => {
+        setDeleteConfirmations(prev => {
+          const newState = { ...prev };
+          delete newState[orderId];
+          return newState;
+        });
+      }, 5000);
+      return;
+    } else if (currentConfirmation === 1) {
+      // İkinci tıklama - "Tekrar emin olduğuna emin misin?" sorusu
+      setDeleteConfirmations(prev => ({ ...prev, [orderId]: 2 }));
+      // 5 saniye sonra confirmation'ı sıfırla
+      setTimeout(() => {
+        setDeleteConfirmations(prev => {
+          const newState = { ...prev };
+          delete newState[orderId];
+          return newState;
+        });
+        // Eğlenceli timeout mesajı
+        toast('⏰ Kararsız kaldın galiba! 😅', {
+          icon: '⏰',
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+      }, 5000);
+      return;
     }
 
+    // Üçüncü tıklama - Silme işlemi gerçekleşir
     try {
       setDeletingOrder(orderId)
       await api.delete(`api/orders/${orderId}`)
       await fetchOrders()
+      // Silme başarılı olduktan sonra confirmation'ı temizle
+      setDeleteConfirmations(prev => {
+        const newState = { ...prev };
+        delete newState[orderId];
+        return newState;
+      });
     } catch (error) {
       console.error('Sipariş silinirken hata:', error)
-      alert('Sipariş silinirken bir hata oluştu')
+      toast.error('Sipariş silinirken bir hata oluştu')
     } finally {
       setDeletingOrder(null)
     }
@@ -146,7 +188,7 @@ export default function OrdersPage() {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.pnrNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${order.customerName} ${order.customerSurname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.companyName ? order.companyName.toLowerCase().includes(searchTerm.toLowerCase()) : `${order.customerName} ${order.customerSurname}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
       order.customerPhone.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.vehiclePlate.toLowerCase().includes(searchTerm.toLowerCase())
     
@@ -306,7 +348,7 @@ export default function OrdersPage() {
                     <div>
                       <div className="text-sm text-gray-400">Müşteri</div>
                       <div className="text-white font-medium">
-                        {order.customerName} {order.customerSurname}
+                        {order.companyName ? order.companyName : `${order.customerName} ${order.customerSurname}`}
                       </div>
                       <div className="text-sm text-gray-400">
                         {order.customerPhone}
@@ -348,15 +390,24 @@ export default function OrdersPage() {
                       Detay
                     </button>
                     <button 
-                      className="flex-1 px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium relative"
+                      className="px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium relative"
                       onClick={() => deleteOrder(order.id)}
                       disabled={deletingOrder === order.id}
+                      title={deleteConfirmations[order.id] === 1 ? "Tekrar emin olduğuna emin misin?" : deleteConfirmations[order.id] === 2 ? "Sivaslıyım" : "Silme Vazgeçtim"}
                     >
                       {deletingOrder === order.id ? (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
-                      ) : 'Sil'}
+                      ) : deleteConfirmations[order.id] === 1 ? (
+                        <span className="text-xs">Eminsen sivaslıyım de.</span>
+                      ) : deleteConfirmations[order.id] === 2 ? (
+                        <span className="text-xs">Sivaslıyım.</span>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -400,7 +451,7 @@ export default function OrdersPage() {
                         </td>
                         <td className="px-6 py-4 block md:table-cell">
                           <div className="text-white font-medium">
-                            {order.customerName} {order.customerSurname}
+                            {order.companyName ? order.companyName : `${order.customerName} ${order.customerSurname}`}
                           </div>
                           <div className="text-sm text-gray-400">
                             {order.customerPhone}
@@ -442,12 +493,21 @@ export default function OrdersPage() {
                               className="flex-1 md:flex-none px-3 py-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-all font-medium relative"
                               onClick={() => deleteOrder(order.id)}
                               disabled={deletingOrder === order.id}
+                              title={deleteConfirmations[order.id] === 1 ? "Tekrar emin olduğuna emin misin?" : deleteConfirmations[order.id] === 2 ? "Sivaslıyım" : "Silme Vazgeçtim"}
                             >
                               {deletingOrder === order.id ? (
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                                 </div>
-                              ) : 'Sil'}
+                              ) : deleteConfirmations[order.id] === 1 ? (
+                                <span className="text-xs">Eminsen sivaslıyım de.</span>
+                              ) : deleteConfirmations[order.id] === 2 ? (
+                                <span className="text-xs">Sivaslıyım.</span>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
                             </button>
                           </div>
                         </td>

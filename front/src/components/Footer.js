@@ -205,11 +205,10 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap justify-center gap-4 space-x-8  text-xs text-gray-400 md:-mt-8 text-center">
+        <div className="mt-6 flex flex-wrap justify-end gap-4 space-x-8  text-xs text-gray-400 md:-mt-8 text-right">
           <button onClick={() => setIsKvkkOpen(true)} className="hover:text-yellow-400 underline transition-colors">KVKK ve Gizlilik</button>
           <button onClick={() => setIsAcikRizaOpen(true)} className="hover:text-yellow-400 underline transition-colors">Açık Rıza Metni</button>
           <button onClick={() => setIsAydinlatmaOpen(true)} className="hover:text-yellow-400 underline transition-colors">Aydınlatma Metni</button>
-          <button onClick={() => setIsKvkkOpen(true)} className="hover:text-yellow-400 underline transition-colors">KVKK Politikası</button>
           <button onClick={() => setIsSorumlulukReddiOpen(true)} className="hover:text-yellow-400 underline transition-colors">Sorumluluk Reddi</button>
         </div>
 
