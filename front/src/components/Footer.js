@@ -17,6 +17,18 @@ export default function Footer() {
   const [isKvkkOpen, setIsKvkkOpen] = useState(false)
   const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false)
 
+  // Smooth scroll fonksiyonu
+  const handleSmoothScroll = (e, targetId) => {
+    e.preventDefault()
+    const element = document.getElementById(targetId)
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }
+
   return (
     <footer className="bg-[#202020] text-white">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -113,10 +125,14 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <a 
+                  href="#hizmetler" 
+                  onClick={(e) => handleSmoothScroll(e, 'hizmetler')}
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Hizmetler
-                </Link>
+                </a>
               </li>
               <li>
                 <Link href="/blog" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
@@ -138,22 +154,34 @@ export default function Footer() {
             <h3 className="text-lg sm:text-xl font-semibold mb-4 text-yellow-400">Hizmetlerimiz</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/#toplu-cekici" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <a 
+                  href="#toplu-cekici" 
+                  onClick={(e) => handleSmoothScroll(e, 'toplu-cekici')}
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Şehirler Arası Taşıma
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/#ozel-cekici" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <a 
+                  href="#ozel-cekici" 
+                  onClick={(e) => handleSmoothScroll(e, 'ozel-cekici')}
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Çekici Hizmeti
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/#yol-yardim" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <a 
+                  href="#yol-yardim" 
+                  onClick={(e) => handleSmoothScroll(e, 'yol-yardim')}
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Yol Yardım
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

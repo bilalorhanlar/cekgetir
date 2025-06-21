@@ -261,7 +261,7 @@ export default function PnrSorgula() {
                       <>
                         <div>
                           <div className="flex mb-2 justify-between items-end">
-                          <div className="text-[#bdbdbd] text-md mb-1">Teslim Alınacak Konum</div>
+                          <div className="text-[#bdbdbd] text-md mb-1">Nereden</div>
                           <button 
                             onClick={() => {
                               window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.pickupLocationLat},${order.pickupLocationLng}`, '_blank')
@@ -272,7 +272,7 @@ export default function PnrSorgula() {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                             </svg>
-                            Alınacak Konum
+                            Nereden
                           </button>
                           </div>
                           <div className="flex gap-2 mt-2">
@@ -281,7 +281,7 @@ export default function PnrSorgula() {
                         </div>
                         <div>
                           <div className="flex mb-2 justify-between items-end">
-                            <div className="text-[#bdbdbd] text-md mb-1">Bırakılacak Konum</div>
+                            <div className="text-[#bdbdbd] text-md mb-1">Nereye</div>
                             <button 
                               onClick={() => {
                                 window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.dropoffLocationLat},${order.dropoffLocationLng}`, '_blank')
@@ -292,7 +292,7 @@ export default function PnrSorgula() {
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                               </svg>
-                              Bırakılacak Konum
+                              Nereye
                             </button>
                           </div>
                           <div className="flex gap-2 mt-2">

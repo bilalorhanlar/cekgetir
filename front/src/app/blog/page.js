@@ -1,3 +1,6 @@
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
+
 export const metadata = {
   title: 'Blog ve Haberler',
   description: 'Çekgetir blog ve haberler. Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler.',
@@ -61,51 +64,63 @@ export default function BlogPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-center text-black mb-8">Blog ve Haberler</h1>
-        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-          Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler ve güncel haberler.
-        </p>
+    <>
+      <Navbar />
+      <main className="min-h-screen bg-gray-50">
+        {/* Hero Section */}
+        <section className="relative py-16 bg-gradient-to-b from-yellow-400 to-yellow-500">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">Blog ve Haberler</h1>
+            <p className="text-xl text-black/80 max-w-2xl mx-auto">
+              Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler ve güncel haberler.
+            </p>
+          </div>
+        </section>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogPosts.map((post) => (
-            <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                    {post.category}
-                  </span>
-                  <span className="text-gray-500 text-sm">{post.readTime}</span>
-                </div>
-                
-                <h2 className="text-xl font-semibold text-black mb-3 line-clamp-2">
-                  {post.title}
-                </h2>
-                
-                <p className="text-gray-600 mb-4 line-clamp-3">
-                  {post.excerpt}
-                </p>
-                
-                <div className="flex items-center justify-between">
-                  <time className="text-sm text-gray-500">
-                    {new Date(post.date).toLocaleDateString('tr-TR')}
-                  </time>
-                  <button className="text-yellow-600 hover:text-yellow-700 font-medium text-sm">
-                    Devamını Oku →
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-        
-        <div className="mt-12 text-center">
-          <button className="bg-yellow-500 text-black px-8 py-3 rounded-lg font-medium hover:bg-yellow-400 transition-colors">
-            Daha Fazla Yazı
-          </button>
-        </div>
-      </div>
-    </div>
+        {/* Blog Posts Section */}
+        <section className="py-16">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {blogPosts.map((post) => (
+                <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        {post.category}
+                      </span>
+                      <span className="text-gray-500 text-sm">{post.readTime}</span>
+                    </div>
+                    
+                    <h2 className="text-xl font-semibold text-black mb-3 line-clamp-2">
+                      {post.title}
+                    </h2>
+                    
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <time className="text-sm text-gray-500">
+                        {new Date(post.date).toLocaleDateString('tr-TR')}
+                      </time>
+                      <button className="text-yellow-600 hover:text-yellow-700 font-medium text-sm">
+                        Devamını Oku →
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            
+            <div className="mt-12 text-center">
+              <button className="bg-yellow-500 text-black px-8 py-3 rounded-lg font-medium hover:bg-yellow-400 transition-colors">
+                Daha Fazla Yazı
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
   )
 } 

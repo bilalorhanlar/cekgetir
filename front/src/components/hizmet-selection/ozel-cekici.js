@@ -622,7 +622,7 @@ export default function OzelCekiciModal({ onClose }) {
                 {/* Alınacak Konum */}
                 <div>
                   <label className="block text-sm font-medium text-[#ebebeb] mb-2">
-                    Teslim Alınacak Konum
+                    Nereden
                   </label>
                   <div className="relative">
                     {isLoaded && (
@@ -708,7 +708,7 @@ export default function OzelCekiciModal({ onClose }) {
                 {/* Teslim Edilecek Konum */}
                 <div>
                   <label className="block text-sm font-medium text-[#ebebeb] mb-2">
-                    Teslim Edilecek Konum
+                    Nereye
                   </label>
                   <div className="relative">
                     {isLoaded && (
@@ -869,13 +869,13 @@ export default function OzelCekiciModal({ onClose }) {
                           <div className="text-white font-medium">{aracBilgileri.plaka}</div>
                         </div>
                         <div className="bg-[#202020] rounded-lg p-2 mb-3">
-                          <div className="text-white/60">Teslim Alınacak Konum</div>
+                          <div className="text-white/60">Nereden</div>
                           <div className="text-white font-medium text-xs" title={pickupLocation?.address }>
                             {pickupLocation?.address}
                           </div>
                         </div>
                         <div className="bg-[#202020] rounded-lg p-2">
-                          <div className="text-white/60">Teslim Edilecek Konum</div>
+                          <div className="text-white/60">Nereye</div>
                           <div className="text-white font-medium text-xs" title={deliveryLocation?.address}>
                             {deliveryLocation?.address}
                           </div>
@@ -1262,7 +1262,7 @@ export default function OzelCekiciModal({ onClose }) {
                       <div className="text-white font-medium">{aracBilgileri.plaka}</div>
                     </div>
                     <div className="bg-[#202020] rounded-lg p-3">
-                      <div className="text-[#404040] text-sm mb-1">Teslim Alınacak Konum</div>
+                      <div className="text-[#404040] text-sm mb-1">Nereden</div>
                       <div className="text-white font-medium text-sm" title={pickupLocation?.address}>
                         {pickupLocation?.address}
                       </div>

@@ -59,14 +59,9 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-semibold text-black mb-1 sm:mb-2">Adres</h3>
-                    <a 
-                      href="https://www.google.com/maps?q=40.9782,29.1271" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm sm:text-base text-black hover:text-yellow-500 transition-colors"
-                    >
+                    <p className="text-sm sm:text-base text-black hover:text-yellow-500 transition-colors">
                       Ferhatpaşa, Anadolu Cd. No:74, 34888 Ataşehir/İstanbul
-                    </a>
+                    </p>
                   </div>
                 </div>
 

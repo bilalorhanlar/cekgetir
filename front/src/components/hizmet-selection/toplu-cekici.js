@@ -1193,7 +1193,7 @@ export default function TopluCekiciModal({ onClose }) {
           {step === 1 ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
-                <h3 className="text-lg font-semibold text-white mb-4">Aracı Bize Teslim Edeceğiniz Konum</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Nereden</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <input
@@ -1357,7 +1357,7 @@ export default function TopluCekiciModal({ onClose }) {
               </div>
 
               <div className="bg-[#141414] rounded-lg p-4 border border-[#404040]">
-                <h3 className="text-lg font-semibold text-white mb-4">Aracı Teslim Alacağımız Konum</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Nereye</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <input
@@ -1689,7 +1689,7 @@ export default function TopluCekiciModal({ onClose }) {
                     </div>
                   </div>
                   <div className="bg-[#202020] rounded-lg p-3">
-                    <div className="text-[#ebebeb] text-sm mb-1">Teslim Edilecek Konum</div>
+                    <div className="text-[#ebebeb] text-sm mb-1">Nereye</div>
                     <div className="text-white font-medium text-sm" title={deliverySearchValue}>
                       {deliverySearchValue}
                     </div>
@@ -2001,7 +2001,7 @@ export default function TopluCekiciModal({ onClose }) {
                         <span className="font-medium">IBAN:</span> TR65 0011 1000 0000 0098 6222 45
                       </div>
                       <div className="text-white">
-                        <span className="font-medium">Hesap Sahibi:</span> Çekgetir A.Ş.
+                        <span className="font-medium">Hesap Sahibi:</span> Ömer KAYA
                       </div>
                       <div className="text-[#ebebeb] text-sm mt-2">
                         * Ödemenizi yaptıktan sonra dekontunuzu Talep numaranız ile birlikte info@cekgetir.com adresine göndermeniz gerekmektedir.
