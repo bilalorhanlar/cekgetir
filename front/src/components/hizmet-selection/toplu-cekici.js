@@ -872,7 +872,6 @@ export default function TopluCekiciModal({ onClose }) {
     try {
       const loadingToast = toast.loading('Konumunuz alınıyor...', { id: 'location' });
       
-      // Önce konum servislerinin mevcut olup olmadığını kontrol et
       if (!navigator.geolocation) {
         toast.error('Tarayıcınız konum servislerini desteklemiyor.', { id: 'location' });
         return;
@@ -901,16 +900,15 @@ export default function TopluCekiciModal({ onClose }) {
             reject(new Error(errorMessage));
           },
           {
-            enableHighAccuracy: false, // Daha hızlı sonuç için false yapıyoruz
-            timeout: 15000, // Timeout süresini artırıyoruz
-            maximumAge: 60000 // 1 dakika önceki konumu kabul ediyoruz
+            enableHighAccuracy: false,
+            timeout: 15000,
+            maximumAge: 60000
           }
         );
       });
 
       const { latitude, longitude } = position.coords;
       
-      // OpenCage API yerine Nominatim kullanıyoruz (daha güvenilir)
       const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=tr`);
       const data = await response.json();
       
@@ -922,13 +920,19 @@ export default function TopluCekiciModal({ onClose }) {
       const cityName = data.address.province || data.address.state || data.address.city || "";
 
       if (target === 'pickup') {
+        if (cityName && cityName === selectedDeliveryCity) {
+          toast.error('Lütfen farklı 2 il giriniz');
+          toast.dismiss(loadingToast);
+          return;
+        }
+
         setSehir(cityName);
         setSelectedPickupCity(cityName);
         const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: cityName });
         setPickupSearchValue(address);
         setPickupLocation(newLocation);
+        setIsPickupMapSelected(true);
         
-        // Şehir fiyatlandırmasını güncelle
         if (cityName && fiyatlandirma?.sehirler) {
           const normalizedSehir = normalizeSehirAdi(cityName);
           const sehirFiyat = fiyatlandirma.sehirler.find(s => 
@@ -939,13 +943,19 @@ export default function TopluCekiciModal({ onClose }) {
           }
         }
       } else {
+        if (cityName && cityName === selectedPickupCity) {
+          toast.error('Lütfen farklı 2 il giriniz');
+          toast.dismiss(loadingToast);
+          return;
+        }
+
         setSehir2(cityName);
         setSelectedDeliveryCity(cityName);
         const newLocation = normalizeLocation({ lat: latitude, lng: longitude, address: address, sehir: cityName });
         setDeliveryLocation(newLocation);
         setDeliverySearchValue(address);
+        setIsDeliveryMapSelected(true);
         
-        // Şehir fiyatlandırmasını güncelle
         if (cityName && fiyatlandirma?.sehirler) {
           const normalizedSehir = normalizeSehirAdi(cityName);
           const sehirFiyat = fiyatlandirma.sehirler.find(s => 
@@ -1449,6 +1459,7 @@ export default function TopluCekiciModal({ onClose }) {
                                   setIsPickupMapSelected(false); // elle yazınca map seçimi devre dışı
                                 }}
                                 onInputChange={() => setIsPickupMapSelected(false)}
+                                onClick={() => setIsPickupMapSelected(true)}
                                 onSelect={({ lat, lng, address }) => {
                                   const newLocation = { lat, lng, address: address || pickupSearchValue };
                                   setPickupLocation(newLocation);
@@ -1502,54 +1513,7 @@ export default function TopluCekiciModal({ onClose }) {
                               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 bg-[#141414] z-[101]">
                                 <button
                                   type="button"
-                                  onClick={async () => {
-                                    try {
-                                      const position = await new Promise((resolve, reject) => {
-                                        navigator.geolocation.getCurrentPosition(resolve, reject, { 
-                                          enableHighAccuracy: false, 
-                                          timeout: 15000, 
-                                          maximumAge: 60000 
-                                        });
-                                      });
-                                      const { latitude, longitude } = position.coords;
-                                      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=tr`);
-                                      const data = await response.json();
-                                      const address = data.display_name;
-                                      let sehir = data.address?.province || data.address?.state || data.address?.city || "";
-                                      setSehir2(sehir);
-                                      setSelectedDeliveryCity(sehir);
-                                      const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
-                                      setDeliveryLocation(newLocation);
-                                      setDeliverySearchValue(address);
-                                      setIsDeliveryMapSelected(true);
-                                      
-                                      // Aynı şehir kontrolü
-                                      if (sehir === selectedPickupCity) {
-                                        toast.error('Lütfen farklı 2 il giriniz');
-                                        setDeliveryLocation(null);
-                                        setDeliverySearchValue('');
-                                        setSelectedDeliveryCity('');
-                                        setSehir2(null);
-                                        setDeliverySehirFiyatlandirma(null);
-                                        return;
-                                      }
-                                      
-                                      // Şehir fiyatlandırmasını güncelle
-                                      if (sehir && fiyatlandirma?.sehirler) {
-                                        const normalizedSehir = normalizeSehirAdi(sehir);
-                                        const sehirFiyat = fiyatlandirma.sehirler.find(s => 
-                                          normalizeSehirAdi(s.sehirAdi).toLowerCase() === normalizedSehir.toLowerCase()
-                                        );
-                                        if (sehirFiyat) {
-                                          setDeliverySehirFiyatlandirma(sehirFiyat);
-                                        }
-                                      }
-                                      toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
-                                    } catch (error) {
-                                      console.error('Konum alma hatası:', error);
-                                      toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
-                                    }
-                                  }}
+                                  onClick={() => handleCurrentLocation('pickup')}
                                   className="text-[#404040] hover:text-white transition-colors"
                                   title="Mevcut Konumu Kullan"
                                 >
@@ -1747,35 +1711,7 @@ export default function TopluCekiciModal({ onClose }) {
                               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2 bg-[#141414] z-[101]">
                                 <button
                                   type="button"
-                                  onClick={async () => {
-                                    try {
-                                      const position = await new Promise((resolve, reject) => {
-                                        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-                                      });
-                                      const { latitude, longitude } = position.coords;
-                                      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=85e92bcb025e4243b2ad8ccaef8c3593`);
-                                      const data = await response.json();
-                                      const address = data.results[0].formatted;
-                                      let sehir = normalizeSehirAdi(data.results[0].components.province) || normalizeSehirAdi(data.results[0].components.state);
-                                      setSehir2(sehir);
-                                      const newLocation = { lat: latitude, lng: longitude, address: address, sehir: sehir };
-                                      setDeliveryLocation(newLocation);
-                                      setDeliverySearchValue(address);
-                                      setIsDeliveryMapSelected(true);
-                                      // Şehir fiyatlandırmasını güncelle
-                                      if (sehir) {
-                                        const sehirFiyat = fiyatlandirma.sehirler.find(s => 
-                                          normalizeSehirAdi(s.sehirAdi).toLowerCase() === sehir.toLowerCase()
-                                        );
-                                        if (sehirFiyat) {
-                                          setDeliverySehirFiyatlandirma(sehirFiyat);
-                                        }
-                                      }
-                                      toast.success('Konumunuz başarıyla alındı.', { id: 'location' });
-                                    } catch (error) {
-                                      toast.error('Konum izni kontrol edilemedi. Lütfen manuel olarak girin.');
-                                    }
-                                  }}
+                                  onClick={() => handleCurrentLocation('delivery')}
                                   className="text-[#404040] hover:text-white transition-colors"
                                   title="Mevcut Konumu Kullan"
                                 >

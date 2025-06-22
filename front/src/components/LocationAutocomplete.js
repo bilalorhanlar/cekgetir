@@ -14,14 +14,16 @@ const LocationAutocomplete = ({
   const [internalValue, setInternalValue] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Controlled input desteği
   const inputValue = typeof value === "string" ? value : internalValue;
 
   useEffect(() => {
-    // Eğer haritadan seçildiyse veya input boşsa arama yapma
+    // Eğer haritadan seçildiyse, konum bulma işlemi yapılıyorsa veya input boşsa arama yapma
     if (isMapSelected || inputValue.length < 3) {
       setResults([]);
+      setShowSuggestions(false);
       return;
     }
 
@@ -73,6 +75,7 @@ const LocationAutocomplete = ({
           );
 
           setResults(uniqueResults);
+          setShowSuggestions(true); // Sonuçlar varsa göster
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -82,9 +85,8 @@ const LocationAutocomplete = ({
   }, [inputValue, isMapSelected]);
 
   const handleInputChange = e => {
-    // Input değiştiğinde sonuçları temizle
-    setResults([]);
-    setLoading(false);
+    setLoading(true);
+    setShowSuggestions(true);
     if (onInputChange) onInputChange(e.target.value); // parent'a bildir
     if (onChange) {
       onChange(e);
@@ -93,17 +95,11 @@ const LocationAutocomplete = ({
     }
   };
 
-  // inputa tıklama ile öneri kutusu açılmasın (isMapSelected true ise)
-  const handleInputClick = e => {
-    if (isMapSelected) {
-      e.target.blur(); // inputa tıklayınca focus olmasın, öneri açılmasın
-    }
-  };
-
   const handleSelect = ({ lat, lng, label, cityData }) => {
     // Önce sonuçları temizle
     setResults([]);
     setLoading(false);
+    setShowSuggestions(false);
     // Sonra input değerini güncelle
     if (onChange) {
       onChange({ target: { value: label } });
@@ -123,19 +119,27 @@ const LocationAutocomplete = ({
         placeholder={placeholder}
         value={inputValue}
         onChange={handleInputChange}
-        onClick={handleInputClick}
+        onFocus={() => {
+          // Sadece input boş değilse ve haritadan seçilmediyse göster
+          if (inputValue && !isMapSelected) {
+            setShowSuggestions(true);
+          }
+        }}
+        onBlur={() => {
+          // Hafif bir gecikme ile önerileri gizle ki tıklama işlemi yapılabilsin
+          setTimeout(() => setShowSuggestions(false), 150);
+        }}
         className={inputClassName}
         style={{ fontSize: '0.875rem' }}
       />
 
-      {/* isMapSelected true ise öneri ve loading hiç gösterme */}
-      {!isMapSelected && loading && (
+      {showSuggestions && loading && (
         <div className="absolute top-full left-0 right-0 p-2 bg-[#141414] border border-[#404040] rounded-b-lg shadow-lg text-white text-sm">
           Yükleniyor...
         </div>
       )}
 
-      {!isMapSelected && results.length > 0 && (
+      {showSuggestions && results.length > 0 && (
         <ul className={suggestionClassName}>
           {results
             .sort((a, b) => {
