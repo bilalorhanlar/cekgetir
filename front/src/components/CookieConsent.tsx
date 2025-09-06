@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
+import { useState, useEffect } from 'react'
 // Window objesine gtag ve fbq tiplerini ekle
 declare global {
   interface Window {

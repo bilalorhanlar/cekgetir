@@ -9,7 +9,9 @@ export class EmailService {
   private readonly retryDelay = 2000; // 2 seconds
 
   constructor() {
-    this.initializeTransporter();
+    // Email service disabled to prevent timeout issues
+    this.logger.warn('Email service is disabled - no emails will be sent');
+    // this.initializeTransporter();
   }
 
   private initializeTransporter() {
@@ -51,6 +53,10 @@ export class EmailService {
   }
 
   private async sendWithRetry(mailOptions: nodemailer.SendMailOptions): Promise<any> {
+    // Email service disabled
+    this.logger.warn('Email sending disabled - sendWithRetry not executed');
+    return;
+    
     let lastError: Error | null = null;
     
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -117,6 +123,9 @@ export class EmailService {
     status: 'ODEME_BEKLIYOR' | 'ODENDI' | 'IPTAL_EDILDI' | 'IADE_EDILDI',
     amount: number,
   ) {
+    // Email service disabled
+    this.logger.warn('Email sending disabled - payment status email not sent');
+    return;
     const statusText = {
       ODEME_BEKLIYOR: 'Ödeme Bekleniyor',
       ODENDI: 'Ödendi',
@@ -179,6 +188,9 @@ export class EmailService {
     status: 'ONAY_BEKLIYOR' | 'ONAYLANDI' | 'CEKICI_YONLENDIRILIYOR' | 'TRANSFER_SURECINDE' | 'TAMAMLANDI' | 'IPTAL_EDILDI',
     serviceType: string,
   ) {
+    // Email service disabled
+    this.logger.warn('Email sending disabled - order status email not sent');
+    return;
     const statusText = {
       ONAY_BEKLIYOR: 'Onay Bekleniyor',
       ONAYLANDI: 'Onaylandı',
@@ -249,6 +261,9 @@ export class EmailService {
     serviceType: string,
     price: number,
   ) {
+    // Email service disabled
+    this.logger.warn('Email sending disabled - order creation email not sent');
+    return;
     const serviceTypeText = {
       YOL_YARDIM: 'Yol Yardım',
       OZEL_CEKICI: 'Özel Çekici',
