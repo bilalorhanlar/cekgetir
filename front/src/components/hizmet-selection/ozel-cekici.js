@@ -7,10 +7,6 @@ import axios from 'axios'
 import { toast } from 'react-hot-toast'
 import dynamic from "next/dynamic";
 import LocationAutocomplete from '@/components/LocationAutocomplete';
-import AcikRizaModal from '@/components/sozlesmeler/acikriza';
-import AydinlatmaModal from '@/components/sozlesmeler/aydinlatma';
-import KvkkModal from '@/components/sozlesmeler/kvkk';
-import SorumlulukReddiModal from '@/components/sozlesmeler/sorumlulukreddi';
 
 // Leaflet'i SSR olmadan sadece client'ta render etmek için
 const MapComponent = dynamic(() => import("@/components/MapComponent"), {
@@ -103,10 +99,10 @@ export default function OzelCekiciModal({ onClose }) {
   const [sehir2, setSehir2] = useState(null)  
   const [isPickupMapSelected, setIsPickupMapSelected] = useState(false);
   const [isDeliveryMapSelected, setIsDeliveryMapSelected] = useState(false);
-  const [isAcikRizaOpen, setIsAcikRizaOpen] = useState(false);
-  const [isAydinlatmaOpen, setIsAydinlatmaOpen] = useState(false);
-  const [isKvkkOpen, setIsKvkkOpen] = useState(false);
-  const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false);
+  // PDF açma fonksiyonu
+  const openPdf = (pdfPath) => {
+    window.open(pdfPath, '_blank')
+  }
   const [detectedBridges, setDetectedBridges] = useState([]);
   const [bridgeFees, setBridgeFees] = useState(0);
 
@@ -1230,10 +1226,10 @@ export default function OzelCekiciModal({ onClose }) {
               <div className="mt-4 text-center">
                 <p className="text-xs text-[#404040]">
                   Siparişi Onayla butonuna tıkladığınızda{' '}
-                  <button onClick={() => setIsKvkkOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</button>,{' '}
-                  <button onClick={() => setIsAcikRizaOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</button>,{' '}
-                  <button onClick={() => setIsAydinlatmaOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</button> ve{' '}
-                  <button onClick={() => setIsSorumlulukReddiOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</button> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
+                  <button onClick={() => openPdf('/docs/KVKKvegizlilik.pdf')} className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</button>,{' '}
+                  <button onClick={() => openPdf('/docs/acikrizametni.pdf')} className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</button>,{' '}
+                  <button onClick={() => openPdf('/docs/aydinlatmametni.pdf')} className="text-yellow-500 hover:text-yellow-400 transition-colors">Aydınlatma Metni</button> ve{' '}
+                  <button onClick={() => openPdf('/docs/sorumlulukreddibeyani.pdf')} className="text-yellow-500 hover:text-yellow-400 transition-colors">Sorumluluk Reddi Beyanı</button> metinlerini okuduğunuzu ve onayladığınızı taahhüt etmiş sayılırsınız.
                 </p>
               </div>
             </form>
@@ -1266,7 +1262,25 @@ export default function OzelCekiciModal({ onClose }) {
                     </div>
                     <div className="bg-[#202020] rounded-lg p-3">
                       <div className="text-[#404040] text-sm mb-1">IBAN</div>
-                      <div className="text-white font-medium">TR65 0011 1000 0000 0098 6222 45</div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-white font-medium">TR65 0011 1000 0000 0098 6222 45</div>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText('TR65 0011 1000 0000 0098 6222 45');
+                            toast.success('IBAN kopyalandı!');
+                          }}
+                          className="ml-2 p-1 text-[#404040] hover:text-yellow-500 transition-colors"
+                          title="IBAN'ı Kopyala"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="bg-[#202020] rounded-lg p-3">
+                      <div className="text-[#404040] text-sm mb-1">Hesap Sahibi</div>
+                      <div className="text-white font-medium">Ömer KAYA</div>
                     </div>
                     <div className="bg-[#202020] rounded-lg p-3">
                       <div className="text-[#404040] text-sm mb-1">Tutar</div>
@@ -1351,10 +1365,6 @@ export default function OzelCekiciModal({ onClose }) {
           )}
         </div>
       </div>
-      <AcikRizaModal isOpen={isAcikRizaOpen} onClose={() => setIsAcikRizaOpen(false)} />
-      <AydinlatmaModal isOpen={isAydinlatmaOpen} onClose={() => setIsAydinlatmaOpen(false)} />
-      <KvkkModal isOpen={isKvkkOpen} onClose={() => setIsKvkkOpen(false)} />
-      <SorumlulukReddiModal isOpen={isSorumlulukReddiOpen} onClose={() => setIsSorumlulukReddiOpen(false)} />
     </div>
   )
 

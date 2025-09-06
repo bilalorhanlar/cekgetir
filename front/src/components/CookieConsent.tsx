@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import KvkkModal from './sozlesmeler/kvkk';
 
 // Window objesine gtag ve fbq tiplerini ekle
 declare global {
@@ -13,7 +12,11 @@ declare global {
 
 const CookieConsent = () => {
   const [showConsent, setShowConsent] = useState(false);
-  const [isKvkkOpen, setIsKvkkOpen] = useState(false);
+
+  // PDF açma fonksiyonu
+  const openPdf = (pdfPath: string) => {
+    window.open(pdfPath, '_blank')
+  }
   useEffect(() => {
     const consent = localStorage.getItem('cookieConsent');
     if (!consent) {
@@ -79,7 +82,7 @@ const CookieConsent = () => {
         <div className="text-sm text-gray-300">
           Bu web sitesi, size en iyi deneyimi sunmak için çerezleri kullanmaktadır. 
           Daha fazla bilgi için{' '}
-          <button onClick={() => setIsKvkkOpen(true)} className="text-yellow-500 hover:text-yellow-400 transition-colors">
+          <button onClick={() => openPdf('/docs/KVKKvegizlilik.pdf')} className="text-yellow-500 hover:text-yellow-400 transition-colors">
             KVKK ve Gizlilik Politikamızı
           </button>{' '}
           inceleyebilirsiniz.
@@ -99,7 +102,6 @@ const CookieConsent = () => {
           </button>
         </div>
       </div>
-      <KvkkModal isOpen={isKvkkOpen} onClose={() => setIsKvkkOpen(false)} />
     </div>
   );
 };

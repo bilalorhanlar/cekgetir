@@ -5,17 +5,12 @@ import { FaInstagram, FaXTwitter, FaLinkedin, FaYoutube } from 'react-icons/fa6'
 // Logo olarak resim kullanacaksan:
 import Image from 'next/image'
 import Link from 'next/link'
-import AcikRizaModal from './sozlesmeler/acikriza'
-import AydinlatmaModal from './sozlesmeler/aydinlatma'
-import KvkkModal from './sozlesmeler/kvkk'
-import SorumlulukReddiModal from './sozlesmeler/sorumlulukreddi'
-import { useState } from 'react'
 
 export default function Footer() {
-  const [isAcikRizaOpen, setIsAcikRizaOpen] = useState(false)
-  const [isAydinlatmaOpen, setIsAydinlatmaOpen] = useState(false)
-  const [isKvkkOpen, setIsKvkkOpen] = useState(false)
-  const [isSorumlulukReddiOpen, setIsSorumlulukReddiOpen] = useState(false)
+  // PDF açma fonksiyonları
+  const openPdf = (pdfPath) => {
+    window.open(pdfPath, '_blank')
+  }
 
   // Smooth scroll fonksiyonu
   const handleSmoothScroll = (e, targetId) => {
@@ -206,10 +201,10 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-4 space-x-8  text-xs text-gray-400 md:-mt-8 text-right">
-          <button onClick={() => setIsKvkkOpen(true)} className="hover:text-yellow-400 underline transition-colors">KVKK ve Gizlilik</button>
-          <button onClick={() => setIsAcikRizaOpen(true)} className="hover:text-yellow-400 underline transition-colors">Açık Rıza Metni</button>
-          <button onClick={() => setIsAydinlatmaOpen(true)} className="hover:text-yellow-400 underline transition-colors">Aydınlatma Metni</button>
-          <button onClick={() => setIsSorumlulukReddiOpen(true)} className="hover:text-yellow-400 underline transition-colors">Sorumluluk Reddi</button>
+          <button onClick={() => openPdf('/docs/KVKKvegizlilik.pdf')} className="hover:text-yellow-400 underline transition-colors">KVKK ve Gizlilik</button>
+          <button onClick={() => openPdf('/docs/acikrizametni.pdf')} className="hover:text-yellow-400 underline transition-colors">Açık Rıza Metni</button>
+          <button onClick={() => openPdf('/docs/aydinlatmametni.pdf')} className="hover:text-yellow-400 underline transition-colors">Aydınlatma Metni</button>
+          <button onClick={() => openPdf('/docs/sorumlulukreddibeyani.pdf')} className="hover:text-yellow-400 underline transition-colors">Sorumluluk Reddi</button>
         </div>
 
         {/* Alt Footer */}
@@ -250,23 +245,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-
-      <AcikRizaModal 
-        isOpen={isAcikRizaOpen} 
-        onClose={() => setIsAcikRizaOpen(false)} 
-      />
-      <AydinlatmaModal 
-        isOpen={isAydinlatmaOpen} 
-        onClose={() => setIsAydinlatmaOpen(false)} 
-      />
-      <KvkkModal 
-        isOpen={isKvkkOpen} 
-        onClose={() => setIsKvkkOpen(false)} 
-      />
-      <SorumlulukReddiModal 
-        isOpen={isSorumlulukReddiOpen} 
-        onClose={() => setIsSorumlulukReddiOpen(false)} 
-      />
     </footer>
   )
 }

@@ -27,7 +27,19 @@ export default function PnrSorgula() {
     try {
       const response = await api.get(`/api/orders/pnr/${pnrNumber.toUpperCase()}`)
       setOrder(response.data)
-      console.log(response.data)
+      console.log('Order data:', response.data)
+      console.log('Pickup coords:', {
+        pickupLocationLat: response.data.pickupLocationLat,
+        pickupLocationLng: response.data.pickupLocationLng,
+        pickupLat: response.data.pickupLat,
+        pickupLng: response.data.pickupLng
+      })
+      console.log('Dropoff coords:', {
+        dropoffLocationLat: response.data.dropoffLocationLat,
+        dropoffLocationLng: response.data.dropoffLocationLng,
+        dropoffLat: response.data.dropoffLat,
+        dropoffLng: response.data.dropoffLng
+      })
       // Başarılı sorgulamada PNR'ı localStorage'a kaydet
       localStorage.setItem('lastPnr', pnrNumber)
     } catch (err) {
@@ -43,6 +55,14 @@ export default function PnrSorgula() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     handlePnrQuery(pnr)
+  }
+
+  const openGoogleMaps = (lat, lng, type) => {
+    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+    } else {
+      alert(`${type} konum bilgisi bulunamadı veya geçersiz`);
+    }
   }
 
   return (
@@ -205,7 +225,21 @@ export default function PnrSorgula() {
                     </div>
                     <div className="bg-[#141414] rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-md mb-1">IBAN</span>
-                      <span className="text-white text-sm font-mono tracking-widest">TR65 0011 1000 0000 0098 6222 45</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-white text-sm font-mono tracking-widest">TR65 0011 1000 0000 0098 6222 45</span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText('TR65 0011 1000 0000 0098 6222 45');
+                            toast.success('IBAN kopyalandı!');
+                          }}
+                          className="ml-2 p-1 text-[#404040] hover:text-yellow-500 transition-colors"
+                          title="IBAN'ı Kopyala"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     <div className=" rounded-lg p-4 flex flex-col">
                       <span className="text-[#bdbdbd] text-md mb-1">Açıklama</span>
@@ -264,7 +298,9 @@ export default function PnrSorgula() {
                           <div className="text-[#bdbdbd] text-md mb-1">Nereden</div>
                           <button 
                             onClick={() => {
-                              window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.pickupLocationLat},${order.pickupLocationLng}`, '_blank')
+                              const lat = order.pickupLocationLat || order.pickupLat;
+                              const lng = order.pickupLocationLng || order.pickupLng;
+                              openGoogleMaps(lat, lng, 'Alınacak');
                             }}
                             className="text-white bg-[#404040] hover:bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-md font-medium transition-colors inline-flex items-center gap-2 text-sm shadow-sm"
                             title="Alınacak Konuma Git"
@@ -284,7 +320,9 @@ export default function PnrSorgula() {
                             <div className="text-[#bdbdbd] text-md mb-1">Nereye</div>
                             <button 
                               onClick={() => {
-                                window.open(`https://www.google.com/maps/dir/?api=1&destination=${order.dropoffLocationLat},${order.dropoffLocationLng}`, '_blank')
+                                const lat = order.dropoffLocationLat || order.dropoffLat;
+                                const lng = order.dropoffLocationLng || order.dropoffLng;
+                                openGoogleMaps(lat, lng, 'Bırakılacak');
                               }}
                               className="text-white bg-[#404040] hover:bg-purple-500 hover:bg-purple-600 px-3 py-1.5 rounded-md font-medium transition-colors inline-flex items-center gap-2 text-sm shadow-sm"
                               title="Bırakılacak Konuma Git"
