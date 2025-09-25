@@ -14,7 +14,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
+          <Link href="/" className="flex items-center space-x-2 group" title="Ana Sayfa">
             <Image
               src="/images/logo.png"
               alt="Çekgetir Logo"
@@ -32,12 +32,14 @@ export default function Navbar() {
               className={`text-base lg:text-lg font-medium transition-colors ${
                 pathname === '/' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
+              title="Ana Sayfa"
             >
               Ana Sayfa
             </Link>
             <Link 
               href="/#hizmetler" 
               className="text-base lg:text-lg font-medium text-white hover:text-yellow-400 transition-colors"
+              title="Hizmetler"
             >
               Hizmetler
             </Link>
@@ -46,6 +48,7 @@ export default function Navbar() {
               className={`text-base lg:text-lg font-medium transition-colors ${
                 pathname === '/sss' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
+              title="SSS"
             >
               SSS
             </Link>
@@ -54,6 +57,7 @@ export default function Navbar() {
               className={`text-base lg:text-lg font-medium transition-colors ${
                 pathname === '/blog' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
+              title="Blog"
             >
               Blog
             </Link>
@@ -62,6 +66,7 @@ export default function Navbar() {
               className={`text-base lg:text-lg font-medium transition-colors ${
                 pathname === '/iletisim' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
+              title="İletişim"
             >
               İletişim
             </Link>
@@ -69,6 +74,7 @@ export default function Navbar() {
               href="/pnr-sorgula" 
               className="flex items-center gap-2 p-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-xl shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-sm border-2 border-yellow-400 hover:scale-105 active:scale-95"
               style={{ boxShadow: '0 4px 24px 0 rgba(234, 179, 8, 0.15)' }}
+              title="Talep Sorgula"
             >
               <svg className="w-4 h-4 lg:w-5 lg:h-5 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -104,6 +110,7 @@ export default function Navbar() {
             href="/pnr-sorgula"
             className="md:hidden flex items-center gap-1 p-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-lg shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-xs border-2 border-yellow-400 ml-2 hover:scale-105 active:scale-95"
             style={{ boxShadow: '0 2px 12px 0 rgba(234, 179, 8, 0.15)' }}
+            title="Talep No"
           >
             <svg className="w-5 h-5 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -135,6 +142,7 @@ export default function Navbar() {
                 pathname === '/' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
               onClick={() => setIsMobileMenuOpen(false)}
+              title="Ana Sayfa"
             >
               Ana Sayfa
             </Link>
@@ -142,6 +150,7 @@ export default function Navbar() {
               href="/#hizmetler" 
               className="block text-lg font-medium text-white hover:text-yellow-400 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
+              title="Hizmetler"
             >
               Hizmetler
             </Link>
@@ -151,6 +160,7 @@ export default function Navbar() {
                 pathname === '/sss' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
               onClick={() => setIsMobileMenuOpen(false)}
+              title="SSS"
             >
               SSS
             </Link>
@@ -160,6 +170,7 @@ export default function Navbar() {
                 pathname === '/blog' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
               onClick={() => setIsMobileMenuOpen(false)}
+              title="Blog"
             >
               Blog
             </Link>
@@ -169,6 +180,7 @@ export default function Navbar() {
                 pathname === '/iletisim' ? 'text-yellow-400' : 'text-white hover:text-yellow-400'
               }`}
               onClick={() => setIsMobileMenuOpen(false)}
+              title="İletişim"
             >
               İletişim
             </Link>
@@ -176,6 +188,7 @@ export default function Navbar() {
               href="/pnr-sorgula" 
               className="block flex items-center gap-2 p-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-[#303030] font-bold rounded-xl shadow-lg hover:from-yellow-500 hover:to-yellow-400 focus:ring-2 focus:ring-yellow-400/60 transition-all duration-300 text-xs border-2 border-yellow-400 hover:scale-105 active:scale-95 text-center justify-center mt-2"
               onClick={() => setIsMobileMenuOpen(false)}
+              title="Talep Sorgula"
             >
               <svg className="w-5 h-5 text-[#303030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

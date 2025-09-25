@@ -31,7 +31,7 @@ export default function Footer() {
           {/* Logo ve İletişim */}
           <div className="col-span-1">
             <div className="flex items-center group">
-              <Link href="/" className="flex items-center space-x-2">
+              <Link href="/" className="flex items-center space-x-2" title="Ana Sayfa">
                 <Image
                   src="/images/logo.png"
                   alt="Çekgetir Logo"
@@ -49,6 +49,7 @@ export default function Footer() {
               <a
                 href="tel:+05404901000"
                 className="flex items-center text-gray-300 hover:text-yellow-400 transition-colors group"
+                title="Telefon ile arayın"
               >
                 <svg
                   className="h-5 w-5 mr-3 text-yellow-400 group-hover:scale-110 transition-transform"
@@ -90,6 +91,7 @@ export default function Footer() {
               <a
                 href="mailto:info@cekgetir.com"
                 className="flex items-center text-gray-300 hover:text-yellow-400 transition-colors group"
+                title="E-posta gönderin"
               >
                 <svg
                   className="h-5 w-5 mr-3 text-yellow-400 group-hover:scale-110 transition-transform"
@@ -114,7 +116,7 @@ export default function Footer() {
             <h3 className="text-lg sm:text-xl font-semibold mb-4 text-yellow-400">Hızlı Linkler</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <Link href="/" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group" title="Ana Sayfa">
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Ana Sayfa
                 </Link>
@@ -124,19 +126,20 @@ export default function Footer() {
                   href="#hizmetler" 
                   onClick={(e) => handleSmoothScroll(e, 'hizmetler')}
                   className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                  title="Hizmetler"
                 >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Hizmetler
                 </a>
               </li>
               <li>
-                <Link href="/blog" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <Link href="/blog" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group" title="Blog">
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Blog
                 </Link>
               </li>
               <li>
-                <Link href="/iletisim" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group">
+                <Link href="/iletisim" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group" title="İletişim">
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   İletişim
                 </Link>
@@ -153,6 +156,7 @@ export default function Footer() {
                   href="#toplu-cekici" 
                   onClick={(e) => handleSmoothScroll(e, 'toplu-cekici')}
                   className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                  title="Şehirler Arası Taşıma"
                 >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Şehirler Arası Taşıma
@@ -163,6 +167,7 @@ export default function Footer() {
                   href="#ozel-cekici" 
                   onClick={(e) => handleSmoothScroll(e, 'ozel-cekici')}
                   className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                  title="Çekici Hizmeti"
                 >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Çekici Hizmeti
@@ -173,6 +178,7 @@ export default function Footer() {
                   href="#yol-yardim" 
                   onClick={(e) => handleSmoothScroll(e, 'yol-yardim')}
                   className="text-gray-300 hover:text-yellow-400 transition-colors text-sm sm:text-base flex items-center group cursor-pointer"
+                  title="Yol Yardım"
                 >
                   <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-2 group-hover:scale-150 transition-transform"></span>
                   Yol Yardım
