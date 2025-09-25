@@ -218,7 +218,8 @@ export default function Footer() {
                 href="https://www.instagram.com/cekgetircom" 
                 className="text-gray-400 hover:text-yellow-400 transition-colors transform hover:scale-110"
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="nofollow noopener noreferrer"
+                title="Instagram'da bizi takip edin"
               >
                 <span className="sr-only">Instagram</span>
                 <FaInstagram className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -227,7 +228,8 @@ export default function Footer() {
                 href="https://x.com/cekgetir" 
                 className="text-gray-400 hover:text-yellow-400 transition-colors transform hover:scale-110"
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="nofollow noopener noreferrer"
+                title="X'te bizi takip edin"
               >
                 <span className="sr-only">Twitter</span>
                 <FaXTwitter className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -236,7 +238,8 @@ export default function Footer() {
                 href="https://www.linkedin.com/company/cekgetir" 
                 className="text-gray-400 hover:text-yellow-400 transition-colors transform hover:scale-110"
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="nofollow noopener noreferrer"
+                title="LinkedIn'de bizi takip edin"
               >
                 <span className="sr-only">LinkedIn</span>
                 <FaLinkedin className="h-5 w-5 sm:h-6 sm:w-6" />
