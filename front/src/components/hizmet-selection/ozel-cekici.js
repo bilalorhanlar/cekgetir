@@ -1224,7 +1224,7 @@ export default function OzelCekiciModal({ onClose }) {
                 </button>
               </div>
               <div className="mt-4 text-center">
-                <p className="text-xs text-[#404040]">
+                <p className="text-xs text-[#ebebeb]">
                   Siparişi Onayla butonuna tıkladığınızda{' '}
                   <button onClick={() => openPdf('/docs/KVKKvegizlilik.pdf')} className="text-yellow-500 hover:text-yellow-400 transition-colors">KVKK</button>,{' '}
                   <button onClick={() => openPdf('/docs/acikrizametni.pdf')} className="text-yellow-500 hover:text-yellow-400 transition-colors">Açık Rıza Metni</button>,{' '}
