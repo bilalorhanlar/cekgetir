@@ -8,12 +8,7 @@ import YolYardimModal from '@/components/hizmet-selection/yol-yardim'
 import OzelCekiciModal from '@/components/hizmet-selection/ozel-cekici'
 import TopluCekiciModal from '@/components/hizmet-selection/toplu-cekici'
 import CookieConsent from '@/components/CookieConsent'
-export const revalidate = 86400
-
-export const metadata = {
-  alternates: { canonical: '/' },
-  openGraph: { url: 'https://cekgetir.com/' },
-}
+ 
 
 export default function Home() {
   const [activeModal, setActiveModal] = useState(null)

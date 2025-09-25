@@ -102,6 +102,8 @@ export const metadata = {
   manifest: '/manifest.json',
 }
 
+export const revalidate = 86400
+
 export default function RootLayout({ children }) {
   return (
     <html lang="tr" suppressHydrationWarning>
