@@ -69,7 +69,7 @@ function findPost(param) {
 
 // Blog verileri
 const blogPosts = {
-'sehirler-arasi-arac-transferi-dijital-kolaylik': {
+  'sehirler-arasi-arac-transferi-dijital-kolaylik': {
     id: 1,
   title: "Şehirler Arası Araç Transferinde Dijital Kolaylık: Çekgetir ile Güvenli ve Hızlı Çözümler",
   excerpt: "Şehirler arası araç transferini dijital kolaylıklarla güvenli ve hızlı şekilde gerçekleştirmek artık mümkün.",
@@ -129,7 +129,7 @@ const blogPosts = {
     author: "Çekgetir Ekibi",
   image: "/images/blog1.webp"
   },
-'sehirler-arasi-transfer-fiyatlari-2025': {
+  'sehirler-arasi-transfer-fiyatlari-2025': {
     id: 2,
   title: "Şehirlerarası Transfer Fiyatları Nasıl Belirlenir? 2025 İçin Kapsamlı Rehber",
   excerpt: "2025 itibarıyla şehirler arası araç transfer fiyatlarının nasıl belirlendiğini öğrenin. Araç tipi, çekici seçeneği, teslim şekli ve mesafenin fiyat üzerindeki etkilerini detaylı şekilde inceleyin.",
@@ -283,7 +283,7 @@ const blogPosts = {
     author: "Çekgetir Ekibi",
   image: "/images/blog3.webp"
   },
-   'yol-yardimi-cagirmadan-once': {
+  'yol-yardimi-cagirmadan-once': {
     id: 4,
     title: "Yol Yardımı Çağırmadan Önce Bilmeniz Gerekenler: Adım Adım Doğru Süreç",
     excerpt: "Yolda kaldığınızda panik yapmadan önce atmanız gereken adımları öğrenin. Güvenlik önlemlerinden doğru hazırlığa kadar, yol yardım çağırmadan önce dikkat edilmesi gerekenleri keşfedin.",
@@ -327,85 +327,7 @@ const blogPosts = {
     author: "Çekgetir Ekibi",
     image: "/images/blog4.webp"
   },
-  'toplu-cekici-ozel-cekici-ve-yol-yardim-nasil-calisir': {
-    id: 5,
-    title: "Toplu Çekici, Özel Çekici ve Yol Yardım: Nasıl Çalışır?",
-    excerpt: "Toplu çekici, özel çekici ve yol yardım süreçleri; ne zaman hangisi seçilir, fiyatlama ve takip nasıl işler?",
-    content: `
-      <p>Çekgetir, “toplu çekici”, “özel çekici” ve “yol yardım” hizmetlerini tek bir dijital süreçte birleştirir. Aşağıda her hizmetin nasıl çalıştığını, hangi durumda hangisini seçmeniz gerektiğini ve sürecin uçtan uca nasıl ilerlediğini anlatıyoruz.</p>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">1) Ortak Süreç Akışı</h2>
-      <ol class="list-decimal list-inside mb-4">
-        <li><strong>Talep Oluşturma:</strong> Araç tipi ve ihtiyaç (toplu çekici / özel çekici / yol yardım) seçilir; alım–teslim konumları girilir.</li>
-        <li><strong>Şeffaf Fiyat ve Rota:</strong> Seçiminize göre rota ve tahmini ücret gösterilir; onayla birlikte süreç başlar.</li>
-        <li><strong>Ekip Yönlendirme:</strong> Konumunuza en yakın doğrulanmış iş ortağı atanır.</li>
-        <li><strong>Canlı Takip:</strong> Talep numarasıyla aracın/ekibin konumunu ve ETA’yı izleyebilirsiniz.</li>
-        <li><strong>Teslim ve Kapanış:</strong> Araç güvenle belirtilen adrese ulaştırılır veya yerinde çözüm sağlanır.</li>
-      </ol>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">2) Toplu Çekici (Çoklu Taşıma)</h2>
-      <p>Birden fazla aracın aynı taşıyıcı üzerinde birlikte taşındığı maliyet avantajlı modeldir.</p>
-      <ul class="list-disc list-inside mb-4">
-        <li><strong>Ne zaman ideal?</strong> Bütçe öncelikli ise, teslim süresinde esneklik varsa, birden fazla araç taşınacaksa.</li>
-        <li><strong>Nasıl işler?</strong> Araç(lar) belirlenen <em>otopark noktasına</em> teslim edilir veya adresten alınır; doluluğa göre en yakın seferle yola çıkar.</li>
-        <li><strong>Fiyatlama:</strong> Kapasite paylaşımı sayesinde araç başına maliyet düşer.</li>
-        <li><strong>Takip:</strong> Sefer ve aktarma noktaları canlı takipte görünür.</li>
-      </ul>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">3) Özel Çekici (Tekli Taşıma)</h2>
-      <p>Sadece sizin aracınıza tahsis edilen hızlı ve kişisel taşıma modelidir.</p>
-      <ul class="list-disc list-inside mb-4">
-        <li><strong>Ne zaman ideal?</strong> Zaman kritikse, hassas/özel araç ise, doğrudan kapıdan kapıya teslim isteniyorsa.</li>
-        <li><strong>Nasıl işler?</strong> Çekici doğrudan konumunuza gelir; aktarma yapılmadan hedef adrese gider.</li>
-        <li><strong>Fiyatlama:</strong> Tüm kapasite size ayrıldığı için toplu çekiciye göre yüksektir; süre kısalır.</li>
-        <li><strong>Takip:</strong> Çekici konumu ve ETA anlık izlenir.</li>
-      </ul>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">4) Yol Yardım (Yerinde Çözüm)</h2>
-      <p>Araç çekilmeden, bulunduğu yerde hızlı müdahale gerektiren durumlar içindir.</p>
-      <ul class="list-disc list-inside mb-4">
-        <li><strong>Kapsam:</strong> Akü takviyesi, lastik değişimi, yakıt desteği, basit mekanik arızalar.</li>
-        <li><strong>Ne zaman ideal?</strong> Araç güvenli konumda ve arıza yerinde giderilebilecek düzeydeyse.</li>
-        <li><strong>Süreç:</strong> En yakın mobil ekip yönlendirilir; çözüm yerinde sağlanır. Gerekirse çekici opsiyonu devreye alınır.</li>
-        <li><strong>Fiyatlama:</strong> İşçilik + parça (varsa) + ulaşım; çekici gerekmeyen durumlarda toplam maliyet düşer.</li>
-      </ul>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">5) Otopark Teslimi vs. Adresten Alım</h2>
-      <ul class="list-disc list-inside mb-4">
-        <li><strong>Otopark Teslimi:</strong> Aracı belirlenen noktaya siz getirirsiniz; maliyet daha düşüktür.</li>
-        <li><strong>Adresten Alım:</strong> Araç adresinizden özel çekiciyle alınır; sonra (toplu ise) transfer çekicisine aktarılır.</li>
-      </ul>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">6) Hangi Hizmeti Seçmeliyim?</h2>
-      <table style="width:100%;border-collapse:collapse;">
-        <tr><th style="text-align:left;border-bottom:1px solid #ddd;">Öncelik</th><th style="text-align:left;border-bottom:1px solid #ddd;">Öneri</th></tr>
-        <tr><td>Bütçe</td><td>Toplu çekici</td></tr>
-        <tr><td>Zaman</td><td>Özel çekici</td></tr>
-        <tr><td>Yerinde çözüm imkânı</td><td>Yol yardım</td></tr>
-        <tr><td>Birden fazla araç</td><td>Toplu çekici</td></tr>
-        <tr><td>Hassas/özel araç</td><td>Özel çekici</td></tr>
-      </table>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">7) Güvenlik ve Sorumluluk</h2>
-      <p>Çekgetir, <strong>dijital platform</strong> olarak doğrulanmış taşıyıcı/yol yardım iş ortaklarını size yönlendirir. Taşıma ve müdahale süreçlerindeki operasyonel sorumluluk ilgili iş ortağına aittir; araçlar ilgili firmanın sigortası kapsamında taşınır. Süreç ve bilgilendirme Çekgetir tarafından şeffaf şekilde yönetilir.</p>
-
-      <h2 style="font-size:24px;font-weight:bold;margin-top:30px;">8) Hızlı Kontrol Listesi</h2>
-      <ul class="list-disc list-inside mb-4">
-        <li>Konumu net paylaşın (GPS / açık adres).</li>
-        <li>Araç bilgilerini hazır edin (plaka, marka/model, renk).</li>
-        <li>Güvenlik: Dörtlüler açık; reflektör 30 m geriye yerleştirilsin.</li>
-        <li>Toplu/özel/yol yardım seçimini önceliğinize göre yapın.</li>
-      </ul>
-
-      <p>Doğru hizmeti seçtiğinizde süreç daha hızlı, güvenli ve ekonomik ilerler. Sorunuz olursa ekiplerimiz talep anında sizi yönlendirir.</p>
-    `,
-    category: "Hizmet Rehberi",
-    date: "2025-09-24",
-    readTime: "7 dk",
-    author: "Çekgetir Ekibi",
-    image: "/images/kirmizi.jpeg"
-  },
- 'cekici-hizmeti-online-sistemler-2025': {
+  'cekici-hizmeti-online-sistemler-2025': {
     id: 6,
   title: "Çekici Hizmeti Çağırmanın En Hızlı Yolu",
   excerpt: "Geleneksel yöntemlerle çekici çağırmanın zorluklarını ve online sistemlerin sunduğu avantajları öğrenin. Çekgetir ile hızlı, güvenilir ve şeffaf bir çözüm keşfedin.",
@@ -455,8 +377,8 @@ const blogPosts = {
   date: "2025-09-24",
   readTime: "5 dk",
   author: "Çekgetir Ekibi",
-  image: "/images/blog6.jpg"
-}
+  image: "/images/blog5.webp"
+  }
   ,
   'cekici-hizmeti-cagirmanin-en-hizli-yolu-online-sistemler': {
     id: 7,
@@ -515,7 +437,7 @@ const blogPosts = {
     date: "2025-09-24",
     readTime: "5 dk",
     author: "Çekgetir Ekibi",
-    image: "/images/blog6.jpg"
+    image: "/images/blog6.webp"
   }
 }
 
