@@ -2306,9 +2306,10 @@ export default function TopluCekiciModal({ onClose }) {
                       <div className="text-white">
                         <span className="font-medium">Hesap Sahibi:</span> Ömer KAYA
                       </div>
-                      <div className="text-[#ebebeb] text-sm mt-2">
-                        * Ödemenizi yaptıktan sonra dekontunuzu Talep numaranız ile birlikte info@cekgetir.com adresine göndermeniz gerekmektedir.
-                      </div>
+                      <div className="bg-[#202020] rounded-lg p-3">
+                        <div className="text-[#404040] text-sm mb-1">Açıklama</div>
+                        <div className="text-white font-medium">Talep Numarası : {pnrNumber}</div>
+                    </div>
                     </div>
                   </div>
                 </div>

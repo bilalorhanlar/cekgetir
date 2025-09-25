@@ -8,7 +8,6 @@ export const revalidate = 3600
 export const metadata = {
   title: 'Blog ve Haberler',
   description: 'Çekgetir blog ve haberler. Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler.',
-  keywords: 'çekgetir blog, yol yardım haberleri, araç bakımı, güvenli sürüş, çekici hizmeti bilgileri',
   alternates: {
     canonical: '/blog'
   },
