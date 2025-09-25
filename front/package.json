@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "dev:https": "/home/ubuntu/.nvm/versions/node/v23.5.0/bin/node server.js",
-    "start:https": "NODE_ENV=production /opt/homebrew/bin/node server.js"
+    "start:https": "NODE_ENV=production /opt/homebrew/bin/node server.js",
+    "ingest:pdf": "node scripts/ingest-pdf.js"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.6",
@@ -23,7 +24,8 @@
     "react-dom": "^19.0.0",
     "react-google-recaptcha": "^3.1.0",
     "react-hot-toast": "^2.5.2",
-    "react-icons": "^5.4.0"
+    "react-icons": "^5.4.0",
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

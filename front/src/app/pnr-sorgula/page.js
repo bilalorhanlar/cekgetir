@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react'
 import api from '@/utils/axios'
 import Navbar from '@/components/Navbar'
 
+export const metadata = {
+  alternates: { canonical: '/pnr-sorgula' },
+  title: 'PNR Sorgula',
+  description: 'PNR numaranız ile aracınızın durumunu ve süreç bilgisini sorgulayın.'
+}
+
 export default function PnrSorgula() {
   const [pnr, setPnr] = useState('')
   const [order, setOrder] = useState(null)

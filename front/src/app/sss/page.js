@@ -4,6 +4,7 @@ import Image from 'next/image'
 import SSSClient from './sss-client'
 
 export const metadata = {
+  alternates: { canonical: '/sss' },
   title: 'Sık Sorulan Sorular',
   description: 'Çekgetir hakkında sık sorulan sorular. Yol yardım, çekici hizmeti ve şehirler arası araç taşıma hakkında merak edilenler.',
   keywords: 'çekgetir sss, yol yardım soruları, çekici hizmeti sık sorulan sorular, araç taşıma sss',

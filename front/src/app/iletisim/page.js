@@ -4,6 +4,7 @@ import Image from 'next/image'
 import ContactForm from './contact-form'
 
 export const metadata = {
+  alternates: { canonical: '/iletisim' },
   title: 'İletişim',
   description: 'Çekgetir ile iletişime geçin. 7/24 yol yardım, çekici hizmeti ve şehirler arası araç taşıma için bize ulaşın.',
   keywords: 'çekgetir iletişim, yol yardım telefon, çekici hizmeti iletişim, araç kurtarma telefon',

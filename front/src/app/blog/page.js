@@ -1,72 +1,92 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
+import fs from 'fs'
+import path from 'path'
+export const revalidate = 3600
 
 export const metadata = {
   title: 'Blog ve Haberler',
   description: 'Çekgetir blog ve haberler. Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler.',
   keywords: 'çekgetir blog, yol yardım haberleri, araç bakımı, güvenli sürüş, çekici hizmeti bilgileri',
+  alternates: {
+    canonical: '/blog'
+  },
   openGraph: {
     title: 'Blog ve Haberler | Çekgetir',
     description: 'Çekgetir blog ve haberler. Yol yardım, çekici hizmeti, araç bakımı ve güvenli sürüş hakkında faydalı bilgiler.',
   },
 }
 
+function readGeneratedPosts() {
+  try {
+    const filePath = path.join(process.cwd(), 'front', 'public', 'data', 'blog-posts.json')
+    const raw = fs.readFileSync(filePath, 'utf8')
+    const data = JSON.parse(raw)
+    if (Array.isArray(data.posts)) {
+      return data.posts
+    }
+  } catch (e) {}
+  return null
+}
+
 export default function BlogPage() {
-  const blogPosts = [
+  const generated = readGeneratedPosts()
+  const blogPosts = generated || [
     {
       id: 1,
-      title: "Yolda Kalan Araçlar İçin Acil Durum Rehberi",
-      excerpt: "Aracınız yolda kaldığında yapmanız gerekenler ve dikkat etmeniz gereken güvenlik önlemleri hakkında detaylı bilgi.",
-      slug: "yolda-kalan-araclar-icin-acil-durum-rehberi",
+      title: "Şehirler Arası Araç Transferinde Dijital Kolaylık: Çekgetir ile Güvenli ve Hızlı Çözümler",
+      excerpt: "Şehirler arası araç transferini dijital kolaylıklarla güvenli ve hızlı şekilde gerçekleştirmek artık mümkün. Çoklu ve özel çekici seçenekleri, esnek teslim ve canlı takip ile süreç tamamen kontrolünüz altında...",
+      category: "Araç Taşıma",
+      slug: "sehirler-arasi-arac-transferi-dijital-kolaylik",
       category: "Güvenlik",
       date: "2024-12-19",
       readTime: "5 dk"
     },
     {
       id: 2,
-      title: "Şehirler Arası Araç Taşıma Sürecinde Dikkat Edilmesi Gerekenler",
-      excerpt: "Aracınızı şehirler arası taşıtırken bilmeniz gereken önemli noktalar ve süreç hakkında bilgilendirme.",
-      slug: "sehirler-arasi-arac-tasima-surecinde-dikkat-edilmesi-gerekenler",
+      title: "Şehirlerarası Transfer Fiyatları Nasıl Belirlenir? 2025 İçin Kapsamlı Rehber",
+      excerpt: "2025 itibarıyla şehirler arası araç transfer fiyatlarının nasıl belirlendiğini öğrenin. Araç tipi, çekici seçeneği, teslim şekli ve mesafenin fiyat üzerindeki etkilerini keşfedin. Uygun maliyet veya hızlı çözüm için ipuçları burada...",
+      slug: "sehirler-arasi-transfer-fiyatlari-2025",
       category: "Araç Taşıma",
       date: "2024-12-18",
       readTime: "7 dk"
     },
     {
       id: 3,
-      title: "Kış Aylarında Araç Bakımı ve Yol Güvenliği",
-      excerpt: "Kış aylarında araç bakımı, lastik kontrolü ve güvenli sürüş için önemli ipuçları.",
-      slug: "kis-aylarinda-arac-bakimi-ve-yol-guvenligi",
-      category: "Bakım",
-      date: "2024-12-17",
+      title: "Yolda Kalan Araçlar İçin Yol Yardımı",
+      excerpt: "Aracınız yolda kaldığında yol yardım hizmetlerinin kapsamını, çekici desteğinin önemini ve Çekgetir’in sağladığı avantajları öğrenin. Küçük arızalardan şehirlerarası çözümlere kadar rehberimizde her detayı bulabilirsiniz...",
+      slug: "yolda-kalan-araclar-icin-yol-yardimi-2025",
+      category: "Yol Yardımı",
+      date: "2025-09-24",
       readTime: "6 dk"
     },
     {
       id: 4,
-      title: "Çekici Hizmeti Alırken Dikkat Edilmesi Gerekenler",
-      excerpt: "Güvenilir çekici hizmeti seçerken dikkat etmeniz gereken kriterler ve yasal haklarınız.",
-      slug: "cekici-hizmeti-alirken-dikkat-edilmesi-gerekenler",
-      category: "Çekici Hizmeti",
-      date: "2024-12-16",
-      readTime: "4 dk"
-    },
-    {
-      id: 5,
-      title: "Araç Aküsü Bakımı ve Akü Takviye Hizmeti",
-      excerpt: "Araç aküsü bakımı, ömrünü uzatma yöntemleri ve acil durumlarda akü takviye hizmeti hakkında bilgiler.",
-      slug: "arac-akusu-bakimi-ve-aku-takviye-hizmeti",
-      category: "Bakım",
-      date: "2024-12-15",
-      readTime: "5 dk"
+      title: "Yol Yardımı Çağırmadan Önce Bilmeniz Gerekenler",
+      excerpt: "Aracınız yolda kaldığında panik yapmadan önce atmanız gereken adımları öğrenin. Güvenlik önlemleri, doğru hazırlık ve yanlış yönlendirmelerin önüne geçmenin yolları burada...",
+      slug: "yol-yardimi-cagirmadan-once",
+      category: "Yol Yardımı",
+      date: "2025-09-24",
+      readTime: "5 dk",
     },
     {
       id: 6,
-      title: "Lastik Değişimi ve Lastik Bakımı Rehberi",
-      excerpt: "Doğru lastik seçimi, lastik bakımı ve acil durumlarda lastik değişimi hakkında detaylı rehber.",
-      slug: "lastik-degisimi-ve-lastik-bakimi-rehberi",
-      category: "Bakım",
-      date: "2024-12-14",
-      readTime: "8 dk"
+      title: "Çekici Hizmeti Çağırmanın En Hızlı Yolu",
+      excerpt: "Yolda kaldığınızda panik yapmadan doğru yardımı bulmak artık çok daha kolay. Geleneksel yöntemlerin aksine online çekici sistemleri; hızlı erişim, şeffaf fiyatlandırma ve güvenilir hizmeti tek platformda sunuyor. Çekgetir ile birkaç tıkla güvenli çözüme ulaşabilirsiniz.",
+      slug: "cekici-hizmeti-online-sistemler-2025",
+      category: "Çekici Hizmeti",
+      date: "2025-09-24",
+      readTime: "5 dk",
+    },
+    {
+      id: 7,
+      title: "Çekici Hizmeti Çağırmanın En Hızlı Yolu: Online Sistemler",
+      excerpt: "Geleneksel yöntemlerin zorlukları ve online sistemlerin hız, şeffaflık ve güven avantajları. Çekgetir ile birkaç adımda doğru yardıma ulaşın.",
+      slug: "cekici-hizmeti-cagirmanin-en-hizli-yolu-online-sistemler",
+      category: "Çekici Hizmeti",
+      date: "2025-09-24",
+      readTime: "5 dk"
     }
   ]
 
@@ -88,9 +108,21 @@ export default function BlogPage() {
         {/* Blog Posts Section */}
         <section className="py-16">
           <div className="max-w-6xl mx-auto px-4">
+            {/* Blog list structured data */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  '@context': 'https://schema.org',
+                  '@type': 'CollectionPage',
+                  name: 'Blog ve Haberler',
+                  url: '/blog'
+                })
+              }}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {blogPosts.map((post) => (
-                <Link key={post.id} href={`/blog/${post.slug}`} className="block">
+                <Link key={post.id} href={`/blog/${post.id}`} className="block">
                   <article className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
                     <div className="p-6 flex-grow flex flex-col">
                       <div className="flex items-center gap-2 mb-3">

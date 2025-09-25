@@ -125,6 +125,36 @@ export default function RootLayout({ children }) {
             gtag('config', 'YOUR_GA_ID');
           `
         }} />
+        {/* Organization and WebSite structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Çekgetir',
+              url: 'https://cekgetir.com',
+              logo: 'https://cekgetir.com/images/logo.png',
+              sameAs: []
+            })
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Çekgetir',
+              url: 'https://cekgetir.com',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://cekgetir.com/search?q={search_term_string}',
+                'query-input': 'required name=search_term_string'
+              }
+            })
+          }}
+        />
       </head>
       <body suppressHydrationWarning className={inter.className}>
         <ErrorBoundary>

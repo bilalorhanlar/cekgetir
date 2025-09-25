@@ -77,7 +77,8 @@
       "Suzuki",
       "Tata",
       "Tesla",
-      "The London Taxi",
+      "Tenax",
+      "TOGG",
       "Tofaş",
       "Toyota",
       "Vanderhall",
@@ -86,7 +87,9 @@
       "Volvo",
       "XEV",
       "Yuki",
-      "Zeekr"
+      "Zeekr",
+      "Iveco",
+      "Skywell"
     ],
     "aracModelleri": {
       "Aion": ["LX", "S", "Y", "V"],
@@ -166,7 +169,6 @@
       "Suzuki": ["Alto", "Baleno", "Celerio", "Grand Vitara", "Ignis", "Jimny", "Kizashi", "Splash", "SX4", "Swift", "Vitara"],
       "Tata": ["Indica", "Indigo", "Nano", "Safari", "Sumo", "Xenon"],
       "Tesla": ["Model 3", "Model S", "Model X", "Model Y"],
-      "The London Taxi": ["TX"],
       "Tofaş": ["Şahin", "Kartal", "Doğan"],
       "Toyota": ["4Runner", "86", "Auris", "Avalon", "Aygo", "C-HR", "Camry", "Corolla", "Highlander", "Hilux", "Land Cruiser", "Prius", "RAV4", "Sequoia", "Sienna", "Supra", "Tacoma", "Tundra", "Yaris", "Proace", "Proace City", "Hiace"],
       "Vanderhall": ["Venice", "Venice GT"],
@@ -176,10 +178,13 @@
       "XEV": ["X1", "X2", "X3"],
       "Yuki": ["Y1", "Y2", "Y3"],
       "Zeekr": ["001", "009", "X"],
-      "Iveco": ["Daily", "Daily Van", "Daily Hi-Matic"],
+      "Iveco": ["Daily", "Daily Van", "Daily Hi-Matic", "Daily C15", "Daily C18", "Daily C35", "Daily S70"],
       "Isuzu": ["N-Series", "D-Max Panelvan"],
       "MAN": ["TGE"],
-      "Maxus": ["V80", "Deliver 9"]
+      "Maxus": ["V80", "Deliver 9"],
+      "Skywell": ["ET5"],
+      "TOGG": ["T10F", "T10X"],
+      "Tenax": ["V35"]
     },
     "yillar": [
       "2025",
